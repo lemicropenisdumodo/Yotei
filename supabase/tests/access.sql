@@ -14,6 +14,17 @@ end $$;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 insert into public.posts(user_id,content) values(auth.uid(),'RLS transaction test');
+insert into public.posts(user_id,content,category,rating) values(auth.uid(),'Une recommandation','Cinéma',4);
+do $$ begin
+ begin
+ insert into public.posts(user_id,content,rating) values(auth.uid(),'Une note sans catégorie',4);
+ raise exception 'Note sans catégorie autorisée';
+ exception when check_violation then null; end;
+ begin
+ insert into public.posts(user_id,content,category,rating) values(auth.uid(),'Note hors limites','Musique',6);
+ raise exception 'Note hors limites autorisée';
+ exception when check_violation then null; end;
+end $$;
 insert into storage.objects(bucket_id,name) values('yotei-media',auth.uid()::text||'/rls-test.png');
 do $$ begin
  begin

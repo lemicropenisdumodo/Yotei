@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { base, check, db, Form, result, site, val } from './core'
+import { Mark } from './Home'
+import { LockKeyhole } from 'lucide-react'
+import { check, db, Form, site, val } from './core'
 export function Auth({
   setup,
   invitation,
@@ -13,34 +15,30 @@ export function Auth({
     [sent, setSent] = useState(false)
   return (
     <main className="welcome">
-      <section className="postcard" aria-label="Le mont Yotei au lever du jour">
-        <img
-          src={base + 'yotei-dawn.png'}
-          alt="Le mont Yotei en pixel art au-dessus d’un lac au lever du jour"
-        />
-        <div className="postmark">
-          YŌTEI <span>北海道</span>
-        </div>
-        <div className="caption">
-          <span>CARTE POSTALE</span>
-          <strong>Mont Yōtei, Hokkaidō</strong>
-        </div>
+      <header className="authHead">
+        <Mark />
+        <span className="wordmark">
+          Yotei<span>.</span>
+        </span>
+        <span className="private">
+          <LockKeyhole size={14} /> Réseau privé
+        </span>
+      </header>
+      <section className="authArt" aria-label="Yotei, votre réseau privé">
+        <h2>
+          Votre cercle<span>.</span>
+        </h2>
       </section>
       <section className="gate window">
-        <div className="bar">
-          <span>▣</span> {setup || invitation ? 'accès.exe' : 'connexion.exe'}
-          <span className="grip" />
-        </div>
         <div className="inside">
-          <div className="eyebrow">LE REFUGE PRIVÉ</div>
           <h1>
             {setup
               ? 'Votre mot de passe'
               : invitation
-                ? 'Bienvenue au refuge'
+                ? 'Votre invitation'
                 : reset
                   ? 'Mot de passe oublié'
-                  : 'Salut, les amis.'}
+                  : 'Connexion'}
           </h1>
           <p>
             {setup
@@ -49,7 +47,7 @@ export function Auth({
                 ? 'Ouvrez votre invitation pour rejoindre le cercle.'
                 : reset
                   ? 'Recevez un lien de récupération par e-mail.'
-                  : 'Connectez-vous pour retrouver votre petit coin d’Internet.'}
+                  : 'Retrouvez vos amis sur Yotei.'}
           </p>
           <Form
             key={String(setup) + reset + invitation}
@@ -138,7 +136,9 @@ export function Auth({
             </button>
           )}
         </div>
-        <div className="statusline">◆ Accès sur invitation</div>
+        <div className="statusline">
+          <LockKeyhole size={15} /> Accès sur invitation
+        </div>
       </section>
     </main>
   )

@@ -176,13 +176,11 @@ export function Chat({
             action="Envoyer"
             submit={async (f) => {
               await result(
-                db
-                  .from('messages')
-                  .insert({
-                    room_id: room,
-                    user_id: d.me.id,
-                    content: val(f, 'text'),
-                  }),
+                db.from('messages').insert({
+                  room_id: room,
+                  user_id: d.me.id,
+                  content: val(f, 'text'),
+                }),
               )
               messages.refresh()
             }}

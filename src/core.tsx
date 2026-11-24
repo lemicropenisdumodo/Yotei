@@ -20,6 +20,7 @@ export type Profile = {
   bio: string
   music: string
   avatar_url: string | null
+  wallpaper_path: string | null
   banner_url: string | null
   theme_color: string
 }
@@ -159,14 +160,10 @@ export function Window({
   children: ReactNode
 }) {
   return (
-    <section className="window">
-      <div className="bar">
-        <span className="winicon" aria-hidden="true">
-          ▣
-        </span>
-        {title}
-        <span className="grip" aria-hidden="true" />
-      </div>
+    <section
+      className="window"
+      aria-label={title.split('.')[0].replaceAll('_', ' ')}
+    >
       <div className="inside">{children}</div>
     </section>
   )

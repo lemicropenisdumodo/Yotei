@@ -2,7 +2,7 @@ import { createRoot } from 'react-dom/client'
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import {
-  base,
+  Media,
   check,
   db,
   ErrorLine,
@@ -19,6 +19,17 @@ import { Admin } from './Admin'
 import { Chat } from './Chat'
 import { Feed } from './Feed'
 import { ProfilePage } from './Profiles'
+import {
+  Home,
+  Mark,
+  Avatar,
+  navigation,
+  type Page,
+  type Category,
+} from './Home'
+import { LogOut } from 'lucide-react'
+import '@fontsource-variable/manrope/index.css'
+import '@fontsource-variable/space-grotesk/index.css'
 import './style.css'
 
 const params = new URLSearchParams(location.hash.slice(1))
@@ -28,7 +39,8 @@ if (['invite', 'recovery'].includes(params.get('type') || ''))
   sessionStorage.setItem(setupKey, '1')
 function Network({ session }: { session: Session }) {
   const id = session.user.id,
-    [page, go] = useState('Fil'),
+    [page, go] = useState<Page>('Accueil'),
+    [category, setCategory] = useState<Category | ''>(''),
     [profile, setProfile] = useState(id),
     [room, setRoom] = useState(''),
     [revision, bump] = useState(0)
@@ -92,16 +104,14 @@ function Network({ session }: { session: Session }) {
         await check(db.auth.signOut({ scope: 'local' }))
       }}
     >
-      Déconnexion
+      <LogOut size={19} /> Déconnexion
     </Task>
   )
   if (members.error || !me || me.suspended)
     return (
       <main className="narrow">
         <Window title="accès.exe">
-          <h1>
-            {members.data ? 'Accès membre requis' : 'Ouverture du refuge'}
-          </h1>
+          <h1>{members.data ? 'Accès membre requis' : 'Ouverture de Yotei'}</h1>
           <ErrorLine value={members.error} />
           {members.data && (
             <p>
@@ -121,43 +131,88 @@ function Network({ session }: { session: Session }) {
     open,
   }
   const activeProfile: Person = people.find((p) => p.id === profile) || me
-  const tabs = [
-    'Fil',
-    'Profil',
-    'Annuaire',
-    'Messages',
-    ...(me.admin ? ['Administration'] : []),
-  ]
+  const tabs = (Object.keys(navigation) as Page[]).filter(
+    (t) => t !== 'Administration' || me.admin,
+  )
+  const navigate = (tab: Page) => {
+    if (tab === 'Profil') setProfile(id)
+    if (tab === 'Fil') setCategory('')
+    go(tab)
+    window.scrollTo(0, 0)
+  }
   return (
     <main className="desktop">
-      <aside>
-        <Window title="navigation.sys">
-          <strong className="sidebrand">Mon refuge</strong>
-          <nav>
-            {tabs.map((tab, i) => (
+      <Media path={me.wallpaper_path} alt="" className="wallpaper" />
+      <aside className="rail">
+        <button
+          className="logoButton"
+          onClick={() => navigate('Accueil')}
+          aria-label="Yotei, accueil"
+        >
+          <Mark />
+        </button>
+        <nav aria-label="Navigation principale">
+          {tabs.map((tab) => {
+            const Icon = navigation[tab]
+            return (
               <button
                 key={tab}
+                title={tab}
+                aria-label={tab}
                 aria-current={page === tab ? 'page' : undefined}
-                onClick={() => {
-                  if (tab === 'Profil') setProfile(id)
-                  go(tab)
-                }}
+                onClick={() => navigate(tab)}
               >
-                <span aria-hidden="true">
-                  {['▤', '▣', '☷', '✉', '⚙'][i]}
-                </span>{' '}
-                {tab}
-                {tab === 'Messages' &&
-                  !!notes.data?.length &&
-                  ' (' + notes.data.length + ')'}
+                <Icon size={22} />
+                <span>{tab === 'Administration' ? 'Admin' : tab}</span>
+                {tab === 'Messages' && !!notes.data?.length && (
+                  <b className="unread">{notes.data.length}</b>
+                )}
               </button>
-            ))}
-          </nav>
-          {signout}
-        </Window>
+            )
+          })}
+        </nav>
+        <div className="railFoot">{signout}</div>
       </aside>
       <div className="content">
-        {page === 'Fil' && <Feed d={d} />}
+        <header className="pageHead">
+          <div className="wordmark">
+            Yotei<span>.</span>
+          </div>
+          <button
+            className="userChip"
+            onClick={() => navigate('Profil')}
+            aria-label="Ouvrir mon profil"
+          >
+            <Avatar person={me} />
+            <span>{me.username}</span>
+          </button>
+        </header>
+        {page === 'Accueil' && (
+          <>
+            <div className="sectionhead">
+              <h1>Accueil</h1>
+              <small>
+                {new Intl.DateTimeFormat('fr-FR', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                }).format(new Date())}
+              </small>
+            </div>
+            <Home
+              d={d}
+              go={navigate}
+              unread={notes.data?.length || 0}
+              filter={(c) => {
+                setCategory(c)
+                go('Fil')
+              }}
+            />
+          </>
+        )}
+        {page === 'Fil' && (
+          <Feed d={d} filter={category} setFilter={setCategory} />
+        )}
         {page === 'Profil' && (
           <ProfilePage
             key={activeProfile.id}
@@ -234,15 +289,6 @@ function App() {
   }, [])
   return (
     <div className="shell">
-      <header className="top">
-        <div className="mast">
-          <img src={base + 'favicon.png'} width="42" height="42" alt="" />
-          <b>
-            Yotei<span>.</span>
-          </b>
-        </div>
-        <span className="mastnote">Réseau privé</span>
-      </header>
       <ErrorLine value={authError} />
       {invitation || session === null || (session && setup) ? (
         <Auth
@@ -263,12 +309,8 @@ function App() {
       ) : session ? (
         <Network key={session.user.id} session={session} />
       ) : (
-        <main className="narrow">Ouverture du refuge…</main>
+        <main className="narrow">Ouverture de Yotei…</main>
       )}
-      <footer>
-        <span>Yotei · Réseau privé</span>
-        <span lang="ja">羊蹄山</span>
-      </footer>
     </div>
   )
 }

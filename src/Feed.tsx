@@ -1,3 +1,5 @@
+import { categories, type Category } from './Home'
+import { Star } from 'lucide-react'
 import { useState } from 'react'
 import {
   accept,
@@ -21,6 +23,8 @@ type Post = {
   content: string
   image_url: string | null
   created_at: string
+  category: Category | null
+  rating: number | null
   likes: { user_id: string }[]
 }
 function Replies({ post, d }: { post: Post; d: Directory }) {
@@ -58,13 +62,11 @@ function Replies({ post, d }: { post: Post; d: Directory }) {
         action="Commenter"
         submit={async (f) => {
           await result(
-            db
-              .from('comments')
-              .insert({
-                user_id: d.me.id,
-                post_id: post.id,
-                content: val(f, 'text'),
-              }),
+            db.from('comments').insert({
+              user_id: d.me.id,
+              post_id: post.id,
+              content: val(f, 'text'),
+            }),
           )
           list.refresh()
         }}
@@ -77,25 +79,52 @@ function Replies({ post, d }: { post: Post; d: Directory }) {
     </div>
   )
 }
-export function Feed({ d }: { d: Directory }) {
+export function Feed({
+  d,
+  filter,
+  setFilter,
+}: {
+  d: Directory
+  filter: Category | ''
+  setFilter: (c: Category | '') => void
+}) {
+  const [chosen, setChosen] = useState<Category | ''>(filter),
+    [rating, setRating] = useState(0)
   const [limit, setLimit] = useState(20),
     [opened, setOpened] = useState<string[]>([])
-  const list = useList(
-    async () =>
-      ((await result(
-        db
-          .from('posts')
-          .select('id,user_id,content,image_url,created_at,likes(user_id)')
-          .order('created_at', { ascending: false })
-          .order('id')
-          .limit(limit),
-      )) as Post[]) || [],
-    [limit],
-  )
+  const list = useList(async () => {
+    let query = db
+      .from('posts')
+      .select(
+        'id,user_id,content,image_url,category,rating,created_at,likes(user_id)',
+      )
+      .order('created_at', { ascending: false })
+      .order('id')
+      .limit(limit)
+    if (filter) query = query.eq('category', filter)
+    return ((await result(query)) || []) as Post[]
+  }, [filter, limit])
   return (
     <>
+      <div className="sectionhead">
+        <h1>Fil d’actualité</h1>
+      </div>
+      <div className="filters" aria-label="Filtrer les publications">
+        {(['', ...Object.keys(categories)] as (Category | '')[]).map((c) => (
+          <button
+            key={c}
+            aria-pressed={filter === c}
+            onClick={() => {
+              setFilter(c)
+              setLimit(20)
+            }}
+          >
+            {c || 'Tout'}
+          </button>
+        ))}
+      </div>
       <Window title="nouvelle_publication.exe">
-        <h1>Quoi de neuf ?</h1>
+        <h2>Nouvelle publication</h2>
         <Form
           action="Publier"
           submit={async (f) => {
@@ -105,18 +134,21 @@ export function Feed({ d }: { d: Directory }) {
               throw new Error('Ajoutez un texte ou une photo.')
             try {
               await result(
-                db
-                  .from('posts')
-                  .insert({
-                    user_id: d.me.id,
-                    content: content || '📷',
-                    image_url: path,
-                  }),
+                db.from('posts').insert({
+                  user_id: d.me.id,
+                  content: content || '📷',
+                  image_url: path,
+                  category: chosen || null,
+                  rating: chosen && rating ? rating : null,
+                }),
               )
             } catch (e) {
               await discard([path])
               throw e
             }
+            setFilter(chosen)
+            setChosen('')
+            setRating(0)
             list.refresh()
           }}
         >
@@ -129,13 +161,44 @@ export function Feed({ d }: { d: Directory }) {
             />
           </label>
           <label>
+            Catégorie <small>Facultatif</small>
+            <select
+              value={chosen}
+              onChange={(e) => {
+                setChosen(e.target.value as Category | '')
+                setRating(0)
+              }}
+            >
+              <option value="">Sans catégorie</option>
+              {Object.keys(categories).map((c) => (
+                <option key={c}>{c}</option>
+              ))}
+            </select>
+          </label>
+          {chosen && (
+            <div className="stars">
+              <span>Votre note · facultatif</span>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  type="button"
+                  key={n}
+                  aria-label={n + ' sur 5'}
+                  aria-pressed={rating === n}
+                  onClick={() => setRating(rating === n ? 0 : n)}
+                >
+                  <Star fill={n <= rating ? 'currentColor' : 'none'} />
+                </button>
+              ))}
+            </div>
+          )}
+          <label>
             Photo <small>Facultatif · 5 Mo max.</small>
             <input name="photo" type="file" accept={accept} />
           </label>
         </Form>
       </Window>
       <div className="sectionhead">
-        <h2>Fil d’actualité</h2>
+        <h2>{filter || 'Publications'}</h2>
         <button onClick={list.refresh}>Actualiser</button>
       </div>
       <ErrorLine value={list.error} />
@@ -154,6 +217,17 @@ export function Feed({ d }: { d: Directory }) {
               </button>
               <time>{date(p.created_at)}</time>
             </header>
+            {p.category && (
+              <div className="tag">
+                {p.category}
+                {p.rating && (
+                  <span aria-label={p.rating + ' sur 5'}>
+                    {'★'.repeat(p.rating)}
+                    {'☆'.repeat(5 - p.rating)}
+                  </span>
+                )}
+              </div>
+            )}
             <p>{p.content}</p>
             <Media
               path={p.image_url}

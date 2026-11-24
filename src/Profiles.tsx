@@ -1,3 +1,4 @@
+import { Music2, Palette } from 'lucide-react'
 import { useState } from 'react'
 import {
   accept,
@@ -25,25 +26,26 @@ export function ProfilePage({
   d: Directory
   reload: () => void
 }) {
-  const [edit, setEdit] = useState(false),
-    [limit, setLimit] = useState(30)
+  const [edit, setEdit] = useState(false)
+  const [postLimit, setPostLimit] = useState(3)
+  const posts = useList(
+    async () =>
+      (await result(
+        db
+          .from('posts')
+          .select('id,content,image_url,category,rating,created_at')
+          .eq('user_id', p.id)
+          .order('created_at', { ascending: false })
+          .order('id')
+          .limit(postLimit + 1),
+      )) || [],
+    [p.id, postLimit],
+  )
   const friends = useList(
     async () =>
       (await result(db.from('friend_requests').select('sender,recipient'))) ||
       [],
     [p.id],
-  )
-  const book = useList(
-    async () =>
-      (await result(
-        db
-          .from('guestbook')
-          .select('id,user_id,content,created_at')
-          .eq('recipient', p.id)
-          .order('created_at', { ascending: false })
-          .limit(limit),
-      )) || [],
-    [p.id, limit],
   )
   const follows = (from: string, to: string) =>
     friends.data?.some((r) => r.sender === from && r.recipient === to)
@@ -63,10 +65,19 @@ export function ProfilePage({
             {p.username.slice(0, 1).toUpperCase()}
             <Media path={p.avatar_url} alt="Portrait" />
           </div>
-          <h1>{p.username}</h1>
+          <div>
+            <small>
+              {p.id === d.me.id ? 'Mon profil' : 'Profil du cercle'}
+            </small>
+            <h1>{p.username}</h1>
+          </div>
         </div>
         <p>{p.bio || 'Aucune biographie pour le moment.'}</p>
-        {p.music && <p>♫ {p.music}</p>}
+        {p.music && (
+          <p className="musicLine">
+            <Music2 size={18} /> {p.music}
+          </p>
+        )}
         {p.id === d.me.id ? (
           <button onClick={() => setEdit(!edit)}>
             {edit ? 'Fermer l’édition' : 'Personnaliser mon profil'}
@@ -110,6 +121,7 @@ export function ProfilePage({
               try {
                 paths.push(await upload(f, 'avatar', p.id))
                 paths.push(await upload(f, 'banner', p.id))
+                paths.push(await upload(f, 'wallpaper', p.id))
                 await result(
                   db
                     .from('profiles')
@@ -120,6 +132,9 @@ export function ProfilePage({
                       theme_color: val(f, 'color'),
                       avatar_url: paths[0] || p.avatar_url,
                       banner_url: paths[1] || p.banner_url,
+                      wallpaper_path:
+                        paths[2] ||
+                        (f.has('removeWallpaper') ? null : p.wallpaper_path),
                     })
                     .eq('id', p.id),
                 )
@@ -130,11 +145,15 @@ export function ProfilePage({
               await discard([
                 paths[0] ? p.avatar_url : null,
                 paths[1] ? p.banner_url : null,
+                paths[2] || f.has('removeWallpaper') ? p.wallpaper_path : null,
               ])
               setEdit(false)
               reload()
             }}
           >
+            <h2>
+              <Palette size={20} /> Personnalisation
+            </h2>
             <label>
               Pseudo
               <input
@@ -164,10 +183,45 @@ export function ProfilePage({
               Bannière
               <input type="file" name="banner" accept={accept} />
             </label>
+            <label>
+              Fond d’écran de mon espace <small>5 Mo maximum</small>
+              <input type="file" name="wallpaper" accept={accept} />
+            </label>
+            {p.wallpaper_path && (
+              <label className="inline">
+                <input type="checkbox" name="removeWallpaper" /> Rétablir le
+                fond par défaut
+              </label>
+            )}
           </Form>
         )}
       </Window>
-      <Window title="amis.txt">
+      <Window title="Publications du profil">
+        <h2>Publications</h2>
+        <ErrorLine value={posts.error} />
+        {posts.data?.length === 0 && <p>Aucune publication pour le moment.</p>}
+        {posts.data?.slice(0, postLimit).map((post) => (
+          <article key={post.id}>
+            <time>{date(post.created_at)}</time>
+            {post.category && (
+              <span className="tag">
+                {post.category}
+                {post.rating && <span>{post.rating} / 5 ★</span>}
+              </span>
+            )}
+            <p>{post.content}</p>
+            <Media
+              path={post.image_url}
+              className="photo"
+              alt="Photo de la publication"
+            />
+          </article>
+        ))}
+        {posts.data && posts.data.length > postLimit && (
+          <button onClick={() => setPostLimit((n) => n + 6)}>Voir plus</button>
+        )}
+      </Window>
+      <Window title="Amis">
         <h2>Liste d’amis</h2>
         <ErrorLine value={friends.error} />
         {pals.map((u) => (
@@ -185,40 +239,6 @@ export function ProfilePage({
                 <button onClick={() => d.open(u.id)}>{u.username}</button>
               </p>
             ))}
-      </Window>
-      <Window title="livre_d_or.txt">
-        <h2>Livre d’or</h2>
-        <Form
-          action="Signer"
-          submit={async (f) => {
-            await result(
-              db
-                .from('guestbook')
-                .insert({
-                  recipient: p.id,
-                  user_id: d.me.id,
-                  content: val(f, 'text'),
-                }),
-            )
-            book.refresh()
-          }}
-        >
-          <label>
-            Un mot pour {p.username}
-            <textarea name="text" required maxLength={1500} />
-          </label>
-        </Form>
-        <ErrorLine value={book.error} />
-        {book.data?.map((x) => (
-          <article key={x.id}>
-            <strong>{d.name(x.user_id)}</strong>{' '}
-            <small>{date(x.created_at)}</small>
-            <p>{x.content}</p>
-          </article>
-        ))}
-        {book.data?.length === limit && (
-          <button onClick={() => setLimit((n) => n + 30)}>Voir la suite</button>
-        )}
       </Window>
     </>
   )
