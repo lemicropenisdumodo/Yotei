@@ -8,6 +8,7 @@ import {
   LayoutGrid,
   MessagesSquare,
   Newspaper,
+  Plus,
   Settings2,
   UsersRound,
 } from 'lucide-react'
@@ -15,8 +16,9 @@ import { Media, type Directory } from './core'
 export const navigation = {
   Accueil: LayoutGrid,
   Fil: Newspaper,
+  Publier: Plus,
   Messages: MessagesSquare,
-  Annuaire: UsersRound,
+  Amis: UsersRound,
   Profil: CircleUserRound,
   Administration: Settings2,
 }
@@ -86,12 +88,12 @@ export function Home({
               : 'Aucun message non lu'}
           </small>
         </button>
-        <button className="quick lilac" onClick={() => go('Annuaire')}>
+        <button className="quick lilac" onClick={() => go('Amis')}>
           <span className="tileTop">
             <UsersRound />
             <ArrowUpRight />
           </span>
-          <strong>Annuaire</strong>
+          <strong>Amis</strong>
           <small>
             {people.length} membre{people.length > 1 ? 's' : ''} ·{' '}
             {online.length} en ligne

@@ -134,7 +134,7 @@ export function Chat({
                 .map((u) => (
                   <label key={u.id}>
                     <input type="checkbox" name="ids" value={u.id} />
-                    {u.username}
+                    {d.name(u.id)}
                   </label>
                 ))}
             </div>

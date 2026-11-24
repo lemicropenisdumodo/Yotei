@@ -44,6 +44,13 @@ do $$ begin
  raise exception 'Escalade de privilège' using errcode='XX000';
  exception when raise_exception then if sqlerrm<>'Accès refusé' then raise;end if;end;
 end $$;
+insert into public.friend_requests(sender,recipient) values(auth.uid(),'10000000-0000-4000-8000-000000000002');
+do $$ begin
+ begin
+ insert into public.friend_nicknames values(auth.uid(),'10000000-0000-4000-8000-000000000002','Test');
+ raise exception 'Surnom avant acceptation';
+ exception when foreign_key_violation then null;end;
+end $$;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
 do $$ begin
  if (select count(*) from public.messages where content='test privé')<>1 then raise exception 'Message invisible au destinataire'; end if;
@@ -51,6 +58,12 @@ do $$ begin
  if exists(select 1 from public.member_accounts()) then raise exception 'Annuaire administratif exposé';end if;
  if (select count(*) from public.notifications)<>1 then raise exception 'Notification absente'; end if;
 end $$;
+insert into public.friend_requests values(auth.uid(),'10000000-0000-4000-8000-000000000001');
+insert into public.friend_nicknames values(auth.uid(),'10000000-0000-4000-8000-000000000001','Surnom personnel');
+do $$ begin if not exists(select 1 from public.friend_nicknames where nickname='Surnom personnel') then raise exception 'Surnom inaccessible'; end if; end $$;
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+do $$ begin if exists(select 1 from public.friend_nicknames) then raise exception 'Surnom visible par son destinataire';end if; end $$;
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
 insert into public.likes(post_id,user_id) select id,auth.uid() from public.posts where content='RLS transaction test';
 insert into public.comments(post_id,user_id,content) select id,auth.uid(),'commentaire' from public.posts where content='RLS transaction test';
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);

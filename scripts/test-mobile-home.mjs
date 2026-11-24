@@ -19,6 +19,8 @@ try {
       profiles: [profile],
       members: [{ id, admin: true, suspended: false }],
       notifications: [],
+      friend_nicknames: [],
+      posts: [],
     }
     return route.fulfill({ json: rows[url.pathname.split('/').pop()] ?? null })
   })
@@ -69,6 +71,16 @@ try {
     )
     console.log('Accueil entièrement visible à ' + width + ' × ' + height)
   }
+  const nav=page.getByRole('navigation',{name:'Navigation principale'})
+  await nav.getByRole('button',{name:'Fil',exact:true}).click()
+  assert.equal(await page.getByRole('textbox').count(),0)
+  await nav.getByRole('button',{name:'Publier',exact:true}).click()
+  await page.getByRole('heading',{name:'Nouvelle publication'}).waitFor()
+  await page.getByLabel('Un mot pour le cercle').fill('Publication de test')
+  await page.locator('form').getByRole('button',{name:'Publier',exact:true}).click()
+  await page.getByRole('heading',{name:'Fil d’actualité'}).waitFor()
+  await nav.getByRole('button',{name:'Amis',exact:true}).click()
+  await page.getByRole('heading',{name:'Amis',exact:true}).waitFor()
 } finally {
   await browser.close()
 }

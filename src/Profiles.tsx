@@ -69,7 +69,8 @@ export function ProfilePage({
             <small>
               {p.id === d.me.id ? 'Mon profil' : 'Profil du cercle'}
             </small>
-            <h1>{p.username}</h1>
+            <h1>{d.name(p.id)}</h1>
+            {p.nickname && <small>Pseudo du cercle · {p.username}</small>}
           </div>
         </div>
         <p>{p.bio || 'Aucune biographie pour le moment.'}</p>
@@ -101,6 +102,7 @@ export function ProfilePage({
                       .insert({ sender: d.me.id, recipient: p.id }),
                   )
                 friends.refresh()
+                reload()
               }}
             >
               {outgoing
@@ -112,6 +114,48 @@ export function ProfilePage({
                   : 'Demander en ami'}
             </Task>
           )
+        )}
+        {incoming && outgoing && (
+          <details key={p.nickname || ''}>
+            <summary>Surnom privé</summary>
+            <Form
+              action="Enregistrer le surnom"
+              submit={async (f) => {
+                const nickname = val(f, 'nickname')
+                if (nickname)
+                  await result(
+                    db
+                      .from('friend_nicknames')
+                      .upsert(
+                        { owner_id: d.me.id, friend_id: p.id, nickname },
+                        { onConflict: 'owner_id,friend_id' },
+                      ),
+                  )
+                else
+                  await result(
+                    db
+                      .from('friend_nicknames')
+                      .delete()
+                      .eq('owner_id', d.me.id)
+                      .eq('friend_id', p.id),
+                  )
+                reload()
+              }}
+            >
+              <label>
+                Visible uniquement par vous
+                <input
+                  name="nickname"
+                  maxLength={40}
+                  defaultValue={p.nickname || ''}
+                  placeholder={p.username}
+                />
+              </label>
+              <small>
+                Effacez le surnom pour retrouver le pseudo du cercle.
+              </small>
+            </Form>
+          </details>
         )}
         {edit && p.id === d.me.id && (
           <Form
@@ -226,7 +270,7 @@ export function ProfilePage({
         <ErrorLine value={friends.error} />
         {pals.map((u) => (
           <button key={u.id} onClick={() => d.open(u.id)}>
-            {u.username}
+            {d.name(u.id)}
           </button>
         ))}
         {friends.data && !pals.length && <p>Aucune amitié confirmée.</p>}
@@ -236,7 +280,7 @@ export function ProfilePage({
             .map((u) => (
               <p key={u.id}>
                 Demande de{' '}
-                <button onClick={() => d.open(u.id)}>{u.username}</button>
+                <button onClick={() => d.open(u.id)}>{d.name(u.id)}</button>
               </p>
             ))}
       </Window>

@@ -30,7 +30,7 @@ export type Member = {
   suspended: boolean
   last_seen: string | null
 }
-export type Person = Profile & Member
+export type Person = Profile & Member & { nickname?: string }
 export type Directory = {
   me: Person
   people: Person[]

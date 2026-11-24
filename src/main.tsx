@@ -17,7 +17,7 @@ import {
 import { Auth } from './Auth'
 import { Admin } from './Admin'
 import { Chat } from './Chat'
-import { Feed } from './Feed'
+import { Composer, Feed } from './Feed'
 import { ProfilePage } from './Profiles'
 import {
   Home,
@@ -45,13 +45,27 @@ function Network({ session }: { session: Session }) {
     [room, setRoom] = useState(''),
     [revision, bump] = useState(0)
   const members = useList(async () => {
-    const [profiles, members] = await Promise.all([
+    const [profiles, members, nicknames] = await Promise.all([
       result(db.from('profiles').select('*').order('username')),
       result(db.from('members').select('*')),
+      result(
+        db
+          .from('friend_nicknames')
+          .select('friend_id,nickname')
+          .eq('owner_id', id),
+      ),
     ])
     return (profiles as Profile[]).flatMap((p) => {
       const m = (members as Member[]).find((x) => x.id === p.id)
-      return m ? [{ ...p, ...m }] : []
+      return m
+        ? [
+            {
+              ...p,
+              ...m,
+              nickname: nicknames?.find((n) => n.friend_id === p.id)?.nickname,
+            },
+          ]
+        : []
     })
   }, [id, revision])
   const notes = useList(
@@ -126,8 +140,10 @@ function Network({ session }: { session: Session }) {
   const d = {
     me,
     people,
-    name: (key: string) =>
-      people.find((p) => p.id === key)?.username || 'Membre',
+    name: (key: string) => {
+      const person = people.find((p) => p.id === key)
+      return person?.nickname || person?.username || 'Membre'
+    },
     open,
   }
   const activeProfile: Person = people.find((p) => p.id === profile) || me
@@ -223,6 +239,17 @@ function Network({ session }: { session: Session }) {
         {page === 'Fil' && (
           <Feed d={d} filter={category} setFilter={setCategory} />
         )}
+        {page === 'Publier' && (
+          <Composer
+            d={d}
+            filter={category}
+            onPublished={(c) => {
+              setCategory(c)
+              go('Fil')
+              window.scrollTo(0, 0)
+            }}
+          />
+        )}
         {page === 'Profil' && (
           <ProfilePage
             key={activeProfile.id}
@@ -231,14 +258,14 @@ function Network({ session }: { session: Session }) {
             reload={members.refresh}
           />
         )}
-        {page === 'Annuaire' && (
-          <Window title="annuaire.txt">
-            <h1>Le cercle</h1>
+        {page === 'Amis' && (
+          <Window title="Amis">
+            <h1>Amis</h1>
             {people
               .filter((p) => !p.suspended)
               .map((p) => (
                 <article key={p.id}>
-                  <button onClick={() => open(p.id)}>{p.username}</button>{' '}
+                  <button onClick={() => open(p.id)}>{d.name(p.id)}</button>{' '}
                   <small>
                     {p.last_seen && Date.now() - Date.parse(p.last_seen) < 90000
                       ? '● En ligne'

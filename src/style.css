@@ -954,3 +954,19 @@ details {
     padding: 9px;
   }
 }
+
+.rail nav button[aria-label='Publier'] svg {
+  border-radius: 50%;
+  background: var(--lav);
+  color: #222;
+  padding: 3px;
+  box-sizing: content-box;
+}
+@media (max-width: 760px) and (max-height: 680px) {
+  .rail nav {
+    gap: 3px;
+  }
+  .rail nav button {
+    padding: 4px 0;
+  }
+}
