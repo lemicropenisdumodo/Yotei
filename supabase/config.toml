@@ -1,8 +1,8 @@
 project_id = "liutzcmwbtkrfgzhyycp"
 
 [auth]
-site_url = "https://dada2777.github.io/Yotei/"
-additional_redirect_urls = ["https://dada2777.github.io/Yotei/"]
+site_url = "https://lemicropenisdumodo.github.io/Yotei/"
+additional_redirect_urls = ["https://lemicropenisdumodo.github.io/Yotei/"]
 enable_signup = false
 
 [functions.invitations]

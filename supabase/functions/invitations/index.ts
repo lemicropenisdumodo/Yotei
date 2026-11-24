@@ -1,6 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.99.2'
 
-const site = 'https://dada2777.github.io/Yotei/'
+const site = 'https://lemicropenisdumodo.github.io/Yotei/'
 const headers = {
   'Access-Control-Allow-Origin': new URL(site).origin,
   'Access-Control-Allow-Headers':
