@@ -30,6 +30,8 @@ on conflict do nothing;
 
 ## Vérification
 
+`npm test` applique les migrations et vérifie les scénarios RLS dans PostgreSQL embarqué (PGlite), avec des interfaces locales pour Auth et Storage. Ces tests sont aussi exécutés dans GitHub Actions.
+
 Exécuter `supabase/tests/access.sql` après la migration dans une base de test ou dans SQL Editor sous le rôle postgres. Le script ouvre une transaction, crée trois identités temporaires, exerce les rôles anon et authenticated, puis annule les écritures. Il vérifie l’admission sur invitation, les likes, les commentaires, les notifications, la confidentialité des conversations, les droits du propriétaire et la suspension. Une exception indique un échec. En cas d’arrêt manuel, annuler la transaction avant de poursuivre.
 
 Le workflow Pages compile le client avant de le déployer. L’activation du backend Supabase est distincte du déploiement du client.

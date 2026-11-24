@@ -14,6 +14,13 @@ end $$;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 insert into public.posts(user_id,content) values(auth.uid(),'RLS transaction test');
+insert into storage.objects(bucket_id,name) values('yotei-media',auth.uid()::text||'/rls-test.png');
+do $$ begin
+ begin
+ insert into storage.objects(bucket_id,name) values('yotei-media','10000000-0000-4000-8000-000000000002/rls-test.png');
+ raise exception 'Écriture dans un dossier tiers';
+ exception when insufficient_privilege then null;end;
+end $$;
 insert into public.rooms(title,participants) values('RLS transaction test',array[auth.uid(),'10000000-0000-4000-8000-000000000002'::uuid]);
 insert into public.messages(room_id,user_id,content) select id,auth.uid(),'test privé' from public.rooms where title='RLS transaction test';
 do $$ begin
@@ -29,6 +36,8 @@ end $$;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
 do $$ begin
  if (select count(*) from public.messages where content='test privé')<>1 then raise exception 'Message invisible au destinataire'; end if;
+ if not exists(select 1 from storage.objects where bucket_id='yotei-media' and name='10000000-0000-4000-8000-000000000001/rls-test.png') then raise exception 'Média du cercle invisible';end if;
+ if exists(select 1 from public.member_accounts()) then raise exception 'Annuaire administratif exposé';end if;
  if (select count(*) from public.notifications)<>1 then raise exception 'Notification absente'; end if;
 end $$;
 insert into public.likes(post_id,user_id) select id,auth.uid() from public.posts where content='RLS transaction test';
@@ -43,6 +52,7 @@ update public.members set suspended=true where id='10000000-0000-4000-8000-00000
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
 do $$ begin
+ if exists(select 1 from storage.objects where bucket_id='yotei-media') then raise exception 'Stockage visible après suspension';end if;
  if exists(select 1 from public.posts) or exists(select 1 from public.profiles) or exists(select 1 from public.messages) then raise exception 'Compte suspendu autorisé'; end if;
 end $$;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000099',true);
