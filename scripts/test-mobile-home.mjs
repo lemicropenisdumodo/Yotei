@@ -78,15 +78,23 @@ try {
         width: document.documentElement.scrollWidth,
         height: document.documentElement.scrollHeight,
         railRight: rail.left >= content.right,
+        bottomGap: Math.abs(rail.bottom - document.querySelector('.profileShortcut').getBoundingClientRect().bottom),
       }
     })
     assert.ok(
-      layout.railRight && layout.width <= width && layout.height <= height,
+      layout.bottomGap <= 1 && layout.railRight && layout.width <= width && layout.height <= height,
       JSON.stringify({ width, height, layout }),
     )
     console.log('Accueil entièrement visible à ' + width + ' × ' + height)
   }
   const nav = page.getByRole('navigation', { name: 'Navigation principale' })
+  await nav.getByRole('button', { name: 'Profil', exact: true }).click()
+  await page.getByText('Aucune publication pour le moment.').waitFor()
+  const profileGap = await page.evaluate(() => Math.abs(
+    document.querySelector('.rail').getBoundingClientRect().bottom -
+    document.querySelector('.content > .window:last-child').getBoundingClientRect().bottom
+  ))
+  assert.ok(profileGap <= 1, 'Alignement du profil court : ' + profileGap)
   await nav.getByRole('button', { name: 'Fil', exact: true }).click()
   assert.equal(await page.getByRole('textbox').count(), 0)
   await nav.getByRole('button', { name: 'Publier', exact: true }).click()
