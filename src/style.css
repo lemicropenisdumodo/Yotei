@@ -1053,3 +1053,88 @@ details {
     font-size: 0.8rem;
   }
 }
+
+.mobileAccount {
+  display: none;
+}
+@media (max-width: 760px) {
+  .desktop {
+    --dock: calc(60px + env(safe-area-inset-bottom));
+    --mobile-panel-height: calc(100dvh - var(--dock) - 22px);
+    display: block;
+    width: 100%;
+    padding: 10px 12px calc(var(--dock) + 12px);
+  }
+  .desktop:is([data-page='Accueil'], [data-page='Profil']) {
+    padding-bottom: calc(var(--dock) + 12px);
+  }
+  .rail {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 5;
+    width: 100%;
+    height: var(--dock);
+    min-height: 0;
+    padding: 2px 6px calc(2px + env(safe-area-inset-bottom));
+    border-radius: 16px 16px 0 0;
+    overflow: visible;
+  }
+  .rail nav {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-content: stretch;
+    gap: 2px;
+  }
+  .rail .logoButton,
+  .railFoot,
+  .rail button[aria-label='Profil'],
+  .rail button[aria-label='Administration'],
+  .pageHead > .userChip {
+    display: none;
+  }
+  .rail nav button {
+    padding: 2px;
+    min-height: 44px;
+    font-size: 0.68rem;
+  }
+  .mobileAccount {
+    display: block;
+    position: relative;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    z-index: 4;
+  }
+  .mobileAccount summary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    margin: 0;
+    list-style: none;
+    border: 1px solid var(--line);
+  }
+  .mobileAccount summary::-webkit-details-marker {
+    display: none;
+  }
+  .accountActions {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 5px;
+    display: grid;
+    min-width: 155px;
+    gap: 3px;
+  }
+}
+@media (max-width: 760px) and (max-height: 620px) {
+  .desktop[data-page='Accueil'] .feature {
+    min-height: 80px;
+  }
+  .desktop[data-page='Accueil'] .profileShortcut {
+    min-height: 48px;
+  }
+}

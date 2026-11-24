@@ -25,8 +25,35 @@ try {
       const path = url.pathname.replace(/^\/Yotei\//, '') || 'index.html'
       return route.fulfill({ path: resolve('dist', path) })
     }
-    if(url.hostname==='geocoding-api.open-meteo.com') return route.fulfill({json:{results:[{id:2996944,name:'Lyon',country:'France',timezone:'Europe/Paris',latitude:45.75,longitude:4.85}]}})
-    if(url.hostname==='api.met.no') return route.fulfill({json:{properties:{timeseries:Array.from({length:13},(_,i)=>({time:new Date(Date.now()+i*3600000).toISOString(),data:{instant:{details:{air_temperature:12}},next_1_hours:{summary:{symbol_code:'cloudy'}}}}))}}})
+    if (url.hostname === 'geocoding-api.open-meteo.com')
+      return route.fulfill({
+        json: {
+          results: [
+            {
+              id: 2996944,
+              name: 'Lyon',
+              country: 'France',
+              timezone: 'Europe/Paris',
+              latitude: 45.75,
+              longitude: 4.85,
+            },
+          ],
+        },
+      })
+    if (url.hostname === 'api.met.no')
+      return route.fulfill({
+        json: {
+          properties: {
+            timeseries: Array.from({ length: 13 }, (_, i) => ({
+              time: new Date(Date.now() + i * 3600000).toISOString(),
+              data: {
+                instant: { details: { air_temperature: 12 } },
+                next_1_hours: { summary: { symbol_code: 'cloudy' } },
+              },
+            })),
+          },
+        },
+      })
     const rows = {
       profiles: [profile, peer],
       rooms: [room],
@@ -75,36 +102,48 @@ try {
     await page.evaluate(() => document.fonts.ready)
     const layout = await page.evaluate(() => {
       const rail = document.querySelector('.rail').getBoundingClientRect()
-      const content = document.querySelector('.content').getBoundingClientRect()
+
       return {
         width: document.documentElement.scrollWidth,
         height: document.documentElement.scrollHeight,
-        railRight: rail.left >= content.right,
-        bottomGap: Math.abs(rail.bottom - document.querySelector('.profileShortcut').getBoundingClientRect().bottom),
+        dockBottom: Math.abs(rail.bottom - innerHeight) <= 1,
+        bottomGap:
+          rail.top -
+          document.querySelector('.profileShortcut').getBoundingClientRect()
+            .bottom,
       }
     })
     assert.ok(
-      layout.bottomGap <= 1 && layout.railRight && layout.width <= width && layout.height <= height,
+      Math.abs(layout.bottomGap - 12) <= 1 &&
+        layout.dockBottom &&
+        layout.width <= width &&
+        layout.height <= height,
       JSON.stringify({ width, height, layout }),
     )
     console.log('Accueil entièrement visible à ' + width + ' × ' + height)
   }
-  await page.getByRole('button',{name:'Configurer la météo'}).click()
-  const weather=page.getByRole('dialog')
-  await weather.getByLabel('Ville',{exact:true}).fill('Lyon')
-  await weather.getByRole('button',{name:'Rechercher'}).click()
-  await weather.getByRole('button',{name:'Lyon, France'}).click()
-  await weather.getByRole('heading',{name:'Prochaines heures'}).waitFor()
-  await weather.getByRole('button',{name:'Fermer la météo'}).click()
+  await page.getByRole('button', { name: 'Configurer la météo' }).click()
+  const weather = page.getByRole('dialog')
+  await weather.getByLabel('Ville', { exact: true }).fill('Lyon')
+  await weather.getByRole('button', { name: 'Rechercher' }).click()
+  await weather.getByRole('button', { name: 'Lyon, France' }).click()
+  await weather.getByRole('heading', { name: 'Prochaines heures' }).waitFor()
+  await weather.getByRole('button', { name: 'Fermer la météo' }).click()
   await page.reload()
-  await page.getByRole('button',{name:'Météo à Lyon'}).waitFor()
+  await page.getByRole('button', { name: 'Météo à Lyon' }).waitFor()
   const nav = page.getByRole('navigation', { name: 'Navigation principale' })
-  await nav.getByRole('button', { name: 'Profil', exact: true }).click()
+  await page.getByLabel('Mon compte', { exact: true }).click()
+  await page.getByRole('button', { name: 'Mon profil', exact: true }).click()
   await page.getByText('Aucune publication pour le moment.').waitFor()
-  const profileGap = await page.evaluate(() => Math.abs(
-    document.querySelector('.rail').getBoundingClientRect().bottom -
-    document.querySelector('.content > .window:last-child').getBoundingClientRect().bottom
-  ))
+  const profileGap = await page.evaluate(() =>
+    Math.abs(
+      document.querySelector('.rail').getBoundingClientRect().top -
+        12 -
+        document
+          .querySelector('.content > .window:last-child')
+          .getBoundingClientRect().bottom,
+    ),
+  )
   assert.ok(profileGap <= 1, 'Alignement du profil court : ' + profileGap)
   await nav.getByRole('button', { name: 'Fil', exact: true }).click()
   assert.equal(await page.getByRole('textbox').count(), 0)

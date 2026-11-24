@@ -213,6 +213,27 @@ function Network({ session }: { session: Session }) {
             <Avatar person={me} />
             <span>{me.username}</span>
           </button>
+          <details className="mobileAccount">
+            <summary className="userChip" aria-label="Mon compte">
+              <Avatar person={me} />
+              <span>{me.username}</span>
+            </summary>
+            <div
+              className="accountActions"
+              onClick={(e) => {
+                const menu = e.currentTarget.closest('details')
+                if (menu) menu.open = false
+              }}
+            >
+              <button onClick={() => navigate('Profil')}>Mon profil</button>
+              {me.admin && (
+                <button onClick={() => navigate('Administration')}>
+                  Administration
+                </button>
+              )}
+              {signout}
+            </div>
+          </details>
         </header>
         {page === 'Accueil' && (
           <>
@@ -354,3 +375,11 @@ function App() {
   )
 }
 createRoot(document.getElementById('root')!).render(<App />)
+
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  navigator.serviceWorker
+    .register(import.meta.env.BASE_URL + 'sw.js')
+    .catch((error) => {
+      console.warn('Installation de Yotei indisponible.', error)
+    })
+}

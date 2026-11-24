@@ -21,6 +21,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: node scripts/test-mobile-home.mjs
+      - run: node scripts/test-install.mjs
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
