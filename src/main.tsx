@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import {
   Media,
@@ -141,7 +141,7 @@ function Network({ session }: { session: Session }) {
     window.scrollTo(0, 0)
   }
   return (
-    <main className="desktop">
+    <main className="desktop" data-page={page} style={{'--accent': /^#[0-9a-f]{6}$/i.test(me.theme_color) ? me.theme_color : '#baa1ef'} as CSSProperties}>
       <Media path={me.wallpaper_path} alt="" className="wallpaper" />
       <aside className="rail">
         <button
