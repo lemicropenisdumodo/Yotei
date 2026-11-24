@@ -62,7 +62,7 @@ summary:focus-visible {
   margin: auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 88px;
-  grid-template-areas: "content rail";
+  grid-template-areas: 'content rail';
   --lav: color-mix(in srgb, var(--accent) 58%, white);
   gap: clamp(18px, 3.3vw, 52px);
   padding: 24px 0 50px;
@@ -370,11 +370,15 @@ time {
   opacity: 0.82;
 }
 .mint {
-  background: radial-gradient(ellipse at top right, white, transparent 80%), color-mix(in srgb, var(--accent) 20%, #d6e8d9);
+  background:
+    radial-gradient(ellipse at top right, white, transparent 80%),
+    color-mix(in srgb, var(--accent) 20%, #d6e8d9);
   color: #24352b;
 }
 .lilac {
-  background: radial-gradient(ellipse at top right, #ffffff86, transparent 72%), var(--lav);
+  background:
+    radial-gradient(ellipse at top right, #ffffff86, transparent 72%),
+    var(--lav);
   color: #30273d;
 }
 .categoryCard,
@@ -776,7 +780,6 @@ details {
   background: linear-gradient(90deg, #0d0c10ba, #0d0c1030);
 }
 @media (max-width: 760px) {
-
   .rail nav button {
     font-size: 0.62rem;
   }
@@ -790,40 +793,164 @@ details {
   background-blend-mode: luminosity;
 }
 .feature:not(:has(.featureWallpaper))::before {
-  background: radial-gradient(ellipse at 85% 8%,color-mix(in srgb,var(--accent) 25%,transparent),transparent 55%),linear-gradient(90deg,#101016a8,transparent 85%);
+  background:
+    radial-gradient(
+      ellipse at 85% 8%,
+      color-mix(in srgb, var(--accent) 25%, transparent),
+      transparent 55%
+    ),
+    linear-gradient(90deg, #101016a8, transparent 85%);
 }
 .profileShortcut {
-  background: radial-gradient(ellipse at top right,color-mix(in srgb,var(--accent) 21%,#28272a),#252529 80%);
+  background: radial-gradient(
+    ellipse at top right,
+    color-mix(in srgb, var(--accent) 21%, #28272a),
+    #252529 80%
+  );
 }
 @media (prefers-reduced-motion: no-preference) {
-  button {transition: transform 120ms ease-out,filter 160ms ease-out,box-shadow 180ms ease-out;}
-  button:enabled:active {transform:scale(.966);}
-  @media (hover:hover) {
-    .bento button:hover {transform:translateY(-2px);box-shadow:0 5px 16px color-mix(in srgb,var(--accent) 16%,transparent);}
-    .bento button:active {transform:scale(.976);}
+  button {
+    transition:
+      transform 120ms ease-out,
+      filter 160ms ease-out,
+      box-shadow 180ms ease-out;
+  }
+  button:enabled:active {
+    transform: scale(0.966);
+  }
+  @media (hover: hover) {
+    .bento button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 16px color-mix(in srgb, var(--accent) 16%, transparent);
+    }
+    .bento button:active {
+      transform: scale(0.976);
+    }
   }
 }
-@media (max-width:760px){
-  .desktop[data-page="Accueil"] {padding-bottom:max(8px,env(safe-area-inset-bottom));}
-  .desktop[data-page="Accueil"] .sectionhead {margin:10px 0;}
-  .bento {gap:8px;}
-  .feature {min-height:clamp(145px,27svh,240px);gap:5px;padding:12px 16px;}
-  .featureTag {font-size:.74rem;padding:3px 8px;}
-  .heroTitle {font-size:clamp(2.15rem,6.3svh,3.45rem);}
-  .heroCta {padding:5px 10px;font-size:.78rem;}
-  .quick {min-height:clamp(88px,15svh,118px);padding:10px;}
-  .quick .tileTop {padding-bottom:5px;}
-  .quick .tileTop svg:first-child {width:22px;height:22px;}
-  .quick strong {font-size:1.12rem;}
-  .categoryCard {padding:11px;}
-  .categoryCard h2 {font-size:1.12rem;margin:0 0 8px;}
-  .categoryLinks button {gap:4px;min-height:44px;}
-  .categoryLinks svg {width:18px;height:18px;}
-  .profileShortcut {display:grid;grid-template-columns:32px minmax(0,1fr) 18px;column-gap:9px;align-items:center;justify-content:stretch;min-height:58px;padding:8px 12px;}
-  .profileShortcut .tileTop {display:contents;}
-  .profileShortcut .avatar {grid-column:1;grid-row:1/3;width:32px;height:32px;}
-  .profileShortcut .tileTop>svg {grid-column:3;grid-row:1/3;}
-  .profileShortcut strong,.profileShortcut small {grid-column:2;}
-  .profileShortcut strong {grid-row:1;font-size:1.05rem;}
-  .profileShortcut small {grid-row:2;font-size:.76rem;}
+@media (max-width: 760px) {
+  .desktop[data-page='Accueil'] {
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+  .desktop[data-page='Accueil'] .sectionhead {
+    margin: 10px 0;
+  }
+  .bento {
+    gap: 8px;
+  }
+  .feature {
+    min-height: clamp(145px, 27svh, 240px);
+    gap: 5px;
+    padding: 12px 16px;
+  }
+  .featureTag {
+    font-size: 0.74rem;
+    padding: 3px 8px;
+  }
+  .heroTitle {
+    font-size: clamp(2.15rem, 6.3svh, 3.45rem);
+  }
+  .heroCta {
+    padding: 5px 10px;
+    font-size: 0.78rem;
+  }
+  .quick {
+    min-height: clamp(88px, 15svh, 118px);
+    padding: 10px;
+  }
+  .quick .tileTop {
+    padding-bottom: 5px;
+  }
+  .quick .tileTop svg:first-child {
+    width: 22px;
+    height: 22px;
+  }
+  .quick strong {
+    font-size: 1.12rem;
+  }
+  .categoryCard {
+    padding: 11px;
+  }
+  .categoryCard h2 {
+    font-size: 1.12rem;
+    margin: 0 0 8px;
+  }
+  .categoryLinks button {
+    gap: 4px;
+    min-height: 44px;
+  }
+  .categoryLinks svg {
+    width: 18px;
+    height: 18px;
+  }
+  .profileShortcut {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) 18px;
+    column-gap: 9px;
+    align-items: center;
+    justify-content: stretch;
+    min-height: 58px;
+    padding: 8px 12px;
+  }
+  .profileShortcut .tileTop {
+    display: contents;
+  }
+  .profileShortcut .avatar {
+    grid-column: 1;
+    grid-row: 1/3;
+    width: 32px;
+    height: 32px;
+  }
+  .profileShortcut .tileTop > svg {
+    grid-column: 3;
+    grid-row: 1/3;
+  }
+  .profileShortcut strong,
+  .profileShortcut small {
+    grid-column: 2;
+  }
+  .profileShortcut strong {
+    grid-row: 1;
+    font-size: 1.05rem;
+  }
+  .profileShortcut small {
+    grid-row: 2;
+    font-size: 0.76rem;
+  }
+}
+
+@media (max-width: 760px) and (max-height: 680px) {
+  .desktop[data-page='Accueil'] .sectionhead small,
+  .desktop[data-page='Accueil'] .featureTag {
+    display: none;
+  }
+  .desktop[data-page='Accueil'] .sectionhead {
+    margin: 6px 0;
+  }
+  .desktop[data-page='Accueil'] .pageHead {
+    padding: 0 0 4px;
+  }
+  .feature {
+    min-height: 105px;
+    padding: 9px 12px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 4px;
+  }
+  .heroTitle {
+    font-size: clamp(1.7rem, 6vw, 2.4rem);
+  }
+  .heroCta {
+    font-size: 0.72rem;
+    padding: 5px 7px;
+    gap: 3px;
+  }
+  .quick {
+    padding: 8px;
+    min-height: 82px;
+  }
+  .categoryCard {
+    padding: 9px;
+  }
 }

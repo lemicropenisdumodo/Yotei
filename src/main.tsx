@@ -141,7 +141,17 @@ function Network({ session }: { session: Session }) {
     window.scrollTo(0, 0)
   }
   return (
-    <main className="desktop" data-page={page} style={{'--accent': /^#[0-9a-f]{6}$/i.test(me.theme_color) ? me.theme_color : '#baa1ef'} as CSSProperties}>
+    <main
+      className="desktop"
+      data-page={page}
+      style={
+        {
+          '--accent': /^#[0-9a-f]{6}$/i.test(me.theme_color)
+            ? me.theme_color
+            : '#baa1ef',
+        } as CSSProperties
+      }
+    >
       <Media path={me.wallpaper_path} alt="" className="wallpaper" />
       <aside className="rail">
         <button
