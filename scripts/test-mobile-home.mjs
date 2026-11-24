@@ -5,6 +5,16 @@ import { resolve } from 'node:path'
 
 const id = 'e3b7bc25-8b22-4777-8b8d-9ae04cca82e0'
 const profile = { id, username: 'Membre du cercle', theme_color: '#198563' }
+const peer = {
+  ...profile,
+  id: '6792ee8d-67dc-43bf-997b-842d84bf8663',
+  username: 'Camille',
+}
+const room = {
+  id: '731b10ce-595f-45bb-a66f-ffad0a6cf059',
+  title: '',
+  participants: [id, peer.id],
+}
 const browser = await chromium.launch({ channel: 'chrome', headless: true })
 try {
   const page = await browser.newPage({ isMobile: true, hasTouch: true })
@@ -16,8 +26,13 @@ try {
       return route.fulfill({ path: resolve('dist', path) })
     }
     const rows = {
-      profiles: [profile],
-      members: [{ id, admin: true, suspended: false }],
+      profiles: [profile, peer],
+      rooms: [room],
+      messages: [],
+      members: [
+        { id, admin: true, suspended: false },
+        { id: peer.id, admin: false, suspended: false },
+      ],
       notifications: [],
       friend_nicknames: [],
       posts: [],
@@ -71,16 +86,27 @@ try {
     )
     console.log('Accueil entièrement visible à ' + width + ' × ' + height)
   }
-  const nav=page.getByRole('navigation',{name:'Navigation principale'})
-  await nav.getByRole('button',{name:'Fil',exact:true}).click()
-  assert.equal(await page.getByRole('textbox').count(),0)
-  await nav.getByRole('button',{name:'Publier',exact:true}).click()
-  await page.getByRole('heading',{name:'Nouvelle publication'}).waitFor()
+  const nav = page.getByRole('navigation', { name: 'Navigation principale' })
+  await nav.getByRole('button', { name: 'Fil', exact: true }).click()
+  assert.equal(await page.getByRole('textbox').count(), 0)
+  await nav.getByRole('button', { name: 'Publier', exact: true }).click()
+  await page.getByRole('heading', { name: 'Nouvelle publication' }).waitFor()
   await page.getByLabel('Un mot pour le cercle').fill('Publication de test')
-  await page.locator('form').getByRole('button',{name:'Publier',exact:true}).click()
-  await page.getByRole('heading',{name:'Fil d’actualité'}).waitFor()
-  await nav.getByRole('button',{name:'Amis',exact:true}).click()
-  await page.getByRole('heading',{name:'Amis',exact:true}).waitFor()
+  await page
+    .locator('form')
+    .getByRole('button', { name: 'Publier', exact: true })
+    .click()
+  await page.getByRole('heading', { name: 'Fil d’actualité' }).waitFor()
+  await nav.getByRole('button', { name: 'Amis', exact: true }).click()
+  await page.getByRole('heading', { name: 'Amis', exact: true }).waitFor()
+  await nav.getByRole('button', { name: 'Messages', exact: true }).click()
+  await page
+    .getByRole('region', { name: 'Écrire à un membre' })
+    .getByRole('button', { name: 'Camille' })
+    .click()
+  await page.getByRole('textbox', { name: 'Votre message' }).waitFor()
+  await page.getByRole('button', { name: 'Choisir un destinataire' }).click()
+  await page.getByRole('heading', { name: 'Écrire à…' }).waitFor()
 } finally {
   await browser.close()
 }

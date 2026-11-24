@@ -4,6 +4,7 @@ import {
   db,
   ErrorLine,
   Form,
+  Task,
   result,
   useList,
   val,
@@ -84,6 +85,30 @@ export function Chat({
           if (!error) seen()
         })
   }, [room, messages.data, d.me.id])
+  async function openRoom(ids: string[], title: string) {
+    const old =
+      ids.length === 2 && !title
+        ? (
+            await result(
+              db
+                .from('rooms')
+                .select('id,title,participants')
+                .contains('participants', ids),
+            )
+          )?.find((r) => !r.title && r.participants.length === 2)
+        : undefined
+    const id =
+      old?.id ||
+      (await result(
+        db
+          .from('rooms')
+          .insert({ participants: ids, title })
+          .select('id')
+          .single(),
+      ))!.id
+    rooms.refresh()
+    setRoom(id)
+  }
   const name = (r: { title: string; participants: string[] }) =>
     r.title ||
     r.participants
@@ -94,8 +119,28 @@ export function Chat({
     <>
       <Window title="messagerie.exe">
         <h1>Messagerie</h1>
+        {room && (
+          <button onClick={() => setRoom('')}>Choisir un destinataire</button>
+        )}
+        {!room && (
+          <section aria-label="Écrire à un membre">
+            <h2>Écrire à…</h2>
+            <div className="contacts">
+              {d.people
+                .filter((u) => u.id !== d.me.id && !u.suspended)
+                .map((u) => (
+                  <Task key={u.id} run={() => openRoom([d.me.id, u.id], '')}>
+                    {d.name(u.id)}
+                  </Task>
+                ))}
+            </div>
+            {!d.people.some((u) => u.id !== d.me.id && !u.suspended) && (
+              <p>Les autres membres apparaîtront ici dès leur arrivée.</p>
+            )}
+          </section>
+        )}
         <details>
-          <summary>Nouvelle conversation</summary>
+          <summary>Conversation de groupe</summary>
           <Form
             action="Ouvrir la conversation"
             submit={async (f) => {
@@ -103,25 +148,7 @@ export function Chat({
               if (ids.length < 2)
                 throw new Error('Sélectionnez au moins un ami.')
               const title = val(f, 'title')
-              const old = rooms.data?.find(
-                (r) =>
-                  !title &&
-                  !r.title &&
-                  ids.length === 2 &&
-                  r.participants.length === 2 &&
-                  ids.every((i) => r.participants.includes(i)),
-              )
-              const id =
-                old?.id ||
-                (await result(
-                  db
-                    .from('rooms')
-                    .insert({ participants: ids, title })
-                    .select('id')
-                    .single(),
-                ))!.id
-              rooms.refresh()
-              setRoom(id)
+              await openRoom(ids, title)
             }}
           >
             <label>

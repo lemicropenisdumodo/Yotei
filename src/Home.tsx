@@ -83,9 +83,7 @@ export function Home({
           </span>
           <strong>Messages</strong>
           <small>
-            {unread
-              ? unread + ' non lu' + (unread > 1 ? 's' : '')
-              : 'Aucun message non lu'}
+            {unread ? unread + ' non lu' + (unread > 1 ? 's' : '') : 'Tout lu'}
           </small>
         </button>
         <button className="quick lilac" onClick={() => go('Amis')}>
@@ -94,10 +92,7 @@ export function Home({
             <ArrowUpRight />
           </span>
           <strong>Amis</strong>
-          <small>
-            {people.length} membre{people.length > 1 ? 's' : ''} ·{' '}
-            {online.length} en ligne
-          </small>
+          <small>{online.length} en ligne</small>
         </button>
       </div>
       <section className="categoryCard">

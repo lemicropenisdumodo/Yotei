@@ -88,7 +88,8 @@ summary:focus-visible {
   border: 1px solid #323338;
   border-radius: 32px;
   padding: 12px 6px;
-  min-height: min(760px, calc(100svh - 48px));
+  height: calc(100dvh - 48px);
+  overflow-y: auto;
 }
 .brandmark {
   display: grid;
@@ -107,9 +108,11 @@ summary:focus-visible {
 }
 .logoButton {
   padding: 0;
-  margin: 0 0 30px;
+  margin: 0;
 }
 .rail nav {
+  flex: 1;
+  align-content: space-evenly;
   display: grid;
   gap: 8px;
   width: 100%;
@@ -130,8 +133,7 @@ summary:focus-visible {
   background: color-mix(in srgb, var(--accent) 24%, #202125);
 }
 .railFoot {
-  margin-top: auto;
-  padding-top: 20px;
+  padding-top: 0;
 }
 .railFoot button {
   font-size: 0.65rem;
@@ -334,6 +336,7 @@ time {
   font-size: 0.87rem;
 }
 .quickStack {
+  grid-auto-rows: 1fr;
   display: grid;
   gap: 14px;
 }
@@ -657,7 +660,7 @@ details {
     border-radius: 22px;
     padding: 7px 2px;
     top: 8px;
-    min-height: 0;
+    height: calc(100dvh - 20px);
   }
   .rail nav button {
     font-size: 0.53rem;
@@ -672,7 +675,7 @@ details {
     width: 23px;
   }
   .logoButton {
-    margin-bottom: 12px;
+    margin-bottom: 0;
   }
   .railFoot button {
     font-size: 0;
@@ -681,7 +684,7 @@ details {
     padding: 0;
   }
   .railFoot {
-    padding-top: 12px;
+    padding-top: 0;
   }
   .bento {
     grid-template-columns: 1fr;
@@ -969,4 +972,11 @@ details {
   .rail nav button {
     padding: 4px 0;
   }
+}
+
+.contacts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
 }

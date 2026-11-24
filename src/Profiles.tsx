@@ -9,7 +9,6 @@ import {
   Form,
   Media,
   result,
-  Task,
   upload,
   useList,
   val,
@@ -41,19 +40,6 @@ export function ProfilePage({
       )) || [],
     [p.id, postLimit],
   )
-  const friends = useList(
-    async () =>
-      (await result(db.from('friend_requests').select('sender,recipient'))) ||
-      [],
-    [p.id],
-  )
-  const follows = (from: string, to: string) =>
-    friends.data?.some((r) => r.sender === from && r.recipient === to)
-  const outgoing = follows(d.me.id, p.id),
-    incoming = follows(p.id, d.me.id)
-  const pals = d.people.filter(
-    (u) => follows(u.id, p.id) && follows(p.id, u.id),
-  )
   return (
     <>
       <Window title="profil.html">
@@ -79,43 +65,12 @@ export function ProfilePage({
             <Music2 size={18} /> {p.music}
           </p>
         )}
-        {p.id === d.me.id ? (
+        {p.id === d.me.id && (
           <button onClick={() => setEdit(!edit)}>
             {edit ? 'Fermer l’édition' : 'Personnaliser mon profil'}
           </button>
-        ) : (
-          friends.data && (
-            <Task
-              run={async () => {
-                if (outgoing)
-                  await result(
-                    db
-                      .from('friend_requests')
-                      .delete()
-                      .eq('sender', d.me.id)
-                      .eq('recipient', p.id),
-                  )
-                else
-                  await result(
-                    db
-                      .from('friend_requests')
-                      .insert({ sender: d.me.id, recipient: p.id }),
-                  )
-                friends.refresh()
-                reload()
-              }}
-            >
-              {outgoing
-                ? incoming
-                  ? 'Retirer de mes amis'
-                  : 'Annuler la demande'
-                : incoming
-                  ? 'Accepter la demande'
-                  : 'Demander en ami'}
-            </Task>
-          )
         )}
-        {incoming && outgoing && (
+        {p.id !== d.me.id && !p.suspended && (
           <details key={p.nickname || ''}>
             <summary>Surnom privé</summary>
             <Form
@@ -264,25 +219,6 @@ export function ProfilePage({
         {posts.data && posts.data.length > postLimit && (
           <button onClick={() => setPostLimit((n) => n + 6)}>Voir plus</button>
         )}
-      </Window>
-      <Window title="Amis">
-        <h2>Liste d’amis</h2>
-        <ErrorLine value={friends.error} />
-        {pals.map((u) => (
-          <button key={u.id} onClick={() => d.open(u.id)}>
-            {d.name(u.id)}
-          </button>
-        ))}
-        {friends.data && !pals.length && <p>Aucune amitié confirmée.</p>}
-        {p.id === d.me.id &&
-          d.people
-            .filter((u) => follows(u.id, p.id) && !follows(p.id, u.id))
-            .map((u) => (
-              <p key={u.id}>
-                Demande de{' '}
-                <button onClick={() => d.open(u.id)}>{d.name(u.id)}</button>
-              </p>
-            ))}
       </Window>
     </>
   )
