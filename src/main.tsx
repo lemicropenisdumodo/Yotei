@@ -14,6 +14,7 @@ import {
   type Person,
   type Profile,
 } from './core'
+import { Weather } from './Weather'
 import { Auth } from './Auth'
 import { Admin } from './Admin'
 import { Chat } from './Chat'
@@ -217,6 +218,7 @@ function Network({ session }: { session: Session }) {
           <>
             <div className="sectionhead">
               <h1>Accueil</h1>
+              <Weather userId={id} />
               <small>
                 {new Intl.DateTimeFormat('fr-FR', {
                   weekday: 'long',

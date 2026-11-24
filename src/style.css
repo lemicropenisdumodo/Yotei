@@ -985,3 +985,71 @@ details {
   flex-wrap: wrap;
   margin: 12px 0;
 }
+
+.weather {
+  margin-left: auto;
+}
+.weatherChip {
+  min-height: 40px;
+  padding: 5px 10px;
+  white-space: nowrap;
+}
+.weather dialog {
+  box-sizing: border-box;
+  width: min(400px, 92vw);
+  max-height: 84dvh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 20px;
+  background: #202126;
+  color: #f4f2f7;
+}
+.weather dialog::backdrop {
+  background: #09090cb8;
+}
+.weather dialog header,
+.weatherNow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.weather dialog header {
+  justify-content: space-between;
+}
+.weather dialog h2 {
+  margin: 0;
+}
+.weatherNow {
+  margin: 18px 0;
+}
+.weatherNow strong {
+  font-size: 1.9rem;
+}
+.weather .hourly {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  margin: 12px 0 20px;
+}
+.hourly > div,
+.cityMatches {
+  display: grid;
+  gap: 6px;
+}
+.weather dialog footer {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 16px;
+}
+.weather a {
+  color: inherit;
+}
+@media (max-width: 760px) {
+  .desktop[data-page='Accueil'] .sectionhead > small {
+    display: none;
+  }
+  .weatherChip {
+    font-size: 0.8rem;
+  }
+}

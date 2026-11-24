@@ -25,6 +25,8 @@ try {
       const path = url.pathname.replace(/^\/Yotei\//, '') || 'index.html'
       return route.fulfill({ path: resolve('dist', path) })
     }
+    if(url.hostname==='geocoding-api.open-meteo.com') return route.fulfill({json:{results:[{id:2996944,name:'Lyon',country:'France',timezone:'Europe/Paris',latitude:45.75,longitude:4.85}]}})
+    if(url.hostname==='api.met.no') return route.fulfill({json:{properties:{timeseries:Array.from({length:13},(_,i)=>({time:new Date(Date.now()+i*3600000).toISOString(),data:{instant:{details:{air_temperature:12}},next_1_hours:{summary:{symbol_code:'cloudy'}}}}))}}})
     const rows = {
       profiles: [profile, peer],
       rooms: [room],
@@ -87,6 +89,15 @@ try {
     )
     console.log('Accueil entièrement visible à ' + width + ' × ' + height)
   }
+  await page.getByRole('button',{name:'Configurer la météo'}).click()
+  const weather=page.getByRole('dialog')
+  await weather.getByLabel('Ville',{exact:true}).fill('Lyon')
+  await weather.getByRole('button',{name:'Rechercher'}).click()
+  await weather.getByRole('button',{name:'Lyon, France'}).click()
+  await weather.getByRole('heading',{name:'Prochaines heures'}).waitFor()
+  await weather.getByRole('button',{name:'Fermer la météo'}).click()
+  await page.reload()
+  await page.getByRole('button',{name:'Météo à Lyon'}).waitFor()
   const nav = page.getByRole('navigation', { name: 'Navigation principale' })
   await nav.getByRole('button', { name: 'Profil', exact: true }).click()
   await page.getByText('Aucune publication pour le moment.').waitFor()
