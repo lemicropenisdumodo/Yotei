@@ -1165,7 +1165,7 @@ details {
 .widgetLink strong {font:700 clamp(1.16rem,3vw,1.65rem)/1.1 'Space Grotesk Variable',sans-serif;letter-spacing:-.04em}
 .widgetLink > svg,.homeTile .weatherChip svg {margin-bottom:10px}
 .homeTile[data-widget=Fil] .widgetLink {min-height:clamp(155px,32vw,260px);position:relative;isolation:isolate}
-.homeTile[data-widget=Fil][data-tone=Original] .widgetLink {background:linear-gradient(0deg,#0d0d11c9,transparent 72%),url('/orbite.webp') center / cover}
+.homeTile[data-widget=Fil][data-tone=Original]:not([data-picture=true]) .widgetLink {background:linear-gradient(0deg,#0d0d11c9,transparent 72%),url('/orbite.webp') center / cover}
 .homeTile .tileWallpaper {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.65);z-index:-1}
 .homeTile[data-widget=Fil] strong {font-size:clamp(1.75rem,5vw,3.6rem);max-width:8ch}
 .homeTile[data-widget=Fil] .widgetLink svg {display:none}
