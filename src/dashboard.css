@@ -102,3 +102,5 @@ body:has(.widgetShell){background:var(--canvas,#101113)}
 .fixedBoard .petShortcut img{height:167%;width:102%;right:-20%;top:17%}
 .fixedBoard .weatherChip{gap:6px;text-align:left}.weatherPlace{margin-right:auto;font-size:clamp(.74rem,2.6cqw,1.1rem);line-height:1.2}.weatherPlace small{display:block;font-size:.69em;opacity:.76}
 .weatherChip b{font-size:clamp(1rem,4.6cqw,1.9rem)}
+
+.layoutActions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
