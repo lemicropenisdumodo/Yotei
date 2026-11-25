@@ -1,3 +1,4 @@
+import { MaintenanceGate } from './Maintenance'
 import { createRoot } from 'react-dom/client'
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import type { Session } from '@supabase/supabase-js'
@@ -265,6 +266,7 @@ function App() {
   return (
     <div className="shell">
       <ErrorLine value={authError} />
+      {session === undefined ? <main className="narrow">Ouverture de Yotei…</main> : <MaintenanceGate key={session?.user.id || 'anonymous'} signedIn={!!session}>
       {invitation || session === null || (session && setup) ? (
         <Auth
           invitation={invitation}
@@ -286,6 +288,7 @@ function App() {
       ) : (
         <main className="narrow">Ouverture de Yotei…</main>
       )}
+    </MaintenanceGate>}
     </div>
   )
 }

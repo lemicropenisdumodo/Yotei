@@ -1,3 +1,4 @@
+import { MaintenanceControl } from './Maintenance'
 import { useState } from 'react'
 import {
   db,
@@ -23,6 +24,7 @@ export function Admin({ d, refresh }: { d: Directory; refresh: () => void }) {
   const [link, setLink] = useState('')
   return (
     <>
+      <MaintenanceControl />
       <Window title="invitations.exe">
         <h1>Invitations</h1>
         <p>

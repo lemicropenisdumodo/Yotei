@@ -14,6 +14,7 @@ let companion
 let posted
 const browser = await chromium.launch({ channel: 'chrome', headless: true })
 try {
+  let maintenance = {enabled:true,owner:true}
   const page = await browser.newPage({ isMobile: true, hasTouch: true })
   await page.routeWebSocket('**/*', () => {})
   await page.route('**/*', async (route) => {
@@ -51,6 +52,7 @@ try {
           },
         },
       })
+    if (url.pathname.endsWith('/rpc/maintenance_status')) return route.fulfill({json:maintenance})
     if (url.pathname.endsWith('/rpc/companion_care')) {
       const {action,detail} = route.request().postDataJSON()
       if (action === 'adopt') companion = {model:detail,nickname:'',version:1,food:2,mood:2,asleep:false,days:[],today:'2026-11-25',streak:0,best:0,affection:0}
@@ -193,6 +195,10 @@ try {
   await page.getByRole('heading',{name:'La recommandation'}).waitFor()
   assert.equal(await page.getByRole('link',{name:/Écouter/}).getAttribute('href'), posted.source_url)
   assert.equal(await page.getByRole('button',{name:'Messages',exact:true}).count(),0)
+  maintenance = {enabled:true,owner:false}
+  await page.reload()
+  await page.getByRole('heading',{name:'Maintenance en cours'}).waitFor()
+  assert.equal(await page.locator('.widgetBoard').count(),0)
 } finally {
   await browser.close()
 }

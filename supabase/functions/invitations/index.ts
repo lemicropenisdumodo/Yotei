@@ -47,7 +47,8 @@ Deno.serve(async (req) => {
       error,
     } = await server.auth.getUser(token)
     if (error || !user) return json({ error: 'Session expirée' }, 401)
-    const member = await server
+    const caller = createClient(url,Deno.env.get('SUPABASE_ANON_KEY')!,{global:{headers:{Authorization:'Bearer '+token}}})
+    const member = await caller
       .from('members')
       .select('admin,suspended')
       .eq('id', user.id)
