@@ -63,7 +63,6 @@ export function Home({d, recent, openPost, go, editing, finish, photo, spotify}:
 }) {
   const key = 'yotei-board-v2-' + d.me.id
   const [layout, setLayout] = useState(() => readLayout(key))
-  const [previousLayout, setPreviousLayout] = useState<Widget[] | null>(null)
   const [selected, select] = useState<Widget | null>(null)
   const [forecastHost,setForecastHost]=useState<HTMLDivElement|null>(null)
   const marketRows=useMarkets()
@@ -76,8 +75,7 @@ export function Home({d, recent, openPost, go, editing, finish, photo, spotify}:
   const positions = useRef(new Map<string, DOMRect>())
   const visible = layout
   const online = d.people.filter(p => !p.suspended && p.last_seen && Date.now() - Date.parse(p.last_seen) < 90000).length
-  function save(next: Widget[], remember = true) {
-    setPreviousLayout(remember ? layout : null)
+  function save(next: Widget[]) {
     positions.current.clear()
     board.current?.querySelectorAll<HTMLElement>('[data-widget]').forEach(el =>
       positions.current.set(el.dataset.widget!, el.getBoundingClientRect()))
@@ -131,8 +129,7 @@ export function Home({d, recent, openPost, go, editing, finish, photo, spotify}:
     </div>
     {editing && <p className="editHint">Glisse une poignée ou sélectionne un widget pour le déplacer avec les flèches.</p>}
     {editing && <div className="layoutActions">
-      <button disabled={!previousLayout} onClick={()=>previousLayout && save(previousLayout, false)}>Annuler la dernière action</button>
-      <button disabled={layout.every((id,index)=>id===widgets[index])} onClick={()=>save([...widgets])}>Rétablir la disposition d’origine</button>
+      <button disabled={layout.every((id,index)=>id===widgets[index])} onClick={()=>save([...widgets])}>Réinitialiser l’emplacement des widgets</button>
     </div>}
     {storageError && <p role="status">La disposition sera conservée jusqu’à la fermeture de cette page.</p>}
     {editing && selected && <div className="orderTools"><strong>{selected}</strong>
