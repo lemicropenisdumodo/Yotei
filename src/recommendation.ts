@@ -17,5 +17,5 @@ export function linkInfo(value: string) {
 }
 export type Recommendation = {
   id: string; user_id: string; content: string; category: string; rating: number | null
-  source_title: string; source_url: string; thumbnail_url: string | null; image_url: string | null
+  source_title: string; source_url: string | null; thumbnail_url: string | null; image_url: string | null
 }

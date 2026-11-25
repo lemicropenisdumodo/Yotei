@@ -31,6 +31,7 @@ begin
  pet:=public.companion_care('rename','Nona','UTC',(pet->>'version')::int);
  if pet->>'nickname'<>'Nona' then raise exception 'Surnom perdu'; end if;
 end $$;
+insert into public.posts(source_title,category,user_id,content) values('Sans lien','Cinéma',auth.uid(),'Sans lien');
 insert into public.posts(source_url,source_title,category,user_id,content) values('https://example.org/watch','Titre','Vidéo',auth.uid(),'RLS transaction test');
 insert into public.posts(source_url,source_title,user_id,content,category,rating) values('https://example.org/watch','Titre',auth.uid(),'Une recommandation','Cinéma',4);
 do $$ begin

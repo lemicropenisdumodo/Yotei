@@ -39,7 +39,7 @@ try {
       if(body.action==='connect'){
         assert.equal(body.code,'fixture-code')
         assert.ok(body.verifier.length>=43)
-        spotifyConnected=true
+        spotifyConnected=true;sharing=body.share
         return route.fulfill({json:{ok:true}})
       }
       if(body.action==='seek')seekPosition=body.position
@@ -153,8 +153,7 @@ try {
   await playerDialog.getByRole('slider').press('Home')
   await page.waitForFunction(()=>!document.querySelector('dialog input[type=range]')?.disabled)
   assert.equal(seekPosition,0)
-  await playerDialog.getByText('Options Spotify').click()
-  await playerDialog.getByRole('button',{name:'Déconnecter Spotify'}).waitFor()
+  assert.equal(await playerDialog.getByRole('button',{name:'Déconnecter Spotify'}).count(),0)
   await page.getByRole('button',{name:'Fermer et revenir à l’accueil'}).click()
   await home.getByRole('button',{name:'Pause',exact:true}).click()
   await home.getByRole('button',{name:'Reprendre'}).click()
@@ -181,6 +180,8 @@ try {
   const order=()=>widgets.evaluateAll(els=>els.map(el=>el.dataset.widget))
   const initialOrder=await order()
   await page.getByRole('button',{name:'Paramètres',exact:true}).click()
+  await page.getByText('Connexion',{exact:true}).click()
+  await page.getByRole('button',{name:'Déconnecter Spotify'}).waitFor()
   await page.getByRole('button',{name:'Personnalisation'}).click()
   await page.getByLabel('Thème de l’interface').selectOption('Boréal')
   await page.getByRole('button',{name:'Déplacer les widgets'}).click()
@@ -210,7 +211,9 @@ try {
   await page.setViewportSize({width:360,height:640})
   await page.getByRole('button',{name:'Ouvrir mon profil'}).click()
   await page.getByRole('button',{name:'Déconnexion'}).waitFor()
+  await page.getByLabel('Afficher mon écoute sur mon profil').check()
   await page.getByRole('heading',{name:'Écoute en ce moment'}).waitFor()
+  assert.equal(await page.getByRole('heading',{name:'Publications',exact:true}).count(),0)
   await close()
   const rec=home.getByRole('button',{name:'Recommandations'})
   await rec.scrollIntoViewIfNeeded()
@@ -241,6 +244,11 @@ try {
   await page.getByRole('heading',{name:'Morceau du cercle'}).waitFor()
   assert.equal(await page.getByRole('link',{name:/Écouter/}).getAttribute('href'), posted.source_url)
   assert.equal(await page.getByRole('button',{name:'Messages',exact:true}).count(),0)
+  await page.getByRole('button',{name:'Nouvelle recommandation'}).click()
+  await page.getByLabel('Titre',{exact:true}).fill('Recommandation sans lien')
+  await page.getByRole('button',{name:'Publier',exact:true}).click()
+  await page.getByRole('heading',{name:'Recommandation sans lien'}).waitFor()
+  assert.equal(posted.source_url,null)
   maintenance = {enabled:true,owner:false}
   await page.reload()
   await page.getByRole('heading',{name:'Maintenance en cours'}).waitFor()

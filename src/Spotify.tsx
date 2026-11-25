@@ -77,7 +77,15 @@ export function useSpotify(id:string,visible:boolean){
       await new Promise(resolve=>setTimeout(resolve,400))
     })
   }
-  return {player,notice,busy,action,command,connect:(share:boolean)=>action(()=>authorize(id,player.clientId!,share))}
+  function setSharing(share:boolean){
+    return action(async()=>{
+      const previous=player.sharing
+      setPlayer(p=>({...p,sharing:share}))
+      try{await call({action:'sharing',share})}
+      catch(e){setPlayer(p=>({...p,sharing:previous}));throw e}
+    })
+  }
+  return {player,notice,busy,action,command,setSharing,connect:(share:boolean)=>action(()=>authorize(id,player.clientId!,share))}
 }
 type Controls=ReturnType<typeof useSpotify>
 function Buttons({control}:{control:Controls}){
@@ -115,7 +123,6 @@ function Timeline({control}:{control:Controls}){
 }
 export function SpotifyPage({control,admin,close}:{control:Controls;admin:boolean;close:()=>void}){
   const {player,action,busy,notice}=control
-  const [share,setShare]=useState(true)
   const dialog=useRef<HTMLDialogElement>(null)
   useEffect(()=>{const el=dialog.current;el?.showModal();return ()=>el?.close()},[])
   const track=player.track
@@ -130,15 +137,27 @@ export function SpotifyPage({control,admin,close}:{control:Controls;admin:boolea
     <li>Dans « Redirect URIs », colle cette adresse exacte.<input aria-label="Adresse de retour Spotify" readOnly onFocus={e=>e.target.select()} value={redirect}/></li>
     <li>Enregistre l’application. Dans « Settings », copie le « Client ID » dans le champ ci-dessous. Dans « User Management », ajoute le nom et l’adresse du compte Spotify de chaque ami.</li></ol>
     <label>Client ID public<input name="client" required pattern="[a-fA-F0-9]{32}" autoComplete="off"/></label><button disabled={busy}>Activer Spotify</button></form>:<p>L’administrateur doit d’abord activer Spotify pour le cercle.</p>)}
-    {player.clientId&&!player.connected && <><label><input type="checkbox" checked={share} onChange={e=>setShare(e.target.checked)}/> Afficher mon écoute sur mon profil</label>
-      <button disabled={busy} onClick={()=>control.connect(share)}>Connecter mon compte Spotify</button></>}
+    {player.clientId&&!player.connected && <button disabled={busy} onClick={()=>control.connect(false)}>Connecter mon compte Spotify</button>}
     {player.connected && <>{track?<div className="musicHero">{track.image&&<a href={track.url} target="_blank" rel="noreferrer"><img alt={'Pochette de '+track.title} src={track.image}/></a>}
       <h2>{track.title}</h2><p>{track.artist}</p><Timeline key={track.url} control={control}/></div>:<p>Ouvre Spotify et lance un morceau sur ton appareil.</p>}
-      <Buttons control={control}/><details className="musicOptions"><summary>Options Spotify</summary><label><input type="checkbox" disabled={busy} checked={!!player.sharing} onChange={e=>{const share=e.target.checked;void action(async()=>{await call({action:'sharing',share})})}}/> Afficher mon écoute sur mon profil</label>
-      <button disabled={busy} onClick={()=>action(async()=>{await call({action:'disconnect'})})}>Déconnecter Spotify</button></details></>}
+      <Buttons control={control}/></>}
     {(notice||player.error)&&<p role="status">{notice||player.error}</p>}
     {player.configured===undefined&&!player.error&&<p>Chargement de Spotify…</p>}
   </div></dialog>
+}
+export function SpotifySharing({control}:{control:Controls}){
+  const {player,busy,notice,setSharing}=control
+  if(!player.connected)return null
+  return <section>{player.sharing&&player.playing&&player.track&&<><h3>Écoute en ce moment</h3><TrackLine track={player.track}/></>}
+    <label className="inline"><input type="checkbox" disabled={busy} checked={!!player.sharing} onChange={e=>{
+      void setSharing(e.target.checked)
+    }}/> Afficher mon écoute sur mon profil</label>{notice&&<p role="status">{notice}</p>}</section>
+}
+export function SpotifyConnection({control,open}:{control:Controls;open:()=>void}){
+  const {player,busy,notice,action}=control
+  return <div><strong>Spotify</strong>{player.connected
+    ? <button disabled={busy} onClick={()=>action(async()=>{await call({action:'disconnect'})})}>Déconnecter Spotify</button>
+    : <button onClick={open}>Ouvrir Spotify</button>}{notice&&<p role="status">{notice}</p>}</div>
 }
 function TrackLine({track}:{track:Track}){
   return <a className="spotifyTrack" href={track.url} target="_blank" rel="noreferrer">{track.image&&<img src={track.image} alt=""/>}<span><small>Spotify</small><strong>{track.title}</strong>{track.artist}</span></a>

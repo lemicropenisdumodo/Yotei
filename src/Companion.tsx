@@ -130,7 +130,7 @@ export function CompanionDialog({kind,state,close,wallpaper}:{kind:PetTile;state
       <p className="petAffection">{p.asleep?'Réveil à 7 h · ':''}♥ {p.affection} · Affection</p>
       <details><summary>Surnom</summary><form onSubmit={async e=>{e.preventDefault(); await act('rename',nickname.trim())}}>
         <label>Surnom du personnage<input value={nickname} onChange={e=>setNickname(e.target.value)} maxLength={28} placeholder={p.model}/></label>
-        <button disabled={busy}>Enregistrer</button></form></details></div>
+        <button className="primary" type="submit" disabled={busy}>Enregistrer</button></form></details></div>
     </>}
   </dialog>
 }

@@ -27,7 +27,7 @@ import {
   type Category,
 } from './Home'
 import {thumbnail} from './TileSettings'
-import {useSpotify,SpotifyPage} from './Spotify'
+import {useSpotify,SpotifyPage,SpotifyConnection} from './Spotify'
 import { Settings, LogOut, X } from 'lucide-react'
 import '@fontsource-variable/manrope/index.css'
 import '@fontsource-variable/space-grotesk/index.css'
@@ -60,7 +60,7 @@ function Network({ session }: { session: Session }) {
     catch {setNotice('Impossible d’enregistrer sur cet appareil.')}
   }
   const spotifyReturn=useRef(new URLSearchParams(location.search).has('spotify_state'))
-  const spotify=useSpotify(id,page==='Accueil'||page==='Spotify')
+  const spotify=useSpotify(id,['Accueil','Spotify','Profil','Paramètres'].includes(page))
   const homeScroll = useRef(0)
   const lastWidget = useRef<HTMLElement | null>(null)
   const closeButton = useRef<HTMLButtonElement>(null)
@@ -121,7 +121,7 @@ function Network({ session }: { session: Session }) {
   const latest = useList(async () => {
     const rows = await result(db.from('posts')
       .select('id,user_id,content,category,rating,source_title,source_url,thumbnail_url,image_url')
-      .not('source_url','is',null).order('created_at',{ascending:false}).order('id').limit(1))
+      .not('source_title','is',null).order('created_at',{ascending:false}).order('id').limit(1))
     return rows?.[0] as Recommendation | undefined
   }, [id, revision, page])
   useEffect(() => {
@@ -209,6 +209,7 @@ function Network({ session }: { session: Session }) {
           <Home key={id} d={d} go={navigate} openPost={post=>{setPostId(post);setCategory('');go('Fil')}} recent={latest.data} editing={editing} finish={()=>setEditing(false)} photo={prefs.photo} spotify={spotify}/>
         </div>
         {page === 'Paramètres' && <Window title="Paramètres"><h1>Paramètres</h1>
+          <details className="connectionSettings"><summary>Connexion</summary><SpotifyConnection control={spotify} open={()=>navigate('Spotify')}/></details>
           <button onClick={()=>setCustom(!custom)} aria-expanded={custom}>Personnalisation</button>
           {me.admin && <button onClick={()=>navigate('Administration')}>Administration</button>}
           {custom && <div className="settingsStack"><label>Thème de l’interface<select value={prefs.theme} onChange={e=>preference({theme:e.target.value})}>
@@ -241,7 +242,7 @@ function Network({ session }: { session: Session }) {
             key={activeProfile.id}
             d={d}
             p={activeProfile}
-            signout={signout}
+            signout={signout} spotify={spotify}
             reload={members.refresh}
           />
         )}
@@ -252,7 +253,7 @@ function Network({ session }: { session: Session }) {
               .filter((p) => !p.suspended)
               .map((p) => (
                 <article key={p.id}>
-                  <button onClick={() => open(p.id)}>{d.name(p.id)}</button>{' '}
+                  <button className="friendEntry" onClick={() => open(p.id)}><Avatar person={p}/><span><strong>{p.nickname || p.username}</strong>{p.nickname && <small>Pseudo · {p.username}</small>}</span></button>{' '}
                   <small>
                     {p.last_seen && Date.now() - Date.parse(p.last_seen) < 90000
                       ? '● En ligne'

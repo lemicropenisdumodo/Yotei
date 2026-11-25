@@ -98,7 +98,7 @@ export function Feed({
       .select(
         'id,user_id,content,image_url,category,rating,source_url,source_title,thumbnail_url,created_at,likes(user_id)',
       )
-      .not('source_url','is',null)
+      .not('source_title','is',null)
       .order('created_at', { ascending: false })
       .order('id')
       .limit(limit)
@@ -158,7 +158,7 @@ export function Feed({
             <h2>{p.source_title}</h2>
             {p.content !== p.source_title && <p>{p.content}</p>}
             {!p.image_url && webLink(p.thumbnail_url) && <img className="photo recCover" loading="lazy" alt="" src={webLink(p.thumbnail_url)} referrerPolicy="no-referrer" />}
-            {webLink(p.source_url) && <p><a className="sourceLink" href={webLink(p.source_url)} target="_blank" rel="noopener noreferrer">{p.category === 'Musique' ? 'Écouter' : 'Découvrir'} · {new URL(p.source_url).hostname}</a></p>}
+            {webLink(p.source_url) && <p><a className="sourceLink" href={webLink(p.source_url)} target="_blank" rel="noopener noreferrer">{p.category === 'Musique' ? 'Écouter' : 'Découvrir'} · {new URL(webLink(p.source_url)).hostname}</a></p>}
             <Media
               path={p.image_url}
               alt="Photo de la publication"
@@ -260,14 +260,15 @@ export function Composer({
         action="Publier"
         submit={async (f) => {
           const url = webLink(link.trim())
-          if (!url || !title.trim()) throw new Error('Indique un lien HTTPS et un titre.')
+          if (link.trim() && !url) throw new Error('Utilise un lien HTTPS valide.')
+          if (!title.trim()) throw new Error('Indique un titre.')
           const content = val(f, 'text')
           const path = await upload(f, 'photo', d.me.id)
           try {
             await result(
               db.from('posts').insert({
                 user_id: d.me.id,
-                content: content || title.trim(), source_title:title.trim(), source_url:url, thumbnail_url:image || null,
+                content: content || title.trim(), source_title:title.trim(), source_url:url || null, thumbnail_url:image || null,
                 image_url: path,
                 category: chosen || null,
                 rating: chosen && rating ? rating : null,
@@ -280,9 +281,9 @@ export function Composer({
           onPublished(chosen)
         }}
       >
-        <label>Lien à recommander<input type="url" required maxLength={2048} value={link} placeholder="https://…" onChange={e => {
+        <label>Lien à recommander · facultatif<input type="url" maxLength={2048} value={link} placeholder="https://…" onChange={e => {
           const value = e.target.value
-          setLink(value); setTitle(''); manual.current = false; setImage(''); setStatus('')
+          setLink(value); if(!manual.current)setTitle(''); setImage(''); setStatus('')
           const url = webLink(value.trim())
           if (url) { const info = linkInfo(url); setChosen(info.category); setImage(info.image); setStatus('Recherche de l’aperçu…') }
         }} /></label>

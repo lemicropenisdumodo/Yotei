@@ -82,7 +82,10 @@ export function Home({d, recent, openPost, go, editing, finish, photo, spotify}:
       const style=getComputedStyle(tile)
       const outer=tile.getBoundingClientRect().width+parseFloat(style.marginTop)+parseFloat(style.marginBottom)
       const row=parseFloat(getComputedStyle(grid).gridAutoRows)
-      tile.style.gridRowEnd='span '+Math.ceil(outer/row)
+      const span='span '+Math.ceil(outer/row)
+      tile.style.gridRowEnd=span
+      const photoTile=grid.querySelector<HTMLElement>('[data-widget="Photo"]')
+      if(photoTile)photoTile.style.gridRowEnd=span
     }
     fit()
     const observer=new ResizeObserver(fit)

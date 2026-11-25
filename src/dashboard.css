@@ -130,3 +130,9 @@ dialog.musicDialog{padding:0;width:min(92vw,420px);max-height:90dvh;background:#
 .musicDialog .playButtons button:nth-child(2){background:white;color:#161820;border-radius:50%;width:60px;height:60px}
 .musicDialog .playButtons svg{width:25px;height:25px;fill:currentColor}
 .musicOptions{margin-top:12px}.musicOptions summary{cursor:pointer;font-size:.8rem}
+.widgetShell button.primary,.widgetShell .window button.primary,.widgetShell form button[type=submit].primary{background:var(--accent);color:#141418;border:1px solid transparent;padding:10px 18px;border-radius:12px;font-weight:800;min-height:44px}
+.connectionSettings{margin-bottom:14px}.connectionSettings summary{cursor:pointer;font-weight:700}.connectionSettings>div,.friendEntry{display:flex;align-items:center;gap:12px;padding:10px}
+.friendEntry>span:last-child{display:grid;text-align:left}.friendEntry small{color:var(--muted)}
+.miniForecast{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);align-items:center;text-align:center;gap:2px}
+.miniForecast span{display:grid;grid-template-columns:auto auto;justify-content:center;align-items:center;gap:2px 4px}
+.miniForecast span small{grid-column:span 2;line-height:1.2}.miniForecast span+span{border-left:1px solid var(--line)}

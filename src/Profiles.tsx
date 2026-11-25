@@ -1,18 +1,14 @@
-import {ProfileListening} from './Spotify'
-import { webLink } from './recommendation'
+import {ProfileListening,SpotifySharing,type useSpotify} from './Spotify'
 import { Music2, Palette } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import {
   accept,
-  date,
   db,
   discard,
-  ErrorLine,
   Form,
   Media,
   result,
   upload,
-  useList,
   val,
   Window,
   type Directory,
@@ -22,28 +18,15 @@ export function ProfilePage({
   p,
   d,
   reload,
-  signout,
+  signout,spotify,
 }: {
   p: Person
+  spotify:ReturnType<typeof useSpotify>
   d: Directory
   signout: ReactNode
   reload: () => void
 }) {
   const [edit, setEdit] = useState(false)
-  const [postLimit, setPostLimit] = useState(3)
-  const posts = useList(
-    async () =>
-      (await result(
-        db
-          .from('posts')
-          .select('id,content,image_url,category,rating,source_title,source_url,thumbnail_url,created_at')
-          .eq('user_id', p.id)
-          .order('created_at', { ascending: false })
-          .order('id')
-          .limit(postLimit + 1),
-      )) || [],
-    [p.id, postLimit],
-  )
   return (
     <>
       <Window title="profil.html">
@@ -57,14 +40,14 @@ export function ProfilePage({
           </div>
           <div>
             <small>
-              {p.id === d.me.id ? 'Mon profil' : 'Profil du cercle'}
+              {p.id === d.me.id ? 'Mon profil' : 'Profil sur Yotei'}
             </small>
             <h1>{d.name(p.id)}</h1>
-            {p.nickname && <small>Pseudo du cercle · {p.username}</small>}
+            {p.nickname && <small>Pseudo · {p.username}</small>}
           </div>
         </div>
         <p>{p.bio || 'Aucune biographie pour le moment.'}</p>
-        <ProfileListening key={p.id} id={p.id}/>
+        {p.id===d.me.id ? <SpotifySharing control={spotify}/> : <ProfileListening key={p.id} id={p.id}/>}
         {p.music && (
           <p className="musicLine">
             <Music2 size={18} /> {p.music}
@@ -111,9 +94,7 @@ export function ProfilePage({
                   placeholder={p.username}
                 />
               </label>
-              <small>
-                Effacez le surnom pour retrouver le pseudo du cercle.
-              </small>
+
             </Form>
           </details>
         )}
@@ -198,33 +179,6 @@ export function ProfilePage({
               </label>
             )}
           </Form>
-        )}
-      </Window>
-      <Window title="Publications du profil">
-        <h2>Publications</h2>
-        <ErrorLine value={posts.error} />
-        {posts.data?.length === 0 && <p>Aucune publication pour le moment.</p>}
-        {posts.data?.slice(0, postLimit).map((post) => (
-          <article key={post.id}>
-            <time>{date(post.created_at)}</time>
-            {post.category && (
-              <span className="tag">
-                {post.category}
-                {post.rating && <span>{post.rating} / 5 ★</span>}
-              </span>
-            )}
-             {webLink(post.source_url) && <h3><a className="sourceLink" href={webLink(post.source_url)} target="_blank" rel="noopener noreferrer">{post.source_title}</a></h3>}
-            {post.content !== post.source_title && <p>{post.content}</p>}
-            {!post.image_url && webLink(post.thumbnail_url) && <img className="photo recCover" src={webLink(post.thumbnail_url)} loading="lazy" referrerPolicy="no-referrer" alt=""/>}
-            <Media
-              path={post.image_url}
-              className="photo"
-              alt="Photo de la publication"
-            />
-          </article>
-        ))}
-        {posts.data && posts.data.length > postLimit && (
-          <button onClick={() => setPostLimit((n) => n + 6)}>Voir plus</button>
         )}
       </Window>
     </>
