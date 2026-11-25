@@ -44,6 +44,10 @@ do $$ begin
  raise exception 'Note hors limites autorisée';
  exception when check_violation then null; end;
 end $$;
+do $$ begin
+ update public.posts set source_title='Titre modifié',content='Texte modifié' where source_title='Sans lien';
+ if not found then raise exception 'Modification personnelle refusée'; end if;
+end $$;
 insert into storage.objects(bucket_id,name) values('yotei-media',auth.uid()::text||'/rls-test.png');
 do $$ begin
  begin
@@ -82,8 +86,18 @@ do $$ begin if not exists(select 1 from public.friend_nicknames where nickname='
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 do $$ begin if exists(select 1 from public.friend_nicknames) then raise exception 'Surnom visible par son destinataire';end if; end $$;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
-insert into public.likes(post_id,user_id) select id,auth.uid() from public.posts where content='RLS transaction test';
-insert into public.comments(post_id,user_id,content) select id,auth.uid(),'commentaire' from public.posts where content='RLS transaction test';
+do $$ begin
+ begin
+  insert into public.likes(post_id,user_id) select id,auth.uid() from public.posts where content='RLS transaction test';
+  raise exception 'Like autorisé';
+ exception when insufficient_privilege then null; end;
+ begin
+  insert into public.comments(post_id,user_id,content) select id,auth.uid(),'test' from public.posts where content='RLS transaction test';
+  raise exception 'Commentaire autorisé';
+ exception when insufficient_privilege then null; end;
+ update public.posts set content='Modification par un tiers' where content='RLS transaction test';
+ if found then raise exception 'Modification par un tiers'; end if;
+end $$;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
 do $$ begin
  if exists(select 1 from public.messages where content='test privé') or exists(select 1 from public.rooms where title='RLS transaction test') or exists(select 1 from public.notifications) then raise exception 'Conversation accessible au tiers'; end if;

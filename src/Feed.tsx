@@ -1,9 +1,8 @@
 import { categories, type Category } from './Home'
-import { Star } from 'lucide-react'
+import { Pencil, Star } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import {
   accept,
-  date,
   db,
   discard,
   ErrorLine,
@@ -18,68 +17,6 @@ import {
   type Directory,
 } from './core'
 import { webLink, linkInfo, type Recommendation } from './recommendation'
-type Post = Recommendation & {
-  id: string
-  user_id: string
-  content: string
-  image_url: string | null
-  created_at: string
-  category: Category | null
-  rating: number | null
-  likes: { user_id: string }[]
-}
-function Replies({ post, d }: { post: Post; d: Directory }) {
-  const [limit, setLimit] = useState(30)
-  const list = useList(
-    async () =>
-      (await result(
-        db
-          .from('comments')
-          .select('id,user_id,content,created_at')
-          .eq('post_id', post.id)
-          .order('created_at')
-          .order('id')
-          .limit(limit),
-      )) || [],
-    [post.id, limit],
-  )
-  return (
-    <div className="replies">
-      <ErrorLine value={list.error} />
-      {list.data?.map((c) => (
-        <p key={c.id}>
-          <button className="link" onClick={() => d.open(c.user_id)}>
-            {d.name(c.user_id)}
-          </button>{' '}
-          {c.content}
-        </p>
-      ))}
-      {list.data?.length === limit && (
-        <button onClick={() => setLimit((n) => n + 30)}>
-          Plus de commentaires
-        </button>
-      )}
-      <Form
-        action="Commenter"
-        submit={async (f) => {
-          await result(
-            db.from('comments').insert({
-              user_id: d.me.id,
-              post_id: post.id,
-              content: val(f, 'text'),
-            }),
-          )
-          list.refresh()
-        }}
-      >
-        <label>
-          Votre commentaire
-          <input name="text" required maxLength={2000} />
-        </label>
-      </Form>
-    </div>
-  )
-}
 export function Feed({
   d,
   filter,
@@ -90,13 +27,14 @@ export function Feed({
   filter: Category | ''
   setFilter: (c: Category | '') => void
 }) {
-  const [limit, setLimit] = useState(20),
-    [opened, setOpened] = useState<string[]>([])
+  const [limit, setLimit] = useState(20)
+  const [menu,setMenu]=useState<string|null>(null)
+  const [editing,setEditing]=useState<Recommendation|null>(null)
   const list = useList(async () => {
     let query = db
       .from('posts')
       .select(
-        'id,user_id,content,image_url,category,rating,source_url,source_title,thumbnail_url,created_at,likes(user_id)',
+        'id,user_id,content,image_url,category,rating,source_url,source_title,thumbnail_url',
       )
       .not('source_title','is',null)
       .order('created_at', { ascending: false })
@@ -104,7 +42,7 @@ export function Feed({
       .limit(limit)
     if (postId) query = query.eq('id',postId)
     if (filter) query = query.eq('category', filter)
-    return ((await result(query)) || []) as Post[]
+    return ((await result(query)) || []) as Recommendation[]
   }, [filter, limit, postId])
   return (
     <>
@@ -135,15 +73,47 @@ export function Feed({
         <p className="empty">Aucune recommandation à afficher.</p>
       )}
       {list.data?.map((p) => {
-        const liked = p.likes.some((l) => l.user_id === d.me.id)
+        const own=p.user_id===d.me.id
         return (
           <article className="post" key={p.id}>
             <header>
               <button className="link" onClick={() => d.open(p.user_id)}>
                 {d.name(p.user_id)}
               </button>
-              <time>{date(p.created_at)}</time>
+              {(own||d.me.admin) && <button className="postPencil" aria-label="Actions sur la publication" aria-expanded={menu===p.id}
+                onClick={()=>setMenu(menu===p.id?null:p.id)}><Pencil size={17}/></button>}
             </header>
+            {menu===p.id && (own||d.me.admin) && <div className="postOptions">
+              {own && <button onClick={()=>{setEditing(p);setMenu(null)}}>Modifier</button>}
+                <Task
+                  run={async () => {
+                    if (
+                      !confirm(
+                        'Supprimer cette publication ?',
+                      )
+                    )
+                      return
+                    await result(db.from('posts').delete().eq('id',p.id).select('id').single())
+                    setMenu(null)
+                    if (p.user_id === d.me.id) await discard([p.image_url])
+                    list.refresh()
+                  }}
+                >
+                  Supprimer
+                </Task>
+            </div>}
+            {editing?.id===p.id && own && <Form action="Enregistrer les modifications" submit={async f=>{
+              const title=val(f,'title'), content=val(f,'message')||title
+              if(!title)throw Error('Indique un titre.')
+              const updated=await result(db.from('posts').update({source_title:title,content})
+                .eq('id',p.id).eq('user_id',d.me.id).eq('source_title',editing.source_title).eq('content',editing.content).select('id').maybeSingle())
+              if(!updated)throw Error('La publication a changé. Annule puis actualise le fil avant de réessayer.')
+              setEditing(null);list.refresh()
+            }}>
+              <label>Titre<input name="title" required maxLength={300} defaultValue={editing.source_title}/></label>
+              <label>Message<textarea name="message" maxLength={5000} defaultValue={editing.content===editing.source_title?'':editing.content}/></label>
+              <button type="button" onClick={()=>setEditing(null)}>Annuler</button>
+            </Form>}
             {p.category && (
               <div className="tag">
                 {p.category}
@@ -164,54 +134,6 @@ export function Feed({
               alt="Photo de la publication"
               className="photo"
             />
-            <div className="actions">
-              <Task
-                run={async () => {
-                  const query = liked
-                    ? db
-                        .from('likes')
-                        .delete()
-                        .eq('post_id', p.id)
-                        .eq('user_id', d.me.id)
-                    : db
-                        .from('likes')
-                        .insert({ post_id: p.id, user_id: d.me.id })
-                  await result(query)
-                  list.refresh()
-                }}
-              >
-                {liked ? '♥' : '♡'} {p.likes.length} · J’aime
-              </Task>
-              <button
-                onClick={() =>
-                  setOpened(
-                    opened.includes(p.id)
-                      ? opened.filter((id) => id !== p.id)
-                      : [...opened, p.id],
-                  )
-                }
-              >
-                Commentaires
-              </button>
-              {(p.user_id === d.me.id || d.me.admin) && (
-                <Task
-                  run={async () => {
-                    if (
-                      !confirm(
-                        'Supprimer cette publication et ses commentaires ?',
-                      )
-                    )
-                      return
-                    await result(db.from('posts').delete().eq('id', p.id))
-                    if (p.user_id === d.me.id) await discard([p.image_url])
-                    list.refresh()
-                  }}
-                >
-                  Supprimer
-                </Task>
-              )}
-            </div>
-            {opened.includes(p.id) && <Replies post={p} d={d} />}
           </article>
         )
       })}

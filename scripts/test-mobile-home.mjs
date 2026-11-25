@@ -90,6 +90,12 @@ try {
       return route.fulfill({contentType:'application/json',body:JSON.stringify(companion || null)})
     }
     if (url.pathname.endsWith('/recommendation-preview')) return route.fulfill({json:{title:'Morceau du cercle'}})
+    if(url.pathname.endsWith('/posts') && ['PATCH','DELETE'].includes(route.request().method())){
+      const changedId=posted.id
+      if(route.request().method()==='PATCH')Object.assign(posted,route.request().postDataJSON())
+      else posted=null
+      return route.fulfill({json:route.request().method()==='PATCH'?[{id:changedId}]:{id:changedId}})
+    }
     if (url.pathname.endsWith('/posts') && route.request().method() === 'POST') {
       posted = {...route.request().postDataJSON(),id:'rec-test',created_at:new Date().toISOString(),likes:[]}
       return route.fulfill({status:201,body:''})
@@ -249,6 +255,18 @@ try {
   await page.getByRole('button',{name:'Publier',exact:true}).click()
   await page.getByRole('heading',{name:'Recommandation sans lien'}).waitFor()
   assert.equal(posted.source_url,null)
+  const post=page.locator('article.post').first()
+  assert.equal(await post.locator('time').count(),0)
+  assert.doesNotMatch(await post.innerText(),/J’aime|Commentaires/)
+  await post.getByLabel('Actions sur la publication').click()
+  await post.getByRole('button',{name:'Modifier',exact:true}).click()
+  await post.getByLabel('Message',{exact:true}).fill('Mon nouveau message')
+  await post.getByRole('button',{name:'Enregistrer les modifications'}).click()
+  await post.getByText('Mon nouveau message',{exact:true}).waitFor()
+  await post.getByLabel('Actions sur la publication').click()
+  page.once('dialog',dialog=>dialog.accept())
+  await post.getByRole('button',{name:'Supprimer',exact:true}).click()
+  await page.getByText('Aucune recommandation à afficher.').waitFor()
   maintenance = {enabled:true,owner:false}
   await page.reload()
   await page.getByRole('heading',{name:'Maintenance en cours'}).waitFor()
