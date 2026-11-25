@@ -1,6 +1,7 @@
+import { TileSettings, palette, ink, isColor, type Appearance } from './TileSettings'
 import {
   Aperture,
-  Grip, ChevronUp, ChevronDown, Pencil, Check,
+  Grip, Pencil, Check,
   AudioLines,
   CircleUserRound,
   Clapperboard,
@@ -12,7 +13,7 @@ import {
   Settings2,
   UsersRound,
 } from 'lucide-react'
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { Weather } from './Weather'
 import { Media, type Directory } from './core'
 export const navigation = {
@@ -48,8 +49,7 @@ export function Avatar({ person }: { person: Directory['me'] }) {
 }
 const widgets = ['Fil', 'Messages', 'Amis', 'Explorer', 'Météo', 'Publier', 'Profil', 'Administration'] as const
 type Widget = typeof widgets[number]
-type Tile = { id: Widget; wide: boolean; tone: string }
-const tones = ['Original', 'Graphite', 'Sauge', 'Lavande']
+type Tile = Appearance & { id: Widget }
 function readLayout(key: string): Tile[] {
   let saved: Partial<Tile>[] = []
   try {
@@ -61,18 +61,21 @@ function readLayout(key: string): Tile[] {
     const item = saved.find(tile => tile.id === id)
     return {
       id, wide: typeof item?.wide === 'boolean' ? item.wide : ['Fil','Explorer'].includes(id),
-      tone: tones.includes(item?.tone || '') ? item!.tone! : tones[0],
+      tone: (item?.tone && (Object.hasOwn(palette,item.tone) || isColor(item.tone))) ? item.tone : 'Original',
+      image: typeof item?.image === 'string' && /^data:image\/(webp|png);base64,/.test(item.image) ? item.image : undefined,
     }
   })
 }
 
-export function Home({d, unread, go, filter, signout}: {
+export function Home({d, unread, go, filter}: {
   d: Directory; unread: number; go: (p: Page) => void
-  filter: (c: Category) => void; signout: ReactNode
+  filter: (c: Category) => void
 }) {
   const key = 'yotei-widgets-v1-' + d.me.id
   const [layout, setLayout] = useState(() => readLayout(key))
   const [editing, setEditing] = useState(false)
+  const [selected, select] = useState<Widget | null>(null)
+  const latest = useRef(layout)
   const [drag, setDrag] = useState<Widget | null>(null)
   const [target, setTarget] = useState<Widget | null>(null)
   const [storageError, setStorageError] = useState(false)
@@ -84,6 +87,7 @@ export function Home({d, unread, go, filter, signout}: {
     positions.current.clear()
     board.current?.querySelectorAll<HTMLElement>('[data-widget]').forEach(el =>
       positions.current.set(el.dataset.widget!, el.getBoundingClientRect()))
+    latest.current = next
     setLayout(next)
     try { localStorage.setItem(key, JSON.stringify(next)); setStorageError(false) }
     catch { setStorageError(true) }
@@ -108,6 +112,12 @@ export function Home({d, unread, go, filter, signout}: {
     next.splice(index, 0, tile)
     save(next)
   }
+  const current = visible.find(t => t.id === selected)
+  const slot = visible.findIndex(t => t.id === selected)
+  function editTile(id: Widget) {
+    select(id)
+    requestAnimationFrame(() => board.current?.querySelector('[data-widget="'+id+'"]')?.scrollIntoView({block:'start'}))
+  }
   function tileContent(id: Widget) {
     if (id === 'Météo') return <Weather userId={d.me.id} />
     if (id === 'Explorer') return <div className="explore">
@@ -118,25 +128,35 @@ export function Home({d, unread, go, filter, signout}: {
     </div>
     const Icon = navigation[id]
     return <button className="widgetLink" onClick={() => go(id)} aria-label={id}>
-      {id === 'Fil' && <Media path={d.me.wallpaper_path} alt="" className="tileWallpaper" />}
+
       <Icon aria-hidden="true" /><strong>{id === 'Fil' ? 'Le fil du cercle.' : id === 'Profil' ? 'Mon profil' : id}</strong>
+      {id === 'Publier' && <small>Texte ou photo</small>}
+      {id === 'Profil' && <small>{d.me.username}</small>}
+      {id === 'Administration' && <small>Membres et invitations</small>}
       {id === 'Messages' && <small>{unread ? unread + (unread > 1 ? ' non lus' : ' non lu') : 'Tout lu'}</small>}
       {id === 'Amis' && <small>{online} en ligne</small>}
     </button>
   }
   return <>
     <div className="boardHeading"><h1>Salut, {d.me.username} !</h1>
-      <button aria-pressed={editing} onClick={() => setEditing(!editing)}>
+      <button aria-pressed={editing} onClick={() => {setEditing(!editing); select(null)}}>
         {editing ? <Check size={17}/> : <Pencil size={17}/>} {editing ? 'Terminer' : 'Modifier'}
       </button>
     </div>
-    {editing && <p className="editHint">Glisse une poignée pour déplacer un raccourci, ou utilise les flèches.</p>}
+    {editing && <p className="editHint">Touche un raccourci pour le personnaliser. Glisse sa poignée pour le déplacer.</p>}
     {storageError && <p role="status">La disposition sera conservée jusqu’à la fermeture de cette page.</p>}
-    <div className="widgetBoard" ref={board}>
-      {visible.map((tile, index) => <section key={tile.id} data-widget={tile.id} data-wide={tile.wide} data-tone={tile.tone}
+    <div className="widgetBoard" ref={board} data-panel={!!current}>
+      {visible.map(tile => {
+        const color = palette[tile.tone] || (isColor(tile.tone) ? tile.tone : undefined)
+        return <section key={tile.id} data-widget={tile.id} data-wide={tile.wide} data-tone={tile.tone}
+        data-selected={current?.id === tile.id} data-picture={!!tile.image}
+        style={{ ...(color ? { '--face':color, '--ink':ink(color) } : {}), '--caption':color || (tile.id === 'Messages' ? '#d9e4d7' : tile.id === 'Amis' ? '#d2cdd8' : '#252629'), '--textHalo':color || 'transparent' } as CSSProperties}
         className={'homeTile' + (target === tile.id ? ' dropTarget' : '')}>
-        {editing ? <div className="tileEditor">
-          <div className="editTitle"><strong>{tile.id}</strong><button className="dragGrip" aria-label={'Déplacer '+tile.id}
+        {tile.image && <img className="widgetPhoto" src={tile.image} alt=""/>}
+        <div className="widgetBody" inert={editing}>{tileContent(tile.id)}</div>
+        {editing && <>
+          <button className="pickWidget" aria-label={'Personnaliser '+tile.id} onClick={() => editTile(tile.id)} />
+          <button className="dragGrip" aria-label={'Déplacer '+tile.id}
             onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); setDrag(tile.id) }}
             onPointerMove={e => {
               if (drag !== tile.id) return
@@ -150,16 +170,14 @@ export function Home({d, unread, go, filter, signout}: {
               move(tile.id, el?.dataset.widget as Widget)
               setDrag(null); setTarget(null)
             }}
-            onPointerCancel={() => {setDrag(null); setTarget(null)}}><Grip size={20}/></button></div>
-          <div className="moveButtons"><button aria-label={'Avancer '+tile.id} disabled={!index} onClick={() => move(tile.id, visible[index-1]?.id)}><ChevronUp/></button>
-            <button aria-label={'Reculer '+tile.id} disabled={index === visible.length-1} onClick={() => move(tile.id, visible[index+1]?.id)}><ChevronDown/></button></div>
-          <label>Taille<select value={tile.wide ? 'large' : 'compact'} onChange={e => save(layout.map(t => t.id === tile.id ? {...t, wide:e.target.value === 'large'} : t))}>
-            <option value="compact">Compacte</option><option value="large">Large</option></select></label>
-          <label>Couleur<select value={tile.tone} onChange={e => save(layout.map(t => t.id === tile.id ? {...t,tone:e.target.value} : t))}>
-            {tones.map(t => <option key={t}>{t}</option>)}</select></label>
-        </div> : tileContent(tile.id)}
-      </section>)}
+            onPointerCancel={() => {setDrag(null); setTarget(null)}}><Grip size={20}/></button>
+        </>}
+      </section>})}
     </div>
-    <div className="boardFooter">{signout}</div>
+    {current && <TileSettings key={current.id} tile={current}
+      change={patch => save(latest.current.map(t => t.id === current.id ? {...t,...patch} : t))}
+      earlier={slot ? () => move(current.id,visible[slot-1].id) : undefined}
+      later={slot < visible.length-1 ? () => move(current.id,visible[slot+1].id) : undefined}
+      close={() => select(null)} />}
   </>
 }

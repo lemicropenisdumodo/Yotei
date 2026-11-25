@@ -1,5 +1,5 @@
 import { Music2, Palette } from 'lucide-react'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import {
   accept,
   date,
@@ -20,9 +20,11 @@ export function ProfilePage({
   p,
   d,
   reload,
+  signout,
 }: {
   p: Person
   d: Directory
+  signout: ReactNode
   reload: () => void
 }) {
   const [edit, setEdit] = useState(false)
@@ -66,9 +68,9 @@ export function ProfilePage({
           </p>
         )}
         {p.id === d.me.id && (
-          <button onClick={() => setEdit(!edit)}>
+          <div className="actions"><button onClick={() => setEdit(!edit)}>
             {edit ? 'Fermer l’édition' : 'Personnaliser mon profil'}
-          </button>
+          </button>{signout}</div>
         )}
         {p.id !== d.me.id && !p.suspended && (
           <details key={p.nickname || ''}>

@@ -1186,3 +1186,35 @@ details {
 .dropTarget {outline:3px solid var(--lav);outline-offset:-3px}
 .boardFooter {margin:24px 0;text-align:right}
 @media(min-width:800px){.widgetBoard{grid-template-columns:repeat(4,minmax(0,1fr))}.homeTile[data-widget=Fil][data-wide=true]{grid-column:span 4}}
+
+.widgetShell {isolation:isolate}
+.widgetShell > .wallpaper {opacity:1;filter:brightness(.69)}
+.widgetShell:has(> .wallpaper) :is(.wordmark,.boardHeading h1,.editHint) {text-shadow:0 1px 5px #000,0 2px 12px #000}
+.homeTile {isolation:isolate;scroll-margin-top:12px}
+.widgetBody {height:100%;position:relative}
+.homeTile .widgetLink strong {font-size:clamp(1.28rem,4.8vw,2rem);overflow-wrap:anywhere}
+.homeTile[data-widget=Fil] strong {font-size:clamp(1.8rem,6vw,3rem)}
+.homeTile .widgetLink small {color:inherit;font-size:.9rem;line-height:1.35;overflow-wrap:anywhere}
+.homeTile .widgetPhoto {position:absolute;inset:0 0 0 auto;width:72%;height:100%;object-fit:cover;mask-image:linear-gradient(to right,transparent,#000 82%);pointer-events:none}
+.homeTile[data-picture=true] .widgetLink {background:transparent}
+.homeTile[data-picture=true] :is(.widgetLink strong,.widgetLink small,.widgetLink > svg,.weatherChip,.explore h2) {text-shadow:0 0 5px var(--textHalo,#202126)}
+.homeTile[data-picture=true] .widgetLink :is(strong,small) {background:var(--caption,#252629);border-radius:5px;padding:1px 5px}
+.homeTile[data-picture=true] .explore button {background:var(--caption,#252629)}
+.homeTile[data-picture=true] .weatherChip {align-items:flex-start;background:linear-gradient(to right,var(--caption,#252629) 25%,transparent 85%)}
+.homeTile .pickWidget {position:absolute;inset:0;z-index:1;border:0;border-radius:inherit;background:transparent}
+.homeTile .dragGrip,.widgetSettings button {color:#fafafa;background:#303138;border:1px solid #676874}
+.homeTile .dragGrip {position:absolute;top:6px;right:6px;z-index:2;min-width:40px;min-height:40px;padding:6px;border-radius:50%}
+.homeTile[data-selected=true] {outline:3px solid white;outline-offset:-3px}
+.widgetBoard[data-panel=true] {padding-bottom:min(48dvh,390px)}
+.widgetSettings {position:fixed;z-index:12;bottom:8px;left:50%;transform:translateX(-50%);width:min(480px,calc(100% - 16px));max-height:45dvh;overflow:auto;overscroll-behavior:contain;background:#222329;color:#f6f6f8;border:1px solid #62636b;border-radius:20px;padding:14px 16px max(14px,env(safe-area-inset-bottom));box-shadow:0 8px 32px #0009;display:grid;gap:10px}
+.widgetSettings header,.settingRow,.customColor,.swatches {display:flex;align-items:center;gap:8px}
+.widgetSettings header {justify-content:space-between}
+.widgetSettings header strong {font-size:1.16rem}
+.settingRow label,.widgetSettings .customColor {display:flex;align-items:center;gap:10px;flex:1}
+.widgetSettings :is(select,input) {background:#14151a;color:#fff;border:1px solid #72737e}
+.widgetSettings label {margin:0}
+.widgetSettings input[type=color] {width:48px;height:40px;padding:2px}
+.widgetSettings .swatches {flex-wrap:wrap}
+.swatches button {border-radius:20px;min-width:34px;min-height:36px;padding:4px 9px}
+.swatches button[aria-pressed=true] {outline:2px solid #fff;outline-offset:1px}
+.widgetSettings input[type=file] {max-width:100%}

@@ -210,7 +210,7 @@ function Network({ session }: { session: Session }) {
           )}
         </header>
         <div hidden={page !== 'Accueil'}>
-          <Home d={d} go={navigate} unread={notes.data?.length || 0} signout={signout}
+          <Home d={d} go={navigate} unread={notes.data?.length || 0}
             filter={(c) => { setCategory(c); go('Fil') }} />
         </div>
         {page === 'Fil' && (
@@ -232,6 +232,7 @@ function Network({ session }: { session: Session }) {
             key={activeProfile.id}
             d={d}
             p={activeProfile}
+            signout={signout}
             reload={members.refresh}
           />
         )}
