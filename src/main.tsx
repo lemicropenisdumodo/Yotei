@@ -1,6 +1,6 @@
 import { MaintenanceGate } from './Maintenance'
 import { createRoot } from 'react-dom/client'
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import {
   Media,
@@ -26,10 +26,13 @@ import {
   type Page,
   type Category,
 } from './Home'
-import { LogOut, X } from 'lucide-react'
+import {thumbnail} from './TileSettings'
+import {spotifyPath} from './Widgets'
+import { Settings, LogOut, X } from 'lucide-react'
 import '@fontsource-variable/manrope/index.css'
 import '@fontsource-variable/space-grotesk/index.css'
 import './style.css'
+import './dashboard.css'
 
 const params = new URLSearchParams(location.hash.slice(1))
 const invite = params.get('invitation')
@@ -43,6 +46,19 @@ function Network({ session }: { session: Session }) {
     [profile, setProfile] = useState(id),
     [postId, setPostId] = useState(''),
     [revision, bump] = useState(0)
+  const prefKey = 'yotei-dashboard-'+id
+  const [prefs,setPrefs] = useState<{theme:string;photo:string;spotify:string}>(()=>{
+    try { const saved=JSON.parse(localStorage.getItem(prefKey)||'{}');return {theme:saved.theme||'Graphite',photo:saved.photo||'',spotify:saved.spotify||''} }
+    catch {return {theme:'Graphite',photo:'',spotify:''}}
+  })
+  const [editing,setEditing]=useState(false)
+  const [custom,setCustom]=useState(false)
+  const [notice,setNotice]=useState('')
+  function preference(patch:Partial<typeof prefs>){
+    const next={...prefs,...patch}
+    try {localStorage.setItem(prefKey,JSON.stringify(next));setPrefs(next);setNotice('')}
+    catch {setNotice('Impossible d’enregistrer sur cet appareil.')}
+  }
   const homeScroll = useRef(0)
   const lastWidget = useRef<HTMLElement | null>(null)
   const closeButton = useRef<HTMLButtonElement>(null)
@@ -169,22 +185,17 @@ function Network({ session }: { session: Session }) {
     <main
       className="desktop widgetShell"
       data-page={page}
-      style={
-        {
-          '--accent': /^#[0-9a-f]{6}$/i.test(me.theme_color)
-            ? me.theme_color
-            : '#baa1ef',
-        } as CSSProperties
-      }
+      data-theme={prefs.theme}
     >
       <Media path={me.wallpaper_path} alt="" className="wallpaper" />
       <div className="content">
         <header className="pageHead">
           <div className="wordmark">Yotei<span>.</span></div>
           {page === 'Accueil' ? (
+            <div className="headActions"><button aria-label="Paramètres" onClick={()=>{setCustom(false);navigate('Paramètres')}}><Settings size={20}/></button>
             <button className="accountShortcut" onClick={() => navigate('Profil')} aria-label="Ouvrir mon profil">
               <Avatar person={me} /> {me.username}
-            </button>
+            </button></div>
           ) : (
             <button className="exitPage" ref={closeButton} onClick={() => history.back()} aria-label="Fermer et revenir à l’accueil">
               <X size={19} /> Fermer
@@ -192,11 +203,30 @@ function Network({ session }: { session: Session }) {
           )}
         </header>
         <div hidden={page !== 'Accueil'}>
-          <Home d={d} go={navigate} recent={latest.data} openPost={(post) => {setPostId(post); setCategory(''); go('Fil')}}
-            filter={(c) => { setPostId(''); setCategory(c); go('Fil') }} />
+          <Home key={id} d={d} go={navigate} openPost={post=>{setPostId(post);setCategory('');go('Fil')}} recent={latest.data} editing={editing} finish={()=>setEditing(false)} photo={prefs.photo} spotify={prefs.spotify}/>
         </div>
-        {page === 'Fil' && (
-          <Feed d={d} filter={category} postId={postId} setFilter={c => {setPostId(''); setCategory(c)}} />
+        {page === 'Paramètres' && <Window title="Paramètres"><h1>Paramètres</h1>
+          <button onClick={()=>setCustom(!custom)} aria-expanded={custom}>Personnalisation</button>
+          {me.admin && <button onClick={()=>navigate('Administration')}>Administration</button>}
+          {custom && <div className="settingsStack"><label>Thème de l’interface<select value={prefs.theme} onChange={e=>preference({theme:e.target.value})}>
+            {['Graphite','Boréal','Prune','Minuit'].map(t=><option key={t}>{t}</option>)}</select></label>
+            <button onClick={()=>{setEditing(true);history.back()}}>Déplacer les widgets</button>
+            <label>Photo du cadre<input type="file" accept="image/jpeg,image/png,image/webp" onChange={async e=>{
+              const file=e.target.files?.[0];if(!file)return
+              try{preference({photo:await thumbnail(file)})}catch{setNotice('Photo illisible.')}
+            }}/></label>{prefs.photo && <button onClick={()=>preference({photo:''})}>Retirer la photo</button>}
+          </div>}
+          {notice && <p role="status">{notice}</p>}</Window>}
+        {page === 'Spotify' && <Window title="Spotify"><h1>Spotify</h1>
+          {spotifyPath(prefs.spotify) && <iframe title="Lecteur Spotify" className="spotifyPlayer" src={'https://open.spotify.com/embed/'+spotifyPath(prefs.spotify)} allow="encrypted-media; autoplay"/>}
+          <form onSubmit={e=>{e.preventDefault();const url=String(new FormData(e.currentTarget).get('link')||'').trim()
+            if(url && !spotifyPath(url)){setNotice('Choisis un lien Spotify de morceau, album, playlist ou épisode.');return}
+            preference({spotify:url})}}>
+            <label>Lien Spotify<input name="link" type="url" defaultValue={prefs.spotify} placeholder="https://open.spotify.com/…"/></label>
+            <button>Enregistrer</button>{notice && <p role="status">{notice}</p>}
+          </form></Window>}
+        {page === 'Fil' && (<><button className="newRec" onClick={()=>navigate('Publier')}>Nouvelle recommandation</button>
+          <Feed d={d} filter={category} postId={postId} setFilter={c => {setPostId(''); setCategory(c)}} /></>
         )}
         {page === 'Publier' && (
           <Composer

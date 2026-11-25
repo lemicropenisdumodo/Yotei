@@ -67,13 +67,13 @@ function Week({pet}:{pet:Pet}) {
 }
 export function CompanionTile({kind,state,open,wide}:{kind:PetTile;state:State;open:()=>void;wide:boolean}) {
   const p = state.pet
-  if (kind === 'Jours ensemble') return <button className="widgetLink petCounter" onClick={open}>
+  if (kind === 'Jours ensemble') return <div className="widgetLink petCounter">
     <Flame/><small>Jours ensemble</small><strong>{p?.streak ?? 0} jour{(p?.streak ?? 0)>1?'s':''}</strong>
     <small>{p ? 'Record · '+p.best : 'Première série à venir'}</small>{wide && p && <Week pet={p}/>}
-  </button>
+  </div>
   return <button className="widgetLink petShortcut" onClick={open} aria-label="Mon personnage">
     <small>Mon personnage</small><strong>{p ? p.nickname || p.model : 'Choisir'}</strong>
-    {p && <><small>{label(p)}</small><img src={art(p.model,p.asleep?'sleep':'idle')} alt=""/></>}
+    {p && <><small>{label(p)}</small><span className="petReadings"><span aria-label={"Moral : "+(4-p.mood)+" sur 4"}><Heart size={14}/>{4-p.mood}/4</span><span aria-label={"Nourriture : "+(4-p.food)+" sur 4"}>🍙 {4-p.food}/4</span></span><img src={art(p.model,p.asleep?'sleep':'idle')} alt=""/></>}
   </button>
 }
 export function CompanionDialog({kind,state,close,wallpaper}:{kind:PetTile;state:State;close:()=>void;wallpaper?:string}) {

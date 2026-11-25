@@ -174,7 +174,7 @@ export function ProfilePage({
               <input name="music" maxLength={180} defaultValue={p.music} />
             </label>
             <label>
-              Couleur du profil et des motifs
+              Couleur du profil
               <input name="color" type="color" defaultValue={p.theme_color} />
             </label>
             <label>

@@ -1,9 +1,9 @@
 import {CompanionDialog, CompanionTile, useCompanion, type PetTile} from './Companion'
 import { webLink, type Recommendation } from './recommendation'
-import { TileSettings, palette, ink, isColor, type Appearance } from './TileSettings'
+import { ClockTiles, Market, SpotifyArt } from './Widgets'
 import {
   Aperture,
-  Grip, Pencil, Check,
+  Grip, Check, ChevronLeft, ChevronRight, Music2, Image as Picture,
   AudioLines,
   CircleUserRound,
   Clapperboard,
@@ -15,7 +15,7 @@ import {
   Settings2,
   UsersRound,
 } from 'lucide-react'
-import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { Weather } from './Weather'
 import { Media, type Directory } from './core'
 export const navigation = {
@@ -25,7 +25,7 @@ export const navigation = {
 
   Amis: UsersRound,
   Profil: CircleUserRound,
-  Administration: Settings2,
+  Administration: Settings2, Paramètres: Settings2, Spotify: Music2,
 }
 export type Page = keyof typeof navigation
 export const categories = {
@@ -49,49 +49,35 @@ export function Avatar({ person }: { person: Directory['me'] }) {
     </span>
   )
 }
-const widgets = ['Fil', 'À découvrir', 'Amis', 'Explorer', 'Météo', 'Publier', 'Profil', 'Administration', 'Mon personnage', 'Jours ensemble'] as const
+const widgets = ['Marchés','Courbe','Batterie','Date','Météo','Heure','Prévisions','Mon personnage','Amis','Jours ensemble','Décor','Photo','Spotify','Recommandations'] as const
 type Widget = typeof widgets[number]
-type Tile = Appearance & { id: Widget }
-function readLayout(key: string): Tile[] {
-  let saved: Partial<Tile>[] = []
+function readLayout(key: string): Widget[] {
   try {
-    const value = JSON.parse(localStorage.getItem(key) || '[]')
-    if (Array.isArray(value)) saved = value.map(item => item?.id === 'Messages' ? {...item,id:'À découvrir'} : item).filter(item => item && widgets.includes(item.id))
-  } catch { /* The default layout also works without storage. */ }
-  const order = new Set([...saved.map(item => item.id!), ...widgets])
-  return Array.from(order, id => {
-    const item = saved.find(tile => tile.id === id)
-    return {
-      id, wide: typeof item?.wide === 'boolean' ? item.wide : ['Fil','Explorer'].includes(id),
-      tone: (item?.tone && (Object.hasOwn(palette,item.tone) || isColor(item.tone))) ? item.tone : 'Original',
-      image: typeof item?.image === 'string' && /^data:image\/(webp|png);base64,/.test(item.image) ? item.image : undefined,
-    }
-  })
+    const saved: unknown = JSON.parse(localStorage.getItem(key) || '[]')
+    if (Array.isArray(saved)) return [...new Set<Widget>([...saved.filter(id=>widgets.includes(id)), ...widgets])]
+  } catch { /* Default arrangement */ }
+  return [...widgets]
 }
-
-export function Home({d, recent, openPost, go, filter}: {
-  d: Directory; recent?: Recommendation; openPost: (id:string) => void; go: (p: Page) => void
-  filter: (c: Category) => void
+export function Home({d, recent, openPost, go, editing, finish, photo, spotify}: {
+  d: Directory; recent?: Recommendation; openPost:(id:string)=>void; go: (p: Page) => void; editing:boolean; finish:()=>void; photo:string; spotify:string
 }) {
-  const key = 'yotei-widgets-v1-' + d.me.id
+  const key = 'yotei-board-v2-' + d.me.id
   const [layout, setLayout] = useState(() => readLayout(key))
-  const [editing, setEditing] = useState(false)
   const [selected, select] = useState<Widget | null>(null)
+  const [forecastHost,setForecastHost]=useState<HTMLDivElement|null>(null)
   const companion = useCompanion()
   const [petPage, setPetPage] = useState<PetTile | null>(null)
-  const latest = useRef(layout)
   const [drag, setDrag] = useState<Widget | null>(null)
   const [target, setTarget] = useState<Widget | null>(null)
   const [storageError, setStorageError] = useState(false)
   const board = useRef<HTMLDivElement>(null)
   const positions = useRef(new Map<string, DOMRect>())
-  const visible = layout.filter(tile => tile.id !== 'Administration' || d.me.admin)
+  const visible = layout
   const online = d.people.filter(p => !p.suspended && p.last_seen && Date.now() - Date.parse(p.last_seen) < 90000).length
-  function save(next: Tile[]) {
+  function save(next: Widget[]) {
     positions.current.clear()
     board.current?.querySelectorAll<HTMLElement>('[data-widget]').forEach(el =>
       positions.current.set(el.dataset.widget!, el.getBoundingClientRect()))
-    latest.current = next
     setLayout(next)
     try { localStorage.setItem(key, JSON.stringify(next)); setStorageError(false) }
     catch { setStorageError(true) }
@@ -111,67 +97,47 @@ export function Home({d, recent, openPost, go, filter}: {
   function move(id: Widget, to?: Widget) {
     if (!to || id === to) return
     const next = layout.slice()
-    const index = next.findIndex(tile => tile.id === to)
-    const [tile] = next.splice(next.findIndex(tile => tile.id === id), 1)
+    const index = next.indexOf(to)
+    const [tile] = next.splice(next.indexOf(id), 1)
     next.splice(index, 0, tile)
     save(next)
   }
-  const current = visible.find(t => t.id === selected)
-  const slot = visible.findIndex(t => t.id === selected)
-  function editTile(id: Widget) {
-    select(id)
-    requestAnimationFrame(() => board.current?.querySelector('[data-widget="'+id+'"]')?.scrollIntoView({block:'start'}))
-  }
   function tileContent(id: Widget) {
-    if (id === 'Mon personnage' || id === 'Jours ensemble') return <CompanionTile kind={id} state={companion} wide={!!layout.find(t=>t.id===id)?.wide} open={()=>setPetPage(id)}/>
-    if (id === 'À découvrir') return <button className="widgetLink recWidget" onClick={() => recent ? openPost(recent.id) : go('Publier')}>
+    if (id === 'Mon personnage' || id === 'Jours ensemble') return <CompanionTile kind={id} state={companion} wide={false} open={()=>setPetPage('Mon personnage')}/>
+    if (id === 'Recommandations') return <button className="widgetLink recWidget" aria-label="Recommandations" onClick={() => recent ? openPost(recent.id) : go('Fil')}>
       {recent && (recent.image_url ? <Media path={recent.image_url} className="recArt" alt="" /> :
         webLink(recent.thumbnail_url) && <img className="recArt" src={webLink(recent.thumbnail_url)} alt="" referrerPolicy="no-referrer" />)}
-      <small>{recent ? d.name(recent.user_id)+' recommande' : 'À découvrir'}</small>
-      <strong>{recent?.source_title || 'Partager la première reco'}</strong>
-      {recent && <small>{recent.category}{recent.rating ? ' · '+recent.rating+'/5 ★' : ''}</small>}
-      {recent && layout.find(t => t.id === id)?.wide && recent.content !== recent.source_title && <small>{recent.content.slice(0,180)}</small>}
+      <small>Recommandations ↗</small><strong>{recent?.source_title || 'La première reco du cercle'}</strong>
+      <small>{recent ? d.name(recent.user_id)+' · '+recent.category : 'Partager un film, une vidéo ou un son'}</small>
     </button>
-    if (id === 'Météo') return <Weather userId={d.me.id} />
-    if (id === 'Explorer') return <div className="explore">
-      <h2>Explorer le fil</h2><div>{(Object.keys(categories) as Category[]).map(c => {
-        const Icon = categories[c]
-        return <button key={c} onClick={() => filter(c)}><Icon />{c}</button>
-      })}</div>
-    </div>
-    const Icon = navigation[id]
-    return <button className="widgetLink" onClick={() => go(id)} aria-label={id}>
-
-      <Icon aria-hidden="true" /><strong>{id === 'Fil' ? 'Le fil du cercle.' : id === 'Profil' ? 'Mon profil' : id}</strong>
-      {id === 'Publier' && <small>Partager un lien</small>}
-      {id === 'Profil' && <small>{d.me.username}</small>}
-      {id === 'Administration' && <small>Membres et invitations</small>}
-      {id === 'Amis' && <small>{online} en ligne</small>}
-    </button>
+    if (id === 'Prévisions') return <div className="forecastHost" ref={setForecastHost}/>
+    if (id === 'Météo') return <Weather userId={d.me.id} forecastHost={forecastHost}/>
+    if (id === 'Marchés' || id === 'Courbe') return <Market chart={id==='Courbe'}/>
+    if (id === 'Date' || id === 'Heure' || id === 'Batterie') return <ClockTiles kind={id}/>
+    if (id === 'Photo') return photo ? <img className="memoryPhoto" src={photo} alt="Ma photo"/> : <div className="stillTile"><Picture/><strong>Ma photo</strong></div>
+    if (id === 'Décor') return <span className="bang" aria-hidden="true">!</span>
+    if (id === 'Spotify') return <button className="widgetLink musicTile" onClick={()=>go('Spotify')}><SpotifyArt link={spotify}/><Music2/><strong>Spotify</strong></button>
+    return <button className="widgetLink friendsTile" aria-label="Amis" onClick={()=>go('Amis')}><span>{d.people.filter(p=>!p.suspended).slice(0,3).map(p=><Avatar key={p.id} person={p}/>)}</span><small>Amis · {online} en ligne</small></button>
   }
   return <>
     <div className="boardHeading"><h1>Salut, {d.me.username} !</h1>
-      <button aria-pressed={editing} onClick={() => {setEditing(!editing); select(null)}}>
-        {editing ? <Check size={17}/> : <Pencil size={17}/>} {editing ? 'Terminer' : 'Modifier'}
-      </button>
+      {editing && <button onClick={()=>{select(null);finish()}}><Check/> Terminer</button>}
     </div>
-    {editing && <p className="editHint">Touche un raccourci pour le personnaliser. Glisse sa poignée pour le déplacer.</p>}
+    {editing && <p className="editHint">Glisse une poignée ou sélectionne un widget pour le déplacer avec les flèches.</p>}
     {storageError && <p role="status">La disposition sera conservée jusqu’à la fermeture de cette page.</p>}
-    <div className="widgetBoard" ref={board} data-panel={!!current}>
-      {visible.map(tile => {
-        const color = palette[tile.tone] || (isColor(tile.tone) ? tile.tone : undefined)
-        return <section key={tile.id} data-widget={tile.id} data-wide={tile.wide} data-tone={tile.tone}
-        data-selected={current?.id === tile.id} data-picture={!!tile.image}
-        style={{ ...(color ? { '--face':color, '--ink':ink(color) } : {}), '--caption':color || (tile.id === 'À découvrir' ? '#d9e4d7' : tile.id === 'Amis' ? '#d2cdd8' : '#252629'), '--textHalo':color || 'transparent' } as CSSProperties}
-        className={'homeTile' + (target === tile.id ? ' dropTarget' : '')}>
-        {tile.image && <img className="widgetPhoto" src={tile.image} alt=""/>}
-        <div className="widgetBody" inert={editing}>{tileContent(tile.id)}</div>
+    {editing && selected && <div className="orderTools"><strong>{selected}</strong>
+      <button aria-label={'Avancer '+selected} disabled={layout.indexOf(selected)===0} onClick={()=>move(selected,layout[layout.indexOf(selected)-1])}><ChevronLeft/></button>
+      <button aria-label={'Reculer '+selected} disabled={layout.indexOf(selected)===layout.length-1} onClick={()=>move(selected,layout[layout.indexOf(selected)+1])}><ChevronRight/></button></div>}
+    <div className="widgetBoard fixedBoard" ref={board}>
+      {visible.map(id => <section key={id} data-widget={id} data-selected={editing && selected===id}
+        className={'homeTile' + (target === id ? ' dropTarget' : '')}>
+        <div className="widgetBody" inert={editing}>{tileContent(id)}</div>
         {editing && <>
-          <button className="pickWidget" aria-label={'Personnaliser '+tile.id} onClick={() => editTile(tile.id)} />
-          <button className="dragGrip" aria-label={'Déplacer '+tile.id}
-            onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); setDrag(tile.id) }}
+          <button className="pickWidget" aria-label={'Sélectionner '+id} onClick={()=>select(id)}/>
+          <button className="dragGrip" aria-label={'Déplacer '+id}
+            onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); select(id); setDrag(id) }}
             onPointerMove={e => {
-              if (drag !== tile.id) return
+              if (drag !== id) return
               if (e.clientY < 65) window.scrollBy(0,-18)
               if (e.clientY > innerHeight-65) window.scrollBy(0,18)
               const el = document.elementFromPoint(e.clientX,e.clientY)?.closest<HTMLElement>('[data-widget]')
@@ -179,18 +145,13 @@ export function Home({d, recent, openPost, go, filter}: {
             }}
             onPointerUp={e => {
               const el = document.elementFromPoint(e.clientX,e.clientY)?.closest<HTMLElement>('[data-widget]')
-              move(tile.id, el?.dataset.widget as Widget)
+              move(id, el?.dataset.widget as Widget)
               setDrag(null); setTarget(null)
             }}
             onPointerCancel={() => {setDrag(null); setTarget(null)}}><Grip size={20}/></button>
         </>}
-      </section>})}
+      </section>)}
     </div>
-    {petPage && <CompanionDialog kind={petPage} state={companion} close={()=>setPetPage(null)} wallpaper={layout.find(t=>t.id==='Mon personnage')?.image}/>}
-    {current && <TileSettings key={current.id} tile={current}
-      change={patch => save(latest.current.map(t => t.id === current.id ? {...t,...patch} : t))}
-      earlier={slot ? () => move(current.id,visible[slot-1].id) : undefined}
-      later={slot < visible.length-1 ? () => move(current.id,visible[slot+1].id) : undefined}
-      close={() => select(null)} />}
+    {petPage && <CompanionDialog kind={petPage} state={companion} close={()=>setPetPage(null)}/>}
   </>
 }

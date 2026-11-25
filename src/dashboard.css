@@ -1,0 +1,47 @@
+.widgetShell {--canvas:#101113;--surface:#212226;--accent:#d5d1dd;--lav:var(--accent);--line:color-mix(in srgb,var(--surface),white 16%);background:var(--canvas);min-height:100dvh}
+.widgetShell[data-theme=Boréal]{--canvas:#0e1b19;--surface:#20332e;--accent:#b1ebc9}
+.widgetShell[data-theme=Prune]{--canvas:#211421;--surface:#392637;--accent:#f5bddb}
+.widgetShell[data-theme=Minuit]{--canvas:#101728;--surface:#202e46;--accent:#b1ccff}
+body:has(.widgetShell){background:var(--canvas,#101113)}
+.widgetShell::before{content:"";position:fixed;inset:0;z-index:-2;background:var(--canvas);pointer-events:none}
+.widgetShell :is(.window,dialog,article){background-color:var(--surface)}
+.widgetShell button:not(.widgetLink,.weatherChip,.pickWidget){border-color:var(--line)}
+.widgetShell :is(.window button,.headActions button,.exitPage,.newRec){background-color:var(--surface);color:var(--accent)}
+.headActions{display:flex;align-items:center;gap:8px;min-width:0}
+.headActions>button:first-child{width:42px;height:42px;border-radius:100%;padding:8px}
+.widgetShell .headActions .accountShortcut{max-width:min(39vw,220px)}
+.fixedBoard{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:clamp(54px,12vw,80px);gap:clamp(6px,1.7vw,12px);grid-auto-flow:row dense}
+.fixedBoard .homeTile{grid-column:span 3;--face:var(--surface);--ink:#f7f7fa;border-radius:clamp(14px,4vw,22px)}
+.fixedBoard [data-widget=Batterie],.fixedBoard [data-widget=Décor]{grid-column:span 1}
+.fixedBoard [data-widget=Date],.fixedBoard [data-widget=Heure],.fixedBoard [data-widget="Jours ensemble"]{grid-column:span 2}
+.fixedBoard [data-widget=Recommandations]{grid-column:span 6;grid-row:span 2}
+.fixedBoard [data-widget="Mon personnage"]{grid-row:span 3;background:radial-gradient(at top right,color-mix(in srgb,var(--accent),transparent 65%),transparent 76%),var(--surface)}
+.fixedBoard :is([data-widget=Photo],[data-widget=Spotify],[data-widget="Jours ensemble"],[data-widget=Décor]){grid-row:span 2}
+.fixedBoard .widgetLink,.fixedBoard .weatherChip,.stillTile{min-height:0;padding:clamp(6px,2vw,15px);justify-content:center}
+.stillTile{height:100%;display:grid;align-content:center;justify-items:center;color:var(--accent);line-height:1.2}
+.fixedBoard .widgetLink strong{font-size:clamp(1.03rem,4vw,1.6rem)}
+.fixedBoard .widgetLink small{font-size:clamp(.72rem,2.8vw,.93rem)}
+.fixedBoard .friendsTile{flex-direction:row;align-items:center;flex-wrap:wrap;gap:0 5px}
+.friendsTile>span{display:flex}.friendsTile .avatar{width:26px;height:26px;margin-right:-5px;border:2px solid var(--surface)}
+.fixedBoard .widgetLink>svg,.fixedBoard .weatherChip svg{margin:0}
+.petReadings,.petReadings span{display:flex;align-items:center;gap:4px}.petReadings{flex-direction:column;align-items:start;font-size:.75rem}
+.fixedBoard .petShortcut{justify-content:start;padding-right:4px}.fixedBoard .petShortcut img{width:74%;height:82%;right:-8%;bottom:0}
+.fixedBoard .petCounter{align-items:center;text-align:center}.petCounter>svg{color:#ff83ac}
+.memoryPhoto,.albumArt{height:100%;width:100%;object-fit:cover}
+.albumArt,.fixedBoard .recArt{position:absolute;inset:0;z-index:-1;width:100%;height:100%;object-fit:cover;opacity:.48;margin:0;mask-image:linear-gradient(20deg,transparent,black)}
+.fixedBoard .recWidget,.fixedBoard .musicTile{isolation:isolate;position:relative;justify-content:end}
+.fixedBoard .recWidget strong{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.bang{display:grid;place-items:center;height:100%;font:900 clamp(3rem,13vw,6rem)/1 sans-serif;color:var(--accent);text-shadow:0 0 13px var(--accent)}
+.marketFrame{width:100%;height:100%;border:0;pointer-events:none}
+.settingsStack{display:grid;gap:12px;margin:18px 0;max-width:420px}
+.orderTools{position:sticky;top:4px;z-index:4;display:flex;align-items:center;gap:8px;padding:5px 12px;background:var(--surface);border-radius:14px;margin-bottom:8px}
+.orderTools strong{margin-right:auto}
+.spotifyPlayer{width:100%;height:352px;border:0;border-radius:14px}
+.newRec{margin-bottom:12px}
+.fixedBoard [data-widget=Date]{grid-column:span 1}
+.fixedBoard [data-widget=Météo],.fixedBoard [data-widget=Prévisions]{grid-column:span 4}
+.fixedBoard .weatherChip{flex-direction:row;align-items:center;justify-content:space-evenly}
+.forecastHost,.miniForecast{height:100%}
+.miniForecast{display:flex;align-items:center;justify-content:space-evenly;padding:3px 6px}
+.miniForecast span{display:grid;justify-items:center;line-height:1;font-size:.85rem}
+.miniForecast small{font-size:.72rem}

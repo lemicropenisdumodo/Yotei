@@ -1,3 +1,4 @@
+import {createPortal} from 'react-dom'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import {
   Cloud,
@@ -56,7 +57,7 @@ function readCity(key: string): City | null {
   }
 }
 
-export function Weather({ userId }: { userId: string }) {
+export function Weather({ userId,forecastHost }: { userId: string;forecastHost?:HTMLElement|null }) {
   const key = 'yotei-weather-' + userId
   const [city, setCity] = useState(() => readCity(key))
   const [forecast, setForecast] = useState<Forecast[]>([]),
@@ -159,6 +160,10 @@ export function Weather({ userId }: { userId: string }) {
     { Icon, label } = condition(now?.symbol || '')
   return (
     <div className="weather">
+      {forecastHost && createPortal(<div className="miniForecast">{now ? [0,3,6,9].filter(i=>forecast[i]).map(i=>{
+        const hour=forecast[i], {Icon,label}=condition(hour.symbol)
+        return <span key={hour.time}><small>{new Date(hour.time).toLocaleTimeString('fr',{hour:'2-digit',timeZone:city?.timezone})}</small><Icon size={15} aria-label={label}/><b>{hour.temperature}°</b></span>
+      }) : <small>{city ? error || 'Prévisions en cours…' : 'Prévisions · choisis ta ville'}</small>}</div>,forecastHost)}
       <button
         className="weatherChip"
         aria-label={city ? 'Météo à ' + city.name : 'Configurer la météo'}
