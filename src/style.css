@@ -1218,3 +1218,8 @@ details {
 .swatches button {border-radius:20px;min-width:34px;min-height:36px;padding:4px 9px}
 .swatches button[aria-pressed=true] {outline:2px solid #fff;outline-offset:1px}
 .widgetSettings input[type=file] {max-width:100%}
+.homeTile[data-widget='À découvrir'] {--face:#d9e4d7;--ink:#202923}
+.recWidget strong,.recWidget small {overflow-wrap:anywhere;max-width:100%}
+.recWidget .recArt {display:block;width:100%;height:95px;object-fit:cover;border-radius:10px;margin-bottom:6px}
+.recCover {max-height:340px;object-fit:contain}
+.sourceLink {color:var(--lav);overflow-wrap:anywhere}

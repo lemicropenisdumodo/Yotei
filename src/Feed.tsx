@@ -1,6 +1,6 @@
 import { categories, type Category } from './Home'
 import { Star } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   accept,
   date,
@@ -17,7 +17,8 @@ import {
   Window,
   type Directory,
 } from './core'
-type Post = {
+import { webLink, linkInfo, type Recommendation } from './recommendation'
+type Post = Recommendation & {
   id: string
   user_id: string
   content: string
@@ -82,9 +83,10 @@ function Replies({ post, d }: { post: Post; d: Directory }) {
 export function Feed({
   d,
   filter,
-  setFilter,
+  setFilter, postId,
 }: {
   d: Directory
+  postId: string
   filter: Category | ''
   setFilter: (c: Category | '') => void
 }) {
@@ -94,18 +96,20 @@ export function Feed({
     let query = db
       .from('posts')
       .select(
-        'id,user_id,content,image_url,category,rating,created_at,likes(user_id)',
+        'id,user_id,content,image_url,category,rating,source_url,source_title,thumbnail_url,created_at,likes(user_id)',
       )
+      .not('source_url','is',null)
       .order('created_at', { ascending: false })
       .order('id')
       .limit(limit)
+    if (postId) query = query.eq('id',postId)
     if (filter) query = query.eq('category', filter)
     return ((await result(query)) || []) as Post[]
-  }, [filter, limit])
+  }, [filter, limit, postId])
   return (
     <>
       <div className="sectionhead">
-        <h1>Fil d’actualité</h1>
+        <h1>{postId ? 'La recommandation' : 'Recommandations'}</h1>
       </div>
       <div className="filters" aria-label="Filtrer les publications">
         {(['', ...Object.keys(categories)] as (Category | '')[]).map((c) => (
@@ -123,12 +127,12 @@ export function Feed({
       </div>
 
       <div className="sectionhead">
-        <h2>{filter || 'Publications'}</h2>
+        <h2>{filter || (postId ? 'À découvrir' : 'Les recos du cercle')}</h2>
         <button onClick={list.refresh}>Actualiser</button>
       </div>
       <ErrorLine value={list.error} />
       {list.data?.length === 0 && (
-        <p className="empty">Aucune publication pour le moment.</p>
+        <p className="empty">Aucune recommandation à afficher.</p>
       )}
       {list.data?.map((p) => {
         const liked = p.likes.some((l) => l.user_id === d.me.id)
@@ -151,7 +155,10 @@ export function Feed({
                 )}
               </div>
             )}
-            <p>{p.content}</p>
+            <h2>{p.source_title}</h2>
+            {p.content !== p.source_title && <p>{p.content}</p>}
+            {!p.image_url && webLink(p.thumbnail_url) && <img className="photo recCover" loading="lazy" alt="" src={webLink(p.thumbnail_url)} referrerPolicy="no-referrer" />}
+            {webLink(p.source_url) && <p><a className="sourceLink" href={webLink(p.source_url)} target="_blank" rel="noopener noreferrer">{p.category === 'Musique' ? 'Écouter' : 'Découvrir'} · {new URL(p.source_url).hostname}</a></p>}
             <Media
               path={p.image_url}
               alt="Photo de la publication"
@@ -226,23 +233,41 @@ export function Composer({
   filter: Category | ''
   onPublished: (c: Category | '') => void
 }) {
-  const [chosen, setChosen] = useState<Category | ''>(filter),
-    [rating, setRating] = useState(0)
+  const [chosen, setChosen] = useState<Category>(filter || 'Vidéo')
+  const [rating, setRating] = useState(0)
+  const [link, setLink] = useState('')
+  const [title, setTitle] = useState('')
+  const manual = useRef(false)
+  const [image, setImage] = useState('')
+  const [status, setStatus] = useState('')
+  useEffect(() => {
+    const url = webLink(link.trim())
+    if (!url) return
+    let active = true
+    const timer = setTimeout(async () => {
+      const {data} = await db.functions.invoke('recommendation-preview',{body:{url}})
+      if (!active) return
+      if (typeof data?.title === 'string' && !manual.current) setTitle(data.title.slice(0,300))
+      if (webLink(data?.image)) setImage(data.image)
+      setStatus(data?.title ? '' : 'Complète le titre. Tu peux aussi choisir une image.')
+    },350)
+    return () => { active = false; clearTimeout(timer) }
+  },[link])
   return (
     <Window title="nouvelle_publication.exe">
-      <h1>Nouvelle publication</h1>
+      <h1>Nouvelle recommandation</h1>
       <Form
         action="Publier"
         submit={async (f) => {
+          const url = webLink(link.trim())
+          if (!url || !title.trim()) throw new Error('Indique un lien HTTPS et un titre.')
           const content = val(f, 'text')
           const path = await upload(f, 'photo', d.me.id)
-          if (!content && !path)
-            throw new Error('Ajoutez un texte ou une photo.')
           try {
             await result(
               db.from('posts').insert({
                 user_id: d.me.id,
-                content: content || '📷',
+                content: content || title.trim(), source_title:title.trim(), source_url:url, thumbnail_url:image || null,
                 image_url: path,
                 category: chosen || null,
                 rating: chosen && rating ? rating : null,
@@ -255,24 +280,32 @@ export function Composer({
           onPublished(chosen)
         }}
       >
+        <label>Lien à recommander<input type="url" required maxLength={2048} value={link} placeholder="https://…" onChange={e => {
+          const value = e.target.value
+          setLink(value); setTitle(''); manual.current = false; setImage(''); setStatus('')
+          const url = webLink(value.trim())
+          if (url) { const info = linkInfo(url); setChosen(info.category); setImage(info.image); setStatus('Recherche de l’aperçu…') }
+        }} /></label>
+        <p role="status">{status}</p>
+        <label>Titre<input value={title} required maxLength={300} onChange={e => {manual.current = true; setTitle(e.target.value)}} /></label>
+        {image && <img className="photo recCover" src={image} alt="Aperçu du lien" referrerPolicy="no-referrer" />}
         <label>
           Un mot pour le cercle
           <textarea
-            placeholder="Racontez votre journée…"
+            placeholder="Pourquoi le recommandes-tu ?"
             name="text"
             maxLength={5000}
           />
         </label>
         <label>
-          Catégorie <small>Facultatif</small>
+          Catégorie
           <select
             value={chosen}
             onChange={(e) => {
-              setChosen(e.target.value as Category | '')
+              setChosen(e.target.value as Category)
               setRating(0)
             }}
           >
-            <option value="">Sans catégorie</option>
             {Object.keys(categories).map((c) => (
               <option key={c}>{c}</option>
             ))}
@@ -295,7 +328,7 @@ export function Composer({
           </div>
         )}
         <label>
-          Photo <small>Facultatif · 5 Mo max.</small>
+          Image ou affiche personnalisée <small>Facultatif · 5 Mo max.</small>
           <input name="photo" type="file" accept={accept} />
         </label>
       </Form>

@@ -13,15 +13,15 @@ do $$ begin
 end $$;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
-insert into public.posts(user_id,content) values(auth.uid(),'RLS transaction test');
-insert into public.posts(user_id,content,category,rating) values(auth.uid(),'Une recommandation','Cinéma',4);
+insert into public.posts(source_url,source_title,category,user_id,content) values('https://example.org/watch','Titre','Vidéo',auth.uid(),'RLS transaction test');
+insert into public.posts(source_url,source_title,user_id,content,category,rating) values('https://example.org/watch','Titre',auth.uid(),'Une recommandation','Cinéma',4);
 do $$ begin
  begin
- insert into public.posts(user_id,content,rating) values(auth.uid(),'Une note sans catégorie',4);
+ insert into public.posts(source_url,source_title,user_id,content,rating) values('https://example.org/watch','Titre',auth.uid(),'Une note sans catégorie',4);
  raise exception 'Note sans catégorie autorisée';
  exception when check_violation then null; end;
  begin
- insert into public.posts(user_id,content,category,rating) values(auth.uid(),'Note hors limites','Musique',6);
+ insert into public.posts(source_url,source_title,user_id,content,category,rating) values('https://example.org/watch','Titre',auth.uid(),'Note hors limites','Musique',6);
  raise exception 'Note hors limites autorisée';
  exception when check_violation then null; end;
 end $$;
@@ -36,7 +36,7 @@ insert into public.rooms(title,participants) values('RLS transaction test',array
 insert into public.messages(room_id,user_id,content) select id,auth.uid(),'test privé' from public.rooms where title='RLS transaction test';
 do $$ begin
  begin
- insert into public.posts(user_id,content) values ('10000000-0000-4000-8000-000000000002','test');
+ insert into public.posts(source_url,source_title,category,user_id,content) values('https://example.org/watch','Titre','Vidéo','10000000-0000-4000-8000-000000000002','test');
  raise exception 'Auteur usurpé';
  exception when insufficient_privilege then null; end;
  begin

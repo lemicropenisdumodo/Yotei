@@ -1,3 +1,4 @@
+import { webLink, type Recommendation } from './recommendation'
 import { TileSettings, palette, ink, isColor, type Appearance } from './TileSettings'
 import {
   Aperture,
@@ -5,9 +6,9 @@ import {
   AudioLines,
   CircleUserRound,
   Clapperboard,
-  Gamepad2,
+  Video,
   LayoutGrid,
-  MessagesSquare,
+
   Newspaper,
   Plus,
   Settings2,
@@ -20,7 +21,7 @@ export const navigation = {
   Accueil: LayoutGrid,
   Fil: Newspaper,
   Publier: Plus,
-  Messages: MessagesSquare,
+
   Amis: UsersRound,
   Profil: CircleUserRound,
   Administration: Settings2,
@@ -29,7 +30,7 @@ export type Page = keyof typeof navigation
 export const categories = {
   Cinéma: Clapperboard,
   Musique: AudioLines,
-  'Jeux vidéo': Gamepad2,
+  Vidéo: Video,
 }
 export type Category = keyof typeof categories
 export function Mark() {
@@ -47,14 +48,14 @@ export function Avatar({ person }: { person: Directory['me'] }) {
     </span>
   )
 }
-const widgets = ['Fil', 'Messages', 'Amis', 'Explorer', 'Météo', 'Publier', 'Profil', 'Administration'] as const
+const widgets = ['Fil', 'À découvrir', 'Amis', 'Explorer', 'Météo', 'Publier', 'Profil', 'Administration'] as const
 type Widget = typeof widgets[number]
 type Tile = Appearance & { id: Widget }
 function readLayout(key: string): Tile[] {
   let saved: Partial<Tile>[] = []
   try {
     const value = JSON.parse(localStorage.getItem(key) || '[]')
-    if (Array.isArray(value)) saved = value.filter(item => item && widgets.includes(item.id))
+    if (Array.isArray(value)) saved = value.map(item => item?.id === 'Messages' ? {...item,id:'À découvrir'} : item).filter(item => item && widgets.includes(item.id))
   } catch { /* The default layout also works without storage. */ }
   const order = new Set([...saved.map(item => item.id!), ...widgets])
   return Array.from(order, id => {
@@ -67,8 +68,8 @@ function readLayout(key: string): Tile[] {
   })
 }
 
-export function Home({d, unread, go, filter}: {
-  d: Directory; unread: number; go: (p: Page) => void
+export function Home({d, recent, openPost, go, filter}: {
+  d: Directory; recent?: Recommendation; openPost: (id:string) => void; go: (p: Page) => void
   filter: (c: Category) => void
 }) {
   const key = 'yotei-widgets-v1-' + d.me.id
@@ -119,6 +120,14 @@ export function Home({d, unread, go, filter}: {
     requestAnimationFrame(() => board.current?.querySelector('[data-widget="'+id+'"]')?.scrollIntoView({block:'start'}))
   }
   function tileContent(id: Widget) {
+    if (id === 'À découvrir') return <button className="widgetLink recWidget" onClick={() => recent ? openPost(recent.id) : go('Publier')}>
+      {recent && (recent.image_url ? <Media path={recent.image_url} className="recArt" alt="" /> :
+        webLink(recent.thumbnail_url) && <img className="recArt" src={webLink(recent.thumbnail_url)} alt="" referrerPolicy="no-referrer" />)}
+      <small>{recent ? d.name(recent.user_id)+' recommande' : 'À découvrir'}</small>
+      <strong>{recent?.source_title || 'Partager la première reco'}</strong>
+      {recent && <small>{recent.category}{recent.rating ? ' · '+recent.rating+'/5 ★' : ''}</small>}
+      {recent && layout.find(t => t.id === id)?.wide && recent.content !== recent.source_title && <small>{recent.content.slice(0,180)}</small>}
+    </button>
     if (id === 'Météo') return <Weather userId={d.me.id} />
     if (id === 'Explorer') return <div className="explore">
       <h2>Explorer le fil</h2><div>{(Object.keys(categories) as Category[]).map(c => {
@@ -130,10 +139,9 @@ export function Home({d, unread, go, filter}: {
     return <button className="widgetLink" onClick={() => go(id)} aria-label={id}>
 
       <Icon aria-hidden="true" /><strong>{id === 'Fil' ? 'Le fil du cercle.' : id === 'Profil' ? 'Mon profil' : id}</strong>
-      {id === 'Publier' && <small>Texte ou photo</small>}
+      {id === 'Publier' && <small>Partager un lien</small>}
       {id === 'Profil' && <small>{d.me.username}</small>}
       {id === 'Administration' && <small>Membres et invitations</small>}
-      {id === 'Messages' && <small>{unread ? unread + (unread > 1 ? ' non lus' : ' non lu') : 'Tout lu'}</small>}
       {id === 'Amis' && <small>{online} en ligne</small>}
     </button>
   }
@@ -150,7 +158,7 @@ export function Home({d, unread, go, filter}: {
         const color = palette[tile.tone] || (isColor(tile.tone) ? tile.tone : undefined)
         return <section key={tile.id} data-widget={tile.id} data-wide={tile.wide} data-tone={tile.tone}
         data-selected={current?.id === tile.id} data-picture={!!tile.image}
-        style={{ ...(color ? { '--face':color, '--ink':ink(color) } : {}), '--caption':color || (tile.id === 'Messages' ? '#d9e4d7' : tile.id === 'Amis' ? '#d2cdd8' : '#252629'), '--textHalo':color || 'transparent' } as CSSProperties}
+        style={{ ...(color ? { '--face':color, '--ink':ink(color) } : {}), '--caption':color || (tile.id === 'À découvrir' ? '#d9e4d7' : tile.id === 'Amis' ? '#d2cdd8' : '#252629'), '--textHalo':color || 'transparent' } as CSSProperties}
         className={'homeTile' + (target === tile.id ? ' dropTarget' : '')}>
         {tile.image && <img className="widgetPhoto" src={tile.image} alt=""/>}
         <div className="widgetBody" inert={editing}>{tileContent(tile.id)}</div>

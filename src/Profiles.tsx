@@ -1,3 +1,4 @@
+import { webLink } from './recommendation'
 import { Music2, Palette } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import {
@@ -34,7 +35,7 @@ export function ProfilePage({
       (await result(
         db
           .from('posts')
-          .select('id,content,image_url,category,rating,created_at')
+          .select('id,content,image_url,category,rating,source_title,source_url,thumbnail_url,created_at')
           .eq('user_id', p.id)
           .order('created_at', { ascending: false })
           .order('id')
@@ -210,7 +211,9 @@ export function ProfilePage({
                 {post.rating && <span>{post.rating} / 5 ★</span>}
               </span>
             )}
-            <p>{post.content}</p>
+             {webLink(post.source_url) && <h3><a className="sourceLink" href={webLink(post.source_url)} target="_blank" rel="noopener noreferrer">{post.source_title}</a></h3>}
+            {post.content !== post.source_title && <p>{post.content}</p>}
+            {!post.image_url && webLink(post.thumbnail_url) && <img className="photo recCover" src={webLink(post.thumbnail_url)} loading="lazy" referrerPolicy="no-referrer" alt=""/>}
             <Media
               path={post.image_url}
               className="photo"

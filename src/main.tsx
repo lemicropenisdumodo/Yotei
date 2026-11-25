@@ -16,7 +16,7 @@ import {
 } from './core'
 import { Auth } from './Auth'
 import { Admin } from './Admin'
-import { Chat } from './Chat'
+import type { Recommendation } from './recommendation'
 import { Composer, Feed } from './Feed'
 import { ProfilePage } from './Profiles'
 import {
@@ -40,7 +40,7 @@ function Network({ session }: { session: Session }) {
     [page, setPage] = useState<Page>('Accueil'),
     [category, setCategory] = useState<Category | ''>(''),
     [profile, setProfile] = useState(id),
-    [room, setRoom] = useState(''),
+    [postId, setPostId] = useState(''),
     [revision, bump] = useState(0)
   const homeScroll = useRef(0)
   const lastWidget = useRef<HTMLElement | null>(null)
@@ -98,17 +98,12 @@ function Network({ session }: { session: Session }) {
         : []
     })
   }, [id, revision])
-  const notes = useList(
-    async () =>
-      (await result(
-        db
-          .from('notifications')
-          .select('id,room_id')
-          .eq('recipient', id)
-          .order('created_at', { ascending: false }),
-      )) || [],
-    [id, revision],
-  )
+  const latest = useList(async () => {
+    const rows = await result(db.from('posts')
+      .select('id,user_id,content,category,rating,source_title,source_url,thumbnail_url,image_url')
+      .not('source_url','is',null).order('created_at',{ascending:false}).order('id').limit(1))
+    return rows?.[0] as Recommendation | undefined
+  }, [id, revision, page])
   useEffect(() => {
     const refresh = () => bump((n) => n + 1)
     const pulse = () => {
@@ -117,23 +112,9 @@ function Network({ session }: { session: Session }) {
     pulse()
     const timer = setInterval(pulse, 30000)
     document.addEventListener('visibilitychange', pulse)
-    const ch = db
-      .channel('alerts-' + id)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: 'recipient=eq.' + id,
-        },
-        refresh,
-      )
-      .subscribe()
     return () => {
       clearInterval(timer)
       document.removeEventListener('visibilitychange', pulse)
-      void db.removeChannel(ch)
     }
   }, [id])
   const people = members.data || [],
@@ -179,7 +160,7 @@ function Network({ session }: { session: Session }) {
   const activeProfile: Person = people.find((p) => p.id === profile) || me
   const navigate = (tab: Page) => {
     if (tab === 'Profil') setProfile(id)
-    if (tab === 'Fil') setCategory('')
+    if (tab === 'Fil') { setCategory(''); setPostId('') }
     go(tab)
     window.scrollTo(0, 0)
   }
@@ -210,17 +191,18 @@ function Network({ session }: { session: Session }) {
           )}
         </header>
         <div hidden={page !== 'Accueil'}>
-          <Home d={d} go={navigate} unread={notes.data?.length || 0}
-            filter={(c) => { setCategory(c); go('Fil') }} />
+          <Home d={d} go={navigate} recent={latest.data} openPost={(post) => {setPostId(post); setCategory(''); go('Fil')}}
+            filter={(c) => { setPostId(''); setCategory(c); go('Fil') }} />
         </div>
         {page === 'Fil' && (
-          <Feed d={d} filter={category} setFilter={setCategory} />
+          <Feed d={d} filter={category} postId={postId} setFilter={c => {setPostId(''); setCategory(c)}} />
         )}
         {page === 'Publier' && (
           <Composer
             d={d}
             filter={category}
             onPublished={(c) => {
+              setPostId('')
               setCategory(c)
               go('Fil')
               window.scrollTo(0, 0)
@@ -252,28 +234,6 @@ function Network({ session }: { session: Session }) {
                 </article>
               ))}
           </Window>
-        )}
-        {page === 'Messages' && (
-          <>
-            {!!notes.data?.length && (
-              <div className="notifications">
-                {[...new Set(notes.data.map((n) => n.room_id))].map((r) => (
-                  <button key={r} onClick={() => setRoom(r)}>
-                    ✉ {notes.data!.filter((n) => n.room_id === r).length}{' '}
-                    message(s) non lu(s) · {r.slice(0, 4)}
-                  </button>
-                ))}
-              </div>
-            )}
-            <Chat
-              key={room}
-              d={d}
-              room={room}
-              setRoom={setRoom}
-              revision={revision}
-              seen={notes.refresh}
-            />
-          </>
         )}
         {page === 'Administration' && me.admin && (
           <Admin d={d} refresh={members.refresh} />

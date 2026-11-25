@@ -7,3 +7,6 @@ enable_signup = false
 
 [functions.invitations]
 verify_jwt = false
+
+[functions.recommendation-preview]
+verify_jwt = false

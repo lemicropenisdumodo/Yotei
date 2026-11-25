@@ -10,11 +10,7 @@ const peer = {
   id: '6792ee8d-67dc-43bf-997b-842d84bf8663',
   username: 'Camille',
 }
-const room = {
-  id: '731b10ce-595f-45bb-a66f-ffad0a6cf059',
-  title: '',
-  participants: [id, peer.id],
-}
+let posted
 const browser = await chromium.launch({ channel: 'chrome', headless: true })
 try {
   const page = await browser.newPage({ isMobile: true, hasTouch: true })
@@ -54,9 +50,14 @@ try {
           },
         },
       })
+    if (url.pathname.endsWith('/recommendation-preview')) return route.fulfill({json:{title:'Morceau du cercle'}})
+    if (url.pathname.endsWith('/posts') && route.request().method() === 'POST') {
+      posted = {...route.request().postDataJSON(),id:'rec-test',created_at:new Date().toISOString(),likes:[]}
+      return route.fulfill({status:201,body:''})
+    }
     const rows = {
       profiles: [profile, peer],
-      rooms: [room],
+
       messages: [],
       members: [
         { id, admin: true, suspended: false },
@@ -64,7 +65,7 @@ try {
       ],
       notifications: [],
       friend_nicknames: [],
-      posts: [],
+      posts: posted ? [posted] : [],
     }
     return route.fulfill({ json: rows[url.pathname.split('/').pop()] ?? null })
   })
@@ -104,15 +105,15 @@ try {
   }
   const home = page.locator('.widgetBoard')
   const close = () => page.getByRole('button', { name: 'Fermer et revenir à l’accueil' }).click()
-  const messages = home.locator('[data-widget="Messages"]')
+  const messages = home.locator('[data-widget="À découvrir"]')
   const size = () => messages.evaluate(el => [el.offsetWidth, el.offsetHeight])
   const normalSize = await size()
   assert.equal(await page.getByRole('button', {name:'Déconnexion'}).count(), 0)
   await page.getByRole('button', { name: 'Modifier', exact: true }).click()
-  await messages.getByLabel('Personnaliser Messages').click()
+  await messages.getByLabel('Personnaliser À découvrir').click()
   assert.deepEqual(await size(), normalSize)
-  const panel = page.getByRole('complementary', {name:'Réglages de Messages'})
-  await panel.getByLabel('Avancer Messages').click()
+  const panel = page.getByRole('complementary', {name:'Réglages de À découvrir'})
+  await panel.getByLabel('Avancer À découvrir').click()
   await panel.getByLabel('Taille').selectOption('large')
   await panel.getByLabel('Sauge', {exact:true}).click()
   await panel.getByLabel('Spectre des couleurs').fill('#efffee')
@@ -124,7 +125,7 @@ try {
   assert.deepEqual(await size(), editedSize)
   await page.reload()
   await messages.waitFor()
-  assert.equal(await home.locator('section').first().getAttribute('data-widget'), 'Messages')
+  assert.equal(await home.locator('section').first().getAttribute('data-widget'), 'À découvrir')
   assert.equal(await messages.getAttribute('data-wide'), 'true')
   assert.equal(await messages.getAttribute('data-tone'), '#efffee')
   await page.getByRole('button', { name: 'Configurer la météo' }).click()
@@ -151,25 +152,26 @@ try {
   assert.equal(await page.getByRole('textbox').count(), 0)
   await close()
   await home.getByRole('button', { name: 'Publier', exact: true }).click()
-  await page.getByRole('heading', { name: 'Nouvelle publication' }).waitFor()
+  await page.getByRole('heading', { name: 'Nouvelle recommandation' }).waitFor()
+  await page.getByLabel('Lien à recommander').fill('https://open.spotify.com/track/example')
+  await page.waitForFunction(() => document.querySelector('input[maxlength="300"]')?.value === 'Morceau du cercle')
+  await page.getByLabel('4 sur 5').click()
   await page.getByLabel('Un mot pour le cercle').fill('Publication de test')
   await page
     .locator('form')
     .getByRole('button', { name: 'Publier', exact: true })
     .click()
-  await page.getByRole('heading', { name: 'Fil d’actualité' }).waitFor()
+  await page.getByRole('heading', { name: 'Recommandations' }).waitFor()
   await close()
   await home.getByRole('button', { name: 'Amis', exact: true }).click()
   await page.getByRole('heading', { name: 'Amis', exact: true }).waitFor()
   await close()
-  await home.getByRole('button', { name: 'Messages', exact: true }).click()
-  await page
-    .getByRole('region', { name: 'Écrire à un membre' })
-    .getByRole('button', { name: 'Camille' })
-    .click()
-  await page.getByRole('textbox', { name: 'Votre message' }).waitFor()
-  await page.getByRole('button', { name: 'Choisir un destinataire' }).click()
-  await page.getByRole('heading', { name: 'Écrire à…' }).waitFor()
+  assert.equal(posted.category,'Musique')
+  assert.equal(posted.rating,4)
+  await home.getByRole('button', {name:/recommande.*Morceau du cercle/}).click()
+  await page.getByRole('heading',{name:'La recommandation'}).waitFor()
+  assert.equal(await page.getByRole('link',{name:/Écouter/}).getAttribute('href'), posted.source_url)
+  assert.equal(await page.getByRole('button',{name:'Messages',exact:true}).count(),0)
 } finally {
   await browser.close()
 }
