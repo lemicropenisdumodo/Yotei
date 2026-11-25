@@ -266,7 +266,7 @@ time {
 .feature,
 .authArt {
   position: relative;
-  background: #15151a url('../public/orbite.webp') center right/cover no-repeat;
+  background: #15151a url('/orbite.webp') center right/cover no-repeat;
   overflow: hidden;
 }
 .feature,
@@ -1138,3 +1138,51 @@ details {
     min-height: 48px;
   }
 }
+
+/* The board is a scrolling canvas on every screen. */
+.desktop.widgetShell[data-page] {
+  display: block;
+  width: min(100%, 900px);
+  padding: clamp(12px, 3vw, 30px) clamp(12px, 3vw, 26px) max(22px, env(safe-area-inset-bottom));
+}
+.desktop.widgetShell[data-page] .content { display: block; min-height: 0; }
+.widgetShell .accountShortcut,.exitPage,.boardHeading button {display:inline-flex;align-items:center;gap:8px;border-radius:100px}
+.widgetShell .accountShortcut {max-width:58%;overflow:hidden;padding:4px 14px 4px 4px}
+.boardHeading,.editTitle,.moveButtons {display:flex;align-items:center;justify-content:space-between;gap:6px}
+.boardHeading {margin:20px 0 16px}
+.boardHeading h1 {margin:0;line-height:1.1;overflow-wrap:anywhere}
+.boardHeading button,.dragGrip {flex-shrink:0}
+.editHint {color:var(--muted)}
+.widgetBoard {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(8px,2vw,16px)}
+.homeTile {--face:#26272c;--ink:#f7f7f8;background:var(--face);color:var(--ink);border:1px solid var(--line);border-radius:24px;overflow:hidden;min-width:0;position:relative}
+.homeTile[data-wide=true] {grid-column:span 2}
+.homeTile[data-widget=Messages] {--face:linear-gradient(135deg,#d9e4d7,#adbbb2);--ink:#202923}
+.homeTile[data-widget=Amis] {--face:linear-gradient(135deg,#d2cdd8,#a7a3b2);--ink:#27232d}
+.homeTile[data-tone=Graphite] {--face:#34363e;--ink:#fff}
+.homeTile[data-tone=Sauge] {--face:linear-gradient(125deg,#d4e3cf,#a6bbaa);--ink:#172c20}
+.homeTile[data-tone=Lavande] {--face:linear-gradient(125deg,#e2daea,#b6a8c9);--ink:#30243b}
+.homeTile .widgetLink,.homeTile .weatherChip {display:flex;align-items:flex-start;justify-content:flex-end;flex-direction:column;gap:4px;width:100%;height:100%;min-height:116px;padding:clamp(14px,3vw,24px);border:0;border-radius:inherit;background:transparent;color:inherit;text-align:left;white-space:normal}
+.widgetLink strong {font:700 clamp(1.16rem,3vw,1.65rem)/1.1 'Space Grotesk Variable',sans-serif;letter-spacing:-.04em}
+.widgetLink > svg,.homeTile .weatherChip svg {margin-bottom:10px}
+.homeTile[data-widget=Fil] .widgetLink {min-height:clamp(155px,32vw,260px);position:relative;isolation:isolate}
+.homeTile[data-widget=Fil][data-tone=Original] .widgetLink {background:linear-gradient(0deg,#0d0d11c9,transparent 72%),url('/orbite.webp') center / cover}
+.homeTile .tileWallpaper {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.65);z-index:-1}
+.homeTile[data-widget=Fil] strong {font-size:clamp(1.75rem,5vw,3.6rem);max-width:8ch}
+.homeTile[data-widget=Fil] .widgetLink svg {display:none}
+.explore,.explore button {min-width:0}
+.explore h2,.explore button {margin:0}
+.explore .icon {color:inherit}
+.explore {padding:16px}
+.explore > div {display:flex;flex-wrap:wrap;gap:6px}
+.explore button {display:grid;gap:8px;justify-items:start;flex:1 1 64px;background:#0002;color:inherit;border-radius:14px;font-size:.9rem;padding:10px}
+.explore h2 {margin:0 0 12px}
+.homeTile .weather {height:100%}
+.tileEditor {padding:clamp(10px,2vw,18px);display:grid;gap:7px}
+.tileEditor label {margin:0;display:grid;gap:2px;color:inherit}
+.tileEditor select {width:100%;min-width:0}
+.tileEditor button {padding:4px;min-width:38px;min-height:40px}
+.dragGrip {touch-action:none;cursor:grab}
+.moveButtons {justify-content:flex-start}
+.dropTarget {outline:3px solid var(--lav);outline-offset:-3px}
+.boardFooter {margin:24px 0;text-align:right}
+@media(min-width:800px){.widgetBoard{grid-template-columns:repeat(4,minmax(0,1fr))}.homeTile[data-widget=Fil][data-wide=true]{grid-column:span 4}}

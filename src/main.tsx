@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client'
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import {
   Media,
@@ -14,7 +14,6 @@ import {
   type Person,
   type Profile,
 } from './core'
-import { Weather } from './Weather'
 import { Auth } from './Auth'
 import { Admin } from './Admin'
 import { Chat } from './Chat'
@@ -22,13 +21,11 @@ import { Composer, Feed } from './Feed'
 import { ProfilePage } from './Profiles'
 import {
   Home,
-  Mark,
   Avatar,
-  navigation,
   type Page,
   type Category,
 } from './Home'
-import { LogOut } from 'lucide-react'
+import { LogOut, X } from 'lucide-react'
 import '@fontsource-variable/manrope/index.css'
 import '@fontsource-variable/space-grotesk/index.css'
 import './style.css'
@@ -40,11 +37,43 @@ if (['invite', 'recovery'].includes(params.get('type') || ''))
   sessionStorage.setItem(setupKey, '1')
 function Network({ session }: { session: Session }) {
   const id = session.user.id,
-    [page, go] = useState<Page>('Accueil'),
+    [page, setPage] = useState<Page>('Accueil'),
     [category, setCategory] = useState<Category | ''>(''),
     [profile, setProfile] = useState(id),
     [room, setRoom] = useState(''),
     [revision, bump] = useState(0)
+  const homeScroll = useRef(0)
+  const lastWidget = useRef<HTMLElement | null>(null)
+  const closeButton = useRef<HTMLButtonElement>(null)
+  const go = (next: Page) => {
+    if (page === 'Accueil') {
+      homeScroll.current = window.scrollY
+      lastWidget.current = document.activeElement as HTMLElement
+      history.pushState({ yotei: id, page: next }, '')
+    } else {
+      history.replaceState({ yotei: id, page: next }, '')
+    }
+    setPage(next)
+  }
+  useEffect(() => {
+    const previous = history.scrollRestoration
+    history.scrollRestoration = 'manual'
+    history.replaceState({ yotei: id, page: 'Accueil' }, '')
+    const back = () => {
+      const state = history.state
+      setPage(state?.yotei === id ? state.page : 'Accueil')
+    }
+    window.addEventListener('popstate', back)
+    return () => {
+      history.scrollRestoration = previous
+      window.removeEventListener('popstate', back)
+    }
+  }, [id])
+  useLayoutEffect(() => {
+    window.scrollTo(0, page === 'Accueil' ? homeScroll.current : 0)
+    if (page === 'Accueil') lastWidget.current?.focus({ preventScroll: true })
+    else closeButton.current?.focus({ preventScroll: true })
+  }, [page])
   const members = useList(async () => {
     const [profiles, members, nicknames] = await Promise.all([
       result(db.from('profiles').select('*').order('username')),
@@ -148,9 +177,6 @@ function Network({ session }: { session: Session }) {
     open,
   }
   const activeProfile: Person = people.find((p) => p.id === profile) || me
-  const tabs = (Object.keys(navigation) as Page[]).filter(
-    (t) => t !== 'Administration' || me.admin,
-  )
   const navigate = (tab: Page) => {
     if (tab === 'Profil') setProfile(id)
     if (tab === 'Fil') setCategory('')
@@ -159,7 +185,7 @@ function Network({ session }: { session: Session }) {
   }
   return (
     <main
-      className="desktop"
+      className="desktop widgetShell"
       data-page={page}
       style={
         {
@@ -170,95 +196,23 @@ function Network({ session }: { session: Session }) {
       }
     >
       <Media path={me.wallpaper_path} alt="" className="wallpaper" />
-      <aside className="rail">
-        <button
-          className="logoButton"
-          onClick={() => navigate('Accueil')}
-          aria-label="Yotei, accueil"
-        >
-          <Mark />
-        </button>
-        <nav aria-label="Navigation principale">
-          {tabs.map((tab) => {
-            const Icon = navigation[tab]
-            return (
-              <button
-                key={tab}
-                title={tab}
-                aria-label={tab}
-                aria-current={page === tab ? 'page' : undefined}
-                onClick={() => navigate(tab)}
-              >
-                <Icon size={22} />
-                <span>{tab === 'Administration' ? 'Admin' : tab}</span>
-                {tab === 'Messages' && !!notes.data?.length && (
-                  <b className="unread">{notes.data.length}</b>
-                )}
-              </button>
-            )
-          })}
-        </nav>
-        <div className="railFoot">{signout}</div>
-      </aside>
       <div className="content">
         <header className="pageHead">
-          <div className="wordmark">
-            Yotei<span>.</span>
-          </div>
-          <button
-            className="userChip"
-            onClick={() => navigate('Profil')}
-            aria-label="Ouvrir mon profil"
-          >
-            <Avatar person={me} />
-            <span>{me.username}</span>
-          </button>
-          <details className="mobileAccount">
-            <summary className="userChip" aria-label="Mon compte">
-              <Avatar person={me} />
-              <span>{me.username}</span>
-            </summary>
-            <div
-              className="accountActions"
-              onClick={(e) => {
-                const menu = e.currentTarget.closest('details')
-                if (menu) menu.open = false
-              }}
-            >
-              <button onClick={() => navigate('Profil')}>Mon profil</button>
-              {me.admin && (
-                <button onClick={() => navigate('Administration')}>
-                  Administration
-                </button>
-              )}
-              {signout}
-            </div>
-          </details>
+          <div className="wordmark">Yotei<span>.</span></div>
+          {page === 'Accueil' ? (
+            <button className="accountShortcut" onClick={() => navigate('Profil')} aria-label="Ouvrir mon profil">
+              <Avatar person={me} /> {me.username}
+            </button>
+          ) : (
+            <button className="exitPage" ref={closeButton} onClick={() => history.back()} aria-label="Fermer et revenir à l’accueil">
+              <X size={19} /> Fermer
+            </button>
+          )}
         </header>
-        {page === 'Accueil' && (
-          <>
-            <div className="sectionhead">
-              <h1>Accueil</h1>
-              <Weather userId={id} />
-              <small>
-                {new Intl.DateTimeFormat('fr-FR', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                }).format(new Date())}
-              </small>
-            </div>
-            <Home
-              d={d}
-              go={navigate}
-              unread={notes.data?.length || 0}
-              filter={(c) => {
-                setCategory(c)
-                go('Fil')
-              }}
-            />
-          </>
-        )}
+        <div hidden={page !== 'Accueil'}>
+          <Home d={d} go={navigate} unread={notes.data?.length || 0} signout={signout}
+            filter={(c) => { setCategory(c); go('Fil') }} />
+        </div>
         {page === 'Fil' && (
           <Feed d={d} filter={category} setFilter={setCategory} />
         )}

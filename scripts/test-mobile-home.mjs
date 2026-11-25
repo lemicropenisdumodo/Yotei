@@ -98,30 +98,22 @@ try {
   ]) {
     await page.setViewportSize({ width, height })
     await page.goto('https://yotei.test/Yotei/')
-    await page.getByRole('heading', { name: 'Accueil', exact: true }).waitFor()
-    await page.evaluate(() => document.fonts.ready)
-    const layout = await page.evaluate(() => {
-      const rail = document.querySelector('.rail').getBoundingClientRect()
-
-      return {
-        width: document.documentElement.scrollWidth,
-        height: document.documentElement.scrollHeight,
-        dockBottom: Math.abs(rail.bottom - innerHeight) <= 1,
-        bottomGap:
-          rail.top -
-          document.querySelector('.profileShortcut').getBoundingClientRect()
-            .bottom,
-      }
-    })
-    assert.ok(
-      Math.abs(layout.bottomGap - 12) <= 1 &&
-        layout.dockBottom &&
-        layout.width <= width &&
-        layout.height <= height,
-      JSON.stringify({ width, height, layout }),
-    )
-    console.log('Accueil entièrement visible à ' + width + ' × ' + height)
+    await page.getByRole('heading', { name: 'Salut, Membre du cercle !' }).waitFor()
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+    assert.equal(await page.locator('.rail').count(), 0)
   }
+  const home = page.locator('.widgetBoard')
+  const close = () => page.getByRole('button', { name: 'Fermer et revenir à l’accueil' }).click()
+  await page.getByRole('button', { name: 'Modifier', exact: true }).click()
+  const messages = home.locator('[data-widget="Messages"]')
+  await messages.getByLabel('Avancer Messages').click()
+  await messages.getByLabel('Taille').selectOption('large')
+  await messages.getByLabel('Couleur').selectOption('Sauge')
+  await page.reload()
+  await messages.waitFor()
+  assert.equal(await home.locator('section').first().getAttribute('data-widget'), 'Messages')
+  assert.equal(await messages.getAttribute('data-wide'), 'true')
+  assert.equal(await messages.getAttribute('data-tone'), 'Sauge')
   await page.getByRole('button', { name: 'Configurer la météo' }).click()
   const weather = page.getByRole('dialog')
   await weather.getByLabel('Ville', { exact: true }).fill('Lyon')
@@ -131,23 +123,20 @@ try {
   await weather.getByRole('button', { name: 'Fermer la météo' }).click()
   await page.reload()
   await page.getByRole('button', { name: 'Météo à Lyon' }).waitFor()
-  const nav = page.getByRole('navigation', { name: 'Navigation principale' })
-  await page.getByLabel('Mon compte', { exact: true }).click()
-  await page.getByRole('button', { name: 'Mon profil', exact: true }).click()
+  await page.setViewportSize({width:360,height:640})
+  const profileWidget = home.getByRole('button', {name:'Profil', exact:true})
+  await profileWidget.scrollIntoViewIfNeeded()
+  const offset = await page.evaluate(() => window.scrollY)
+  assert.ok(offset > 0)
+  await profileWidget.click()
   await page.getByText('Aucune publication pour le moment.').waitFor()
-  const profileGap = await page.evaluate(() =>
-    Math.abs(
-      document.querySelector('.rail').getBoundingClientRect().top -
-        12 -
-        document
-          .querySelector('.content > .window:last-child')
-          .getBoundingClientRect().bottom,
-    ),
-  )
-  assert.ok(profileGap <= 1, 'Alignement du profil court : ' + profileGap)
-  await nav.getByRole('button', { name: 'Fil', exact: true }).click()
+  await page.goBack()
+  await profileWidget.waitFor()
+  assert.ok(Math.abs(await page.evaluate(() => window.scrollY) - offset) <= 2)
+  await home.getByRole('button', { name: 'Fil', exact: true }).click()
   assert.equal(await page.getByRole('textbox').count(), 0)
-  await nav.getByRole('button', { name: 'Publier', exact: true }).click()
+  await close()
+  await home.getByRole('button', { name: 'Publier', exact: true }).click()
   await page.getByRole('heading', { name: 'Nouvelle publication' }).waitFor()
   await page.getByLabel('Un mot pour le cercle').fill('Publication de test')
   await page
@@ -155,9 +144,11 @@ try {
     .getByRole('button', { name: 'Publier', exact: true })
     .click()
   await page.getByRole('heading', { name: 'Fil d’actualité' }).waitFor()
-  await nav.getByRole('button', { name: 'Amis', exact: true }).click()
+  await close()
+  await home.getByRole('button', { name: 'Amis', exact: true }).click()
   await page.getByRole('heading', { name: 'Amis', exact: true }).waitFor()
-  await nav.getByRole('button', { name: 'Messages', exact: true }).click()
+  await close()
+  await home.getByRole('button', { name: 'Messages', exact: true }).click()
   await page
     .getByRole('region', { name: 'Écrire à un membre' })
     .getByRole('button', { name: 'Camille' })

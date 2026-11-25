@@ -168,7 +168,7 @@ export function Weather({ userId }: { userId: string }) {
         }}
       >
         <Icon size={17} />
-        {now ? now.temperature + ' °C' : 'Météo'}
+        {now ? now.temperature + ' °C' : 'Météo'} {city?.name}
       </button>
       <dialog
         ref={dialog}
