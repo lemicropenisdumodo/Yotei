@@ -14,6 +14,7 @@ let companion
 let posted
 const browser = await chromium.launch({ channel: 'chrome', executablePath:process.env.CHROME_PATH, headless: true })
 try {
+  let seekPosition
   let spotifyConnected=false, playing=true, sharing=true
   const spotifyClient="1".repeat(32)
   let maintenance = {enabled:true,owner:true}
@@ -41,10 +42,11 @@ try {
         spotifyConnected=true
         return route.fulfill({json:{ok:true}})
       }
+      if(body.action==='seek')seekPosition=body.position
       if(body.action==='pause')playing=false
       if(body.action==='play')playing=true
       if(body.action==='sharing')sharing=body.share
-      return route.fulfill({json:{configured:true,clientId:spotifyConnected?undefined:spotifyClient,connected:spotifyConnected,playing,sharing,
+      return route.fulfill({json:{configured:true,clientId:spotifyConnected?undefined:spotifyClient,connected:spotifyConnected,playing,sharing,duration:361000,progress:seekPosition??157000,
         track:spotifyConnected?{title:'Titre de test',artist:'Artiste de test',image:'',url:'https://open.spotify.com/track/test'}:null}})
     }
     if (url.hostname === 'geocoding-api.open-meteo.com')
@@ -141,9 +143,18 @@ try {
     assert.equal(await page.locator('.rail').count(), 0)
   }
   const home = page.locator('.widgetBoard')
+  const square=await home.locator('[data-widget="Spotify"]').boundingBox()
+  assert.ok(Math.abs(square.width-square.height)<1)
   await home.getByRole('button',{name:'Ouvrir Spotify'}).click()
   await page.getByRole('button',{name:'Connecter mon compte Spotify'}).click()
-  await page.getByRole('button',{name:'Déconnecter Spotify'}).waitFor()
+  const playerDialog=page.getByRole('dialog',{name:'Lecteur Spotify'})
+  await playerDialog.getByRole('heading',{name:'Titre de test'}).waitFor()
+  await playerDialog.getByText('6:01',{exact:true}).waitFor()
+  await playerDialog.getByRole('slider').press('Home')
+  await page.waitForFunction(()=>!document.querySelector('dialog input[type=range]')?.disabled)
+  assert.equal(seekPosition,0)
+  await playerDialog.getByText('Options Spotify').click()
+  await playerDialog.getByRole('button',{name:'Déconnecter Spotify'}).waitFor()
   await page.getByRole('button',{name:'Fermer et revenir à l’accueil'}).click()
   await home.getByRole('button',{name:'Pause',exact:true}).click()
   await home.getByRole('button',{name:'Reprendre'}).click()

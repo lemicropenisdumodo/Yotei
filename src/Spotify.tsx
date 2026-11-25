@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { Music2, Play, Pause, SkipBack, SkipForward } from 'lucide-react'
+import { Music2, Play, Pause, SkipBack, SkipForward, X } from 'lucide-react'
 import { db, message, site } from './core'
 
 type Track={title:string;artist:string;image:string;url:string}
-type Player={configured?:boolean;clientId?:string;connected?:boolean;sharing?:boolean;track?:Track|null;playing?:boolean;error?:string;retry?:number}
+type Player={progress?:number;duration?:number;received?:number;configured?:boolean;clientId?:string;connected?:boolean;sharing?:boolean;track?:Track|null;playing?:boolean;error?:string;retry?:number}
 const redirect=new URL('spotify-callback.html',site).href
 const pendingKey='yotei-spotify-authorization'
 const b64=(bytes:Uint8Array)=>btoa(String.fromCharCode(...bytes)).replaceAll('+','-').replaceAll('/','_').replace(/=+$/,'')
@@ -60,7 +60,7 @@ export function useSpotify(id:string,visible:boolean){
       let again=true
       try{
         const data=await call({action:'read'})
-        if(active){setPlayer(data);again=data.connected!==false && data.configured!==false
+        if(active){setPlayer({...data,received:Date.now()});again=data.connected!==false && data.configured!==false
           if(data.retry)retryAt.current=Date.now()+data.retry*1000}
       }catch(e){if(active)setPlayer({error:message(e)})}
       finally{reading=false;if(active&&again)timer=setTimeout(update,Math.max(15000,retryAt.current-Date.now()))}
@@ -68,10 +68,10 @@ export function useSpotify(id:string,visible:boolean){
     void update();document.addEventListener('visibilitychange',update)
     return ()=>{active=false;clearTimeout(timer);document.removeEventListener('visibilitychange',update)}
   },[visible,busy,revision,id])
-  function command(name:string){
+  function command(name:string,position?:number){
     return action(async()=>{
       if(Date.now()<retryAt.current)throw Error('Réessaie après la pause demandée par Spotify.')
-      const data=await call({action:name})
+      const data=await call({action:name,position})
       if(data.retry)retryAt.current=Date.now()+data.retry*1000
       if(data.error)throw Error(data.error)
       await new Promise(resolve=>setTimeout(resolve,400))
@@ -95,10 +95,34 @@ export function SpotifyTile({control,open}:{control:Controls;open:()=>void}){
     <small>{notice||player.error||player.track?.artist}</small></button>
     {player.connected && <Buttons control={control}/>}</div>
 }
-export function SpotifyPage({control,admin}:{control:Controls;admin:boolean}){
+function Timeline({control}:{control:Controls}){
+  const {player}=control
+  const [now,setNow]=useState(Date.now),[draft,setDraft]=useState<number|null>(null)
+  useEffect(()=>{
+    if(!player.playing)return
+    const timer=setInterval(()=>setNow(Date.now()),500)
+    return ()=>clearInterval(timer)
+  },[player.playing])
+  const duration=player.duration||0
+  if(!duration)return null
+  const elapsed=player.playing&&player.received?Math.max(0,now-player.received):0
+  const position=draft??Math.min(duration,(player.progress||0)+elapsed)
+  const time=(ms:number)=>Math.floor(ms/60000)+':'+String(Math.floor(ms/1000)%60).padStart(2,'0')
+  function commit(){if(draft!==null){void control.command('seek',Math.min(duration-1,draft));setDraft(null)}}
+  return <div className="musicTimeline"><input type="range" aria-label="Position dans le morceau" aria-valuetext={time(position)} min={0} max={duration} step={1000} value={position}
+    disabled={control.busy} onChange={e=>setDraft(Number(e.target.value))} onPointerUp={commit} onKeyUp={commit} onBlur={commit} onPointerCancel={()=>setDraft(null)}/>
+    <div><time>{time(position)}</time><time>{time(duration)}</time></div></div>
+}
+export function SpotifyPage({control,admin,close}:{control:Controls;admin:boolean;close:()=>void}){
   const {player,action,busy,notice}=control
   const [share,setShare]=useState(true)
-  return <><h1>Spotify</h1>
+  const dialog=useRef<HTMLDialogElement>(null)
+  useEffect(()=>{const el=dialog.current;el?.showModal();return ()=>el?.close()},[])
+  const track=player.track
+  return <dialog ref={dialog} className="musicDialog" aria-label="Lecteur Spotify" onCancel={e=>{e.preventDefault();close()}}>
+    {track?.image && <img className="musicGlow" src={track.image} alt=""/>}
+    <div className="musicSheet"><header><button aria-label="Fermer et revenir à l’accueil" onClick={close}><X/></button></header>
+    {!track && <h1>Spotify</h1>}
     {player.configured===false && (admin?<form onSubmit={e=>{
       e.preventDefault();const appId=new FormData(e.currentTarget).get('client')
       void action(async()=>{const {error}=await db.rpc('spotify_configure',{app_id:appId});if(error)throw Error('Impossible d’enregistrer cet identifiant.')})
@@ -108,12 +132,13 @@ export function SpotifyPage({control,admin}:{control:Controls;admin:boolean}){
     <label>Client ID public<input name="client" required pattern="[a-fA-F0-9]{32}" autoComplete="off"/></label><button disabled={busy}>Activer Spotify</button></form>:<p>L’administrateur doit d’abord activer Spotify pour le cercle.</p>)}
     {player.clientId&&!player.connected && <><label><input type="checkbox" checked={share} onChange={e=>setShare(e.target.checked)}/> Afficher mon écoute sur mon profil</label>
       <button disabled={busy} onClick={()=>control.connect(share)}>Connecter mon compte Spotify</button></>}
-    {player.connected && <>{player.track?<TrackLine track={player.track}/>:<p>Ouvre Spotify et lance un morceau sur ton appareil.</p>}
-      <Buttons control={control}/><label><input type="checkbox" disabled={busy} checked={!!player.sharing} onChange={e=>{const share=e.target.checked;void action(async()=>{await call({action:'sharing',share})})}}/> Afficher mon écoute sur mon profil</label>
-      <button disabled={busy} onClick={()=>action(async()=>{await call({action:'disconnect'})})}>Déconnecter Spotify</button></>}
+    {player.connected && <>{track?<div className="musicHero">{track.image&&<a href={track.url} target="_blank" rel="noreferrer"><img alt={'Pochette de '+track.title} src={track.image}/></a>}
+      <h2>{track.title}</h2><p>{track.artist}</p><Timeline key={track.url} control={control}/></div>:<p>Ouvre Spotify et lance un morceau sur ton appareil.</p>}
+      <Buttons control={control}/><details className="musicOptions"><summary>Options Spotify</summary><label><input type="checkbox" disabled={busy} checked={!!player.sharing} onChange={e=>{const share=e.target.checked;void action(async()=>{await call({action:'sharing',share})})}}/> Afficher mon écoute sur mon profil</label>
+      <button disabled={busy} onClick={()=>action(async()=>{await call({action:'disconnect'})})}>Déconnecter Spotify</button></details></>}
     {(notice||player.error)&&<p role="status">{notice||player.error}</p>}
     {player.configured===undefined&&!player.error&&<p>Chargement de Spotify…</p>}
-  </>
+  </div></dialog>
 }
 function TrackLine({track}:{track:Track}){
   return <a className="spotifyTrack" href={track.url} target="_blank" rel="noreferrer">{track.image&&<img src={track.image} alt=""/>}<span><small>Spotify</small><strong>{track.title}</strong>{track.artist}</span></a>

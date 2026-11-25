@@ -111,3 +111,22 @@ body:has(.widgetShell){background:var(--canvas,#101113)}
 .musicDetails>*{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.musicDetails small{font-size:.7rem}
 .playButtons{display:flex;justify-content:space-evenly}.playButtons button{min-height:32px;padding:3px 6px;border:0;background:transparent;color:white}.playButtons svg{width:17px}
 .spotifyTrack{display:flex;gap:10px;align-items:center;margin:12px 0}.spotifyTrack img{width:64px;height:64px;object-fit:cover;border-radius:8px}.spotifyTrack span{display:grid}.spotifyTrack small{color:var(--muted)}
+.fixedBoard [data-widget=Spotify]{grid-row-start:auto;align-self:start;aspect-ratio:1;width:calc(100% - 6px)}
+.liveMusic .musicDetails>*{flex-shrink:0;line-height:1.25}
+.liveMusic .musicDetails strong,.liveMusic .musicDetails small:last-child{white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+html:has(.musicDialog[open]){overflow:hidden}
+dialog.musicDialog{padding:0;width:min(92vw,420px);max-height:90dvh;background:#171920;color:#fff;border:1px solid #ffffff42;border-radius:23px;isolation:isolate;overflow:auto;box-shadow:0 18px 80px #000a;margin:auto}
+.musicDialog::backdrop{background:#040409c7}
+.musicGlow{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(22px) brightness(.66);transform:scale(1.02);z-index:-1}
+.musicSheet{padding:clamp(14px,4vw,24px);background:linear-gradient(0deg,#080b11a8,transparent 75%)}
+.musicSheet>header{display:flex;justify-content:flex-end}
+.musicSheet>header button{display:grid;place-items:center;background:#20263170;border:1px solid #ffffff42;border-radius:13px;width:44px;height:44px;color:white}
+.musicHero{text-align:center;margin-top:12px}.musicHero img{display:block;margin:auto;width:min(76%,36dvh);aspect-ratio:1;object-fit:contain;box-shadow:0 8px 22px #0003}
+.musicHero h2{font-size:1.22rem;margin:12px 0 0}.musicHero p{font-size:clamp(1.35rem,6vw,2rem);font-weight:800;line-height:1.2;margin:5px 0 12px;overflow-wrap:anywhere}
+.musicTimeline input{width:100%;height:20px;margin:0;accent-color:white;padding:0}
+.musicTimeline>div{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums;font-size:.85rem}
+.musicDialog .playButtons{align-items:center;justify-content:center;gap:clamp(18px,6vw,44px)}
+.musicDialog .playButtons button{color:white;display:grid;place-items:center;width:44px;height:44px}
+.musicDialog .playButtons button:nth-child(2){background:white;color:#161820;border-radius:50%;width:60px;height:60px}
+.musicDialog .playButtons svg{width:25px;height:25px;fill:currentColor}
+.musicOptions{margin-top:12px}.musicOptions summary{cursor:pointer;font-size:.8rem}

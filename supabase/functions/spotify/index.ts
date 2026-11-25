@@ -3,7 +3,7 @@ const origin='https://lemicropenisdumodo.github.io'
 const redirect=origin+'/Yotei/spotify-callback.html'
 const headers={'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Headers':'authorization, apikey, content-type, x-client-info','Cache-Control':'no-store'}
 const json=(body:unknown,status=200)=>Response.json(body,{status,headers})
-const commands={play:'PUT',pause:'PUT',next:'POST',previous:'POST'} as const
+const commands={play:'PUT',pause:'PUT',next:'POST',previous:'POST',seek:'PUT'} as const
 async function tokens(params:Record<string,string>){
   return fetch('https://accounts.spotify.com/api/token',{method:'POST',body:new URLSearchParams(params),signal:AbortSignal.timeout(8000)})
 }
@@ -63,7 +63,9 @@ Deno.serve(async req=>{
     }
     const command=body.action as keyof typeof commands
     const read=body.action==='read'
-    const response=await fetch('https://api.spotify.com/v1/me/player'+(read?'':'/'+command),{
+    if(command==='seek' && (!Number.isSafeInteger(body.position)||body.position<0||body.position>2147483647))return json({},400)
+    const seek=command==='seek'?'?position_ms='+body.position:''
+    const response=await fetch('https://api.spotify.com/v1/me/player'+(read?'':'/'+command+seek),{
       method:read?'GET':commands[command],headers:{Authorization:'Bearer '+access},signal:AbortSignal.timeout(8000)})
     if(response.status===429)return json({...self,track:null,retry:Math.max(30,Number(response.headers.get('retry-after'))||60),error:gate.own?'Spotify demande une pause avant la prochaine actualisation.':undefined})
     if(response.status===204)return json({...self,track:null})
@@ -74,6 +76,6 @@ Deno.serve(async req=>{
     if(!read)return json({ok:true})
     const player=await response.json(), item=player.item
     if(!item||player.device?.is_private_session||(!gate.own&&!player.is_playing))return json({...self,track:null})
-    return json({...self,playing:player.is_playing,track:{title:item.name,artist:item.artists?.map((a:{name:string})=>a.name).join(', ')||'',image:item.album?.images?.[0]?.url||'',url:item.external_urls?.spotify||''}})
+    return json({...self,playing:player.is_playing,progress:player.progress_ms,duration:item.duration_ms,track:{title:item.name,artist:item.artists?.map((a:{name:string})=>a.name).join(', ')||'',image:item.album?.images?.[0]?.url||'',url:item.external_urls?.spotify||''}})
   }catch{return json({error:'Service Spotify temporairement indisponible.'},502)}
 })

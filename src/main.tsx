@@ -90,7 +90,7 @@ function Network({ session }: { session: Session }) {
     }
   }, [id])
   useLayoutEffect(() => {
-    window.scrollTo(0, page === 'Accueil' ? homeScroll.current : 0)
+    if(page!=='Spotify')window.scrollTo(0, page === 'Accueil' ? homeScroll.current : 0)
     if (page === 'Accueil') lastWidget.current?.focus({ preventScroll: true })
     else closeButton.current?.focus({ preventScroll: true })
   }, [page])
@@ -182,19 +182,19 @@ function Network({ session }: { session: Session }) {
     if (tab === 'Profil') setProfile(id)
     if (tab === 'Fil') { setCategory(''); setPostId('') }
     go(tab)
-    window.scrollTo(0, 0)
+    if(tab!=='Spotify')window.scrollTo(0, 0)
   }
   return (
     <main
       className="desktop widgetShell"
-      data-page={page}
+      data-page={page==='Spotify'?'Accueil':page}
       data-theme={prefs.theme}
     >
       <Media path={me.wallpaper_path} alt="" className="wallpaper" />
       <div className="content">
         <header className="pageHead">
           <div className="wordmark">Yotei<span>.</span></div>
-          {page === 'Accueil' ? (
+          {(page === 'Accueil'||page==='Spotify') ? (
             <div className="headActions"><button aria-label="Paramètres" onClick={()=>{setCustom(false);navigate('Paramètres')}}><Settings size={20}/></button>
             <button className="accountShortcut" onClick={() => navigate('Profil')} aria-label="Ouvrir mon profil">
               <Avatar person={me} /> {me.username}
@@ -205,7 +205,7 @@ function Network({ session }: { session: Session }) {
             </button>
           )}
         </header>
-        <div hidden={page !== 'Accueil'}>
+        <div hidden={page !== 'Accueil' && page !== 'Spotify'}>
           <Home key={id} d={d} go={navigate} openPost={post=>{setPostId(post);setCategory('');go('Fil')}} recent={latest.data} editing={editing} finish={()=>setEditing(false)} photo={prefs.photo} spotify={spotify}/>
         </div>
         {page === 'Paramètres' && <Window title="Paramètres"><h1>Paramètres</h1>
@@ -220,7 +220,7 @@ function Network({ session }: { session: Session }) {
             }}/></label>{prefs.photo && <button onClick={()=>preference({photo:''})}>Retirer la photo</button>}
           </div>}
           {notice && <p role="status">{notice}</p>}</Window>}
-        {page === 'Spotify' && <Window title="Spotify"><SpotifyPage control={spotify} admin={me.admin}/></Window>}
+        {page === 'Spotify' && <SpotifyPage control={spotify} admin={me.admin} close={()=>history.back()}/>}
         {page === 'Fil' && (<><button className="newRec" onClick={()=>navigate('Publier')}>Nouvelle recommandation</button>
           <Feed d={d} filter={category} postId={postId} setFilter={c => {setPostId(''); setCategory(c)}} /></>
         )}

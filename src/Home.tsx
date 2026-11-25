@@ -73,6 +73,22 @@ export function Home({d, recent, openPost, go, editing, finish, photo, spotify}:
   const [target, setTarget] = useState<Widget | null>(null)
   const [storageError, setStorageError] = useState(false)
   const board = useRef<HTMLDivElement>(null)
+  useLayoutEffect(()=>{
+    const grid=board.current
+    const tile=grid?.querySelector<HTMLElement>('[data-widget="Spotify"]')
+    if(!grid||!tile)return
+    const fit=()=>{
+      if(!tile.offsetWidth)return
+      const style=getComputedStyle(tile)
+      const outer=tile.getBoundingClientRect().width+parseFloat(style.marginTop)+parseFloat(style.marginBottom)
+      const row=parseFloat(getComputedStyle(grid).gridAutoRows)
+      tile.style.gridRowEnd='span '+Math.ceil(outer/row)
+    }
+    fit()
+    const observer=new ResizeObserver(fit)
+    observer.observe(grid);observer.observe(tile)
+    return ()=>observer.disconnect()
+  },[])
   const positions = useRef(new Map<string, DOMRect>())
   const visible = layout
   const online = d.people.filter(p => !p.suspended && p.last_seen && Date.now() - Date.parse(p.last_seen) < 90000).length
