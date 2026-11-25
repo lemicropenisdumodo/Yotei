@@ -10,6 +10,7 @@ const peer = {
   id: '6792ee8d-67dc-43bf-997b-842d84bf8663',
   username: 'Camille',
 }
+let companion
 let posted
 const browser = await chromium.launch({ channel: 'chrome', headless: true })
 try {
@@ -50,6 +51,16 @@ try {
           },
         },
       })
+    if (url.pathname.endsWith('/rpc/companion_care')) {
+      const {action,detail} = route.request().postDataJSON()
+      if (action === 'adopt') companion = {model:detail,nickname:'',version:1,food:2,mood:2,asleep:false,days:[],today:'2026-11-25',streak:0,best:0,affection:0}
+      if (action === 'feed') {
+        companion.food--; companion.version++
+        if (!companion.food) Object.assign(companion,{days:[companion.today],streak:1,best:1,affection:1})
+      }
+      if (action === 'rename') {companion.nickname=detail; companion.version++}
+      return route.fulfill({contentType:'application/json',body:JSON.stringify(companion || null)})
+    }
     if (url.pathname.endsWith('/recommendation-preview')) return route.fulfill({json:{title:'Morceau du cercle'}})
     if (url.pathname.endsWith('/posts') && route.request().method() === 'POST') {
       posted = {...route.request().postDataJSON(),id:'rec-test',created_at:new Date().toISOString(),likes:[]}
@@ -104,6 +115,16 @@ try {
     assert.equal(await page.locator('.rail').count(), 0)
   }
   const home = page.locator('.widgetBoard')
+  await home.getByRole('button',{name:'Mon personnage',exact:true}).click()
+  const companionDialog = page.getByRole('dialog')
+  await companionDialog.getByRole('button',{name:'Nonna',exact:true}).click()
+  await companionDialog.getByRole('button',{name:'Donner une bouchée'}).click()
+  await companionDialog.getByRole('button',{name:'Donner une bouchée'}).click()
+  await companionDialog.getByRole('button',{name:'Rassasiée'}).waitFor()
+  await companionDialog.getByRole('button',{name:'Fermer le personnage'}).click()
+  await home.getByRole('button',{name:/Jours ensemble/}).click()
+  await companionDialog.getByRole('heading',{name:'1 jour de suite'}).waitFor()
+  await companionDialog.getByRole('button',{name:'Fermer le personnage'}).click()
   const close = () => page.getByRole('button', { name: 'Fermer et revenir à l’accueil' }).click()
   const messages = home.locator('[data-widget="À découvrir"]')
   const size = () => messages.evaluate(el => [el.offsetWidth, el.offsetHeight])

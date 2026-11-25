@@ -1,3 +1,4 @@
+import {CompanionDialog, CompanionTile, useCompanion, type PetTile} from './Companion'
 import { webLink, type Recommendation } from './recommendation'
 import { TileSettings, palette, ink, isColor, type Appearance } from './TileSettings'
 import {
@@ -48,7 +49,7 @@ export function Avatar({ person }: { person: Directory['me'] }) {
     </span>
   )
 }
-const widgets = ['Fil', 'À découvrir', 'Amis', 'Explorer', 'Météo', 'Publier', 'Profil', 'Administration'] as const
+const widgets = ['Fil', 'À découvrir', 'Amis', 'Explorer', 'Météo', 'Publier', 'Profil', 'Administration', 'Mon personnage', 'Jours ensemble'] as const
 type Widget = typeof widgets[number]
 type Tile = Appearance & { id: Widget }
 function readLayout(key: string): Tile[] {
@@ -76,6 +77,8 @@ export function Home({d, recent, openPost, go, filter}: {
   const [layout, setLayout] = useState(() => readLayout(key))
   const [editing, setEditing] = useState(false)
   const [selected, select] = useState<Widget | null>(null)
+  const companion = useCompanion()
+  const [petPage, setPetPage] = useState<PetTile | null>(null)
   const latest = useRef(layout)
   const [drag, setDrag] = useState<Widget | null>(null)
   const [target, setTarget] = useState<Widget | null>(null)
@@ -120,6 +123,7 @@ export function Home({d, recent, openPost, go, filter}: {
     requestAnimationFrame(() => board.current?.querySelector('[data-widget="'+id+'"]')?.scrollIntoView({block:'start'}))
   }
   function tileContent(id: Widget) {
+    if (id === 'Mon personnage' || id === 'Jours ensemble') return <CompanionTile kind={id} state={companion} wide={!!layout.find(t=>t.id===id)?.wide} open={()=>setPetPage(id)}/>
     if (id === 'À découvrir') return <button className="widgetLink recWidget" onClick={() => recent ? openPost(recent.id) : go('Publier')}>
       {recent && (recent.image_url ? <Media path={recent.image_url} className="recArt" alt="" /> :
         webLink(recent.thumbnail_url) && <img className="recArt" src={webLink(recent.thumbnail_url)} alt="" referrerPolicy="no-referrer" />)}
@@ -182,6 +186,7 @@ export function Home({d, recent, openPost, go, filter}: {
         </>}
       </section>})}
     </div>
+    {petPage && <CompanionDialog kind={petPage} state={companion} close={()=>setPetPage(null)} wallpaper={layout.find(t=>t.id==='Mon personnage')?.image}/>}
     {current && <TileSettings key={current.id} tile={current}
       change={patch => save(latest.current.map(t => t.id === current.id ? {...t,...patch} : t))}
       earlier={slot ? () => move(current.id,visible[slot-1].id) : undefined}

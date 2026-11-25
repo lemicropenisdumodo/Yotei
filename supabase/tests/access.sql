@@ -13,6 +13,24 @@ do $$ begin
 end $$;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+do $$
+declare pet jsonb; initial int; version_before int; tz text;
+begin
+ select name into tz from pg_timezone_names where extract(hour from now() at time zone name)=12 limit 1;
+ pet:=public.companion_care('adopt','Nonna',tz,null);
+ if pet->>'model'<>'Nonna' or (pet->>'asleep')::boolean then raise exception 'Adoption invalide'; end if;
+ initial:=(pet->>'food')::int;
+ if initial not between 2 and 4 then raise exception 'Demande invalide'; end if;
+ version_before:=(pet->>'version')::int;
+ pet:=public.companion_care('feed','','UTC',version_before);
+ pet:=public.companion_care('feed','','UTC',version_before);
+ if (pet->>'food')::int<>initial-1 then raise exception 'Double bouchée'; end if;
+ while (pet->>'food')::int>0 loop pet:=public.companion_care('feed','','UTC',(pet->>'version')::int); end loop;
+ while (pet->>'mood')::int>0 loop pet:=public.companion_care('pat','','UTC',(pet->>'version')::int); end loop;
+ if pet->>'streak'<>'1' or pet->>'affection'<>'1' or pet->>'best'<>'1' then raise exception 'Double récompense'; end if;
+ pet:=public.companion_care('rename','Nona','UTC',(pet->>'version')::int);
+ if pet->>'nickname'<>'Nona' then raise exception 'Surnom perdu'; end if;
+end $$;
 insert into public.posts(source_url,source_title,category,user_id,content) values('https://example.org/watch','Titre','Vidéo',auth.uid(),'RLS transaction test');
 insert into public.posts(source_url,source_title,user_id,content,category,rating) values('https://example.org/watch','Titre',auth.uid(),'Une recommandation','Cinéma',4);
 do $$ begin
@@ -46,6 +64,7 @@ do $$ begin
 end $$;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
 do $$ begin
+ if public.companion_care() is not null then raise exception 'Compagnon visible à un tiers'; end if;
  if (select count(*) from public.messages where content='test privé')<>1 then raise exception 'Message invisible au destinataire'; end if;
  if not exists(select 1 from storage.objects where bucket_id='yotei-media' and name='10000000-0000-4000-8000-000000000001/rls-test.png') then raise exception 'Média du cercle invisible';end if;
  if exists(select 1 from public.member_accounts()) then raise exception 'Annuaire administratif exposé';end if;
