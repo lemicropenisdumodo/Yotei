@@ -1,6 +1,6 @@
 import {CompanionDialog, CompanionTile, useCompanion, type PetTile} from './Companion'
 import { webLink, type Recommendation } from './recommendation'
-import { ClockTiles, Market, SpotifyArt } from './Widgets'
+import { ClockTiles, Market, useMarkets, spotifyPath } from './Widgets'
 import {
   Aperture,
   Grip, Check, ChevronLeft, ChevronRight, Music2, Image as Picture,
@@ -65,6 +65,7 @@ export function Home({d, recent, openPost, go, editing, finish, photo, spotify}:
   const [layout, setLayout] = useState(() => readLayout(key))
   const [selected, select] = useState<Widget | null>(null)
   const [forecastHost,setForecastHost]=useState<HTMLDivElement|null>(null)
+  const marketRows=useMarkets()
   const companion = useCompanion()
   const [petPage, setPetPage] = useState<PetTile | null>(null)
   const [drag, setDrag] = useState<Widget | null>(null)
@@ -107,17 +108,20 @@ export function Home({d, recent, openPost, go, editing, finish, photo, spotify}:
     if (id === 'Recommandations') return <button className="widgetLink recWidget" aria-label="Recommandations" onClick={() => recent ? openPost(recent.id) : go('Fil')}>
       {recent && (recent.image_url ? <Media path={recent.image_url} className="recArt" alt="" /> :
         webLink(recent.thumbnail_url) && <img className="recArt" src={webLink(recent.thumbnail_url)} alt="" referrerPolicy="no-referrer" />)}
-      <small>Recommandations ↗</small><strong>{recent?.source_title || 'La première reco du cercle'}</strong>
+      <strong>Recommandation</strong><b>{recent?.source_title || 'La première reco du cercle'}</b>
       <small>{recent ? d.name(recent.user_id)+' · '+recent.category : 'Partager un film, une vidéo ou un son'}</small>
     </button>
     if (id === 'Prévisions') return <div className="forecastHost" ref={setForecastHost}/>
     if (id === 'Météo') return <Weather userId={d.me.id} forecastHost={forecastHost}/>
-    if (id === 'Marchés' || id === 'Courbe') return <Market chart={id==='Courbe'}/>
+    if (id === 'Marchés' || id === 'Courbe') return <Market rows={marketRows} chart={id==='Courbe'}/>
     if (id === 'Date' || id === 'Heure' || id === 'Batterie') return <ClockTiles kind={id}/>
     if (id === 'Photo') return photo ? <img className="memoryPhoto" src={photo} alt="Ma photo"/> : <div className="stillTile"><Picture/><strong>Ma photo</strong></div>
     if (id === 'Décor') return <span className="bang" aria-hidden="true">!</span>
-    if (id === 'Spotify') return <button className="widgetLink musicTile" onClick={()=>go('Spotify')}><SpotifyArt link={spotify}/><Music2/><strong>Spotify</strong></button>
-    return <button className="widgetLink friendsTile" aria-label="Amis" onClick={()=>go('Amis')}><span>{d.people.filter(p=>!p.suspended).slice(0,3).map(p=><Avatar key={p.id} person={p}/>)}</span><small>Amis · {online} en ligne</small></button>
+    if (id === 'Spotify') return <div className="spotifyTile">{spotifyPath(spotify) ?
+      <iframe className="miniPlayer" title="Lecture Spotify" src={'https://open.spotify.com/embed/'+spotifyPath(spotify)+'?theme=0'} allow="encrypted-media; autoplay"/> :
+      <div className="recordSleeve"><span className="vinyl"/><Music2/></div>}
+      <button aria-label="Ouvrir Spotify" onClick={()=>go('Spotify')}>Spotify ↗</button></div>
+    return <button className="widgetLink friendsTile" aria-label="Amis" title={'Amis · '+online+' en ligne'} onClick={()=>go('Amis')}><span>{d.people.filter(p=>!p.suspended).slice(0,3).map(p=><Avatar key={p.id} person={p}/>)}</span></button>
   }
   return <>
     <div className="boardHeading"><h1>Salut, {d.me.username} !</h1>

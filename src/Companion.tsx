@@ -68,12 +68,17 @@ function Week({pet}:{pet:Pet}) {
 export function CompanionTile({kind,state,open,wide}:{kind:PetTile;state:State;open:()=>void;wide:boolean}) {
   const p = state.pet
   if (kind === 'Jours ensemble') return <div className="widgetLink petCounter">
-    <Flame/><small>Jours ensemble</small><strong>{p?.streak ?? 0} jour{(p?.streak ?? 0)>1?'s':''}</strong>
-    <small>{p ? 'Record · '+p.best : 'Première série à venir'}</small>{wide && p && <Week pet={p}/>}
+    <Flame className="streakFlame"/><strong>{p?.streak ?? 0} jour{(p?.streak ?? 0)>1?'s':''}</strong>
+    <small>de suite</small>{wide && p && <Week pet={p}/>}
   </div>
   return <button className="widgetLink petShortcut" onClick={open} aria-label="Mon personnage">
-    <small>Mon personnage</small><strong>{p ? p.nickname || p.model : 'Choisir'}</strong>
-    {p && <><small>{label(p)}</small><span className="petReadings"><span aria-label={"Moral : "+(4-p.mood)+" sur 4"}><Heart size={14}/>{4-p.mood}/4</span><span aria-label={"Nourriture : "+(4-p.food)+" sur 4"}>🍙 {4-p.food}/4</span></span><img src={art(p.model,p.asleep?'sleep':'idle')} alt=""/></>}
+    <strong>{p ? p.nickname || p.model : 'Mon personnage'}</strong>
+    {p ? <><small className="petStatus">{label(p)}</small><small className="petLevel">Nv {1+Math.floor(p.affection/5)}</small>
+      <span className="petReadings">{(['mood','food'] as const).map(need=><span key={need}
+        style={{background:'conic-gradient(#fff '+((4-p[need])*25)+'%, #ffffff35 0)'}}
+        aria-label={(need==='food'?'Nourriture':'Moral')+' : '+(4-p[need])+' sur 4'}>
+        <i>{need==='mood'?<Heart fill="currentColor"/>:<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18C1 14 7 3 12 3s11 11 8 15c-2 3-14 3-16 0Z" fill="none" stroke="currentColor" strokeWidth="2.7"/><rect x="9" y="13" width="6" height="7" rx="1" fill="currentColor"/></svg>}</i></span>)}</span></>:<small>Choisir ↗</small>}
+    <img src={art(p?.model||'Tsunade',p?.asleep?'sleep':'idle')} alt=""/>
   </button>
 }
 export function CompanionDialog({kind,state,close,wallpaper}:{kind:PetTile;state:State;close:()=>void;wallpaper?:string}) {

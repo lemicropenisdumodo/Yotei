@@ -45,3 +45,60 @@ body:has(.widgetShell){background:var(--canvas,#101113)}
 .miniForecast{display:flex;align-items:center;justify-content:space-evenly;padding:3px 6px}
 .miniForecast span{display:grid;justify-items:center;line-height:1;font-size:.85rem}
 .miniForecast small{font-size:.72rem}
+
+/* Proportions du tableau mobile : 17 parts à gauche, 13 à droite. */
+.widgetShell[data-theme=Graphite]{--canvas:#030304;--surface:#171719;--line:#28282b}
+.fixedBoard{container-type:inline-size;grid-template-columns:repeat(30,minmax(0,1fr));column-gap:0;row-gap:0;grid-auto-rows:clamp(3px,.9vw,7px)}
+.fixedBoard .homeTile{margin:3px;grid-column:span 17;grid-row:span 19;border-radius:clamp(9px,2.6vw,20px);border:1px solid var(--line);background:linear-gradient(135deg,color-mix(in srgb,var(--surface),white 3%),var(--surface))}
+.fixedBoard [data-widget=Courbe]{grid-column:span 13}
+.fixedBoard [data-widget=Batterie]{grid-column:span 5;grid-row:span 14}
+.fixedBoard [data-widget=Date]{grid-column:span 6;grid-row:span 14}
+.fixedBoard [data-widget=Météo],.fixedBoard [data-widget=Prévisions]{grid-column:span 19;grid-row:span 14}
+.fixedBoard [data-widget=Heure]{grid-column:span 11;grid-row:span 14}
+.fixedBoard [data-widget="Mon personnage"]{grid-row:span 55;border-radius:clamp(18px,5vw,38px);border:2px solid #40434b;background:radial-gradient(ellipse at 90% 14%,#337c40 0%,#235e39 27%,transparent 66%),linear-gradient(125deg,#080a11,#04060c)}
+.fixedBoard [data-widget=Amis]{grid-column:span 13;grid-row:span 16}
+.fixedBoard [data-widget="Jours ensemble"]{grid-column:span 9;grid-row:span 39;background:radial-gradient(ellipse at 50% 25%,#64233a,transparent 64%),#161517}
+.fixedBoard [data-widget=Décor]{grid-column:span 4;grid-row:span 39;background:transparent;border:0}
+.fixedBoard [data-widget=Photo],.fixedBoard [data-widget=Spotify]{grid-row:span 32}
+.fixedBoard [data-widget=Spotify]{grid-column:span 13}
+.fixedBoard [data-widget=Recommandations]{grid-column:span 30;grid-row:span 29;background:#0d0d10;border:2px solid color-mix(in srgb,var(--accent),transparent 77%);box-shadow:inset 0 0 7px #ffffff12}
+.fixedBoard .petShortcut{padding:6%;gap:3px;isolation:isolate}
+.fixedBoard .petShortcut strong{font-weight:800;font-size:clamp(1.15rem,5.2cqw,2rem);max-width:78%;z-index:1}
+.fixedBoard .petShortcut img{width:76%;height:140%;right:-6%;top:17%;bottom:auto;object-fit:contain;object-position:center top}
+.fixedBoard .petStatus{width:fit-content;padding:1px 7px;background:#345e40;color:#fff;border:1px solid #a3e8a29c;border-radius:12px}
+.petReadings{position:absolute;bottom:12%;left:8%;gap:5px}
+.petReadings span,.petReadings i{display:grid;place-items:center;border-radius:50%;width:clamp(27px,8cqw,48px);aspect-ratio:1}
+.petReadings i{background:#090b11;width:80%}.petReadings svg{width:62%;height:62%}
+.fixedBoard .petCounter{gap:2px}.petCounter svg.streakFlame{width:55%;height:49%;stroke:#ff4082;fill:#ff4082;filter:drop-shadow(0 0 7px #ff3275)}
+.petCounter .streakFlame path:last-child{fill:white}
+.fixedBoard .friendsTile>span{width:100%;height:100%;justify-content:space-evenly;align-items:center}
+.fixedBoard .friendsTile .avatar{width:auto;height:min(100%,10cqw);aspect-ratio:1;flex-shrink:1;margin:0}
+.fixedBoard .bang{font-size:clamp(3rem,24cqw,10rem);color:white;text-shadow:0 0 6px white,0 0 12px #ccc}
+.fixedBoard .recWidget{justify-content:flex-start;gap:0;padding:4% 5%}
+.fixedBoard .recWidget strong{font-size:clamp(1.22rem,5cqw,2.5rem);font-weight:800}
+.recWidget .recArt{opacity:.84;mask-image:linear-gradient(to bottom,transparent 5%,#000 94%)}
+.recWidget b,.recWidget small{max-width:95%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.marketRows,.marketChart,.dateTile{display:flex;height:100%;flex-direction:column;justify-content:center;padding:4% 6%;line-height:1.1}
+.marketRows>div,.marketChart header{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.marketRows{gap:4px;font-size:clamp(.6rem,2.3cqw,.94rem);font-variant-numeric:tabular-nums}
+.marketRows em{color:#ff838c;font-style:normal}.marketRows em[data-up=true]{color:#8ada9c}
+.marketChart{gap:3px}.marketChart header{font-size:clamp(.6rem,2.4cqw,.94rem)}.marketChart small{font-size:.65rem}
+.marketChart svg{width:100%;height:50%;overflow:visible}.marketChart polyline{fill:none;stroke:#79ce9b;stroke-width:2;vector-effect:non-scaling-stroke}
+.chargeTile,.flipClock{display:flex;height:100%;align-items:center;justify-content:center}
+.chargeRing{background:conic-gradient(#8bdd89 var(--charge),#384138 0);display:grid;position:relative;align-content:center;justify-items:center;isolation:isolate;line-height:1;color:white;width:min(80%,9cqw);aspect-ratio:1;border-radius:50%;font-size:clamp(.62rem,2.4cqw,1rem)}
+.chargeRing::before{content:"";position:absolute;inset:3px;background:var(--surface);z-index:-1;border-radius:50%}
+.dateTile small{font-size:clamp(.6rem,2.3cqw,.95rem);text-transform:capitalize;color:#c2c2c5}
+.dateTile b{font-size:clamp(.72rem,3cqw,1.15rem)}
+.flipClock{gap:2%;padding:3%}
+.flipClock b{display:grid;place-items:center;flex:1;height:98%;background:linear-gradient(#27272a 48%,#0b0b0c 49% 52%,#202023 53%);border-radius:4px;font-size:clamp(1.1rem,6.7cqw,3rem);line-height:1}
+.spotifyTile{position:relative;height:100%;overflow:hidden;background:linear-gradient(145deg,#48353c,#232a33 60%,#17191c)}
+.spotifyTile>button{position:absolute;top:5%;left:5%;border:0;border-radius:16px;padding:2px 8px;background:#171719de;color:white;font-size:.75rem}
+.recordSleeve{display:grid;place-items:center;height:100%;isolation:isolate;overflow:hidden;position:relative}
+.vinyl{position:absolute;width:88%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#131419 3%,#a67469 4% 20%,transparent 21%),repeating-radial-gradient(#151519 1px,#34343a 2px,#18181c 3px);transform:translate(24%,18%);z-index:-1}
+.recordSleeve svg{color:#f6dbcc}.miniPlayer{position:absolute;bottom:0;left:0;width:155%;height:152px;transform:scale(.645);transform-origin:bottom left;border:0}
+.fixedBoard .petShortcut:has(.petLevel) strong{max-width:66%;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.fixedBoard .petStatus{position:absolute;top:7%;right:4%;max-width:33%;text-overflow:ellipsis;white-space:nowrap;overflow:hidden;font-size:clamp(.55rem,1.9cqw,.88rem)}
+.fixedBoard .petLevel{font-weight:800}
+.fixedBoard .petShortcut img{height:167%;width:102%;right:-20%;top:17%}
+.fixedBoard .weatherChip{gap:6px;text-align:left}.weatherPlace{margin-right:auto;font-size:clamp(.74rem,2.6cqw,1.1rem);line-height:1.2}.weatherPlace small{display:block;font-size:.69em;opacity:.76}
+.weatherChip b{font-size:clamp(1rem,4.6cqw,1.9rem)}

@@ -172,8 +172,8 @@ export function Weather({ userId,forecastHost }: { userId: string;forecastHost?:
           dialog.current?.showModal()
         }}
       >
-        <Icon size={17} />
-        {now ? now.temperature + ' °C' : 'Météo'} {city?.name}
+        <span className="weatherPlace">{city?.name || 'Météo'}<small>{now ? label : city ? 'Prévisions' : 'Choisir une ville'}</small></span>
+        <Icon size={20}/><b>{now ? now.temperature+'°' : '—'}</b>
       </button>
       <dialog
         ref={dialog}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { BatteryMedium } from 'lucide-react'
+import { Zap } from 'lucide-react'
+import type { CSSProperties } from 'react'
 
 type Battery = EventTarget & { level:number }
 export function ClockTiles({kind}:{kind:'Date'|'Heure'|'Batterie'}) {
@@ -16,25 +17,53 @@ export function ClockTiles({kind}:{kind:'Date'|'Heure'|'Batterie'}) {
     api.getBattery?.().then(b=>{if(disposed)return;device=b;update();b.addEventListener('levelchange',update)}).catch(()=>{})
     return ()=>{disposed=true;device?.removeEventListener('levelchange',update)}
   },[kind])
-  if(kind==='Batterie')return <div className="stillTile" title={battery===null?'Batterie indisponible':'Batterie'}><BatteryMedium/><strong>{battery===null?'—':battery+' %'}</strong></div>
-  return <time className="stillTile">{kind==='Date' && <small>{date.toLocaleDateString('fr',{weekday:'short'})}</small>}<strong>{kind==='Date'?date.toLocaleDateString('fr',{day:'numeric',month:'short'}):date.toLocaleTimeString('fr',{hour:'2-digit',minute:'2-digit'})}</strong></time>
+  if(kind==='Batterie')return <div className="chargeTile" aria-label={battery===null?'Batterie indisponible':'Batterie '+battery+' %'}>
+    <span className="chargeRing" style={{'--charge':(battery||0)+'%'} as CSSProperties}><Zap size={12}/><b>{battery??'—'}</b></span></div>
+  if(kind==='Heure'){
+    const time=date.toLocaleTimeString('fr',{hour:'2-digit',minute:'2-digit'})
+    return <time className="flipClock" aria-label={time}>{time.replace(':','').split('').map((n,i)=><b key={i}>{n}</b>)}</time>
+  }
+  return <time className="dateTile"><small>{date.toLocaleDateString('fr',{weekday:'long'})}</small><b>{date.toLocaleDateString('fr',{day:'numeric',month:'short'})}</b></time>
 }
-export function Market({chart}:{chart:boolean}){
-  const opts=chart?{symbol:'NASDAQ:AAPL',dateRange:'1M'}:{symbols:['NASDAQ:AAPL','NASDAQ:MSFT','NASDAQ:NVDA'].map(proName=>({proName,title:proName.split(':')[1]})),displayMode:'adaptive'}
-  const url='https://s.tradingview.com/embed-widget/'+(chart?'mini-symbol-overview':'ticker-tape')+'/?locale=fr#'+encodeURIComponent(JSON.stringify({...opts,width:'100%',height:'100%',colorTheme:'dark',isTransparent:true}))
-  return <iframe className="marketFrame" src={url} title={chart?'Évolution Apple':'Cours de bourse'} loading="lazy" tabIndex={-1} sandbox="allow-scripts allow-same-origin"/>
+const symbols=['AAPL','MSFT','NVDA']
+type Quote={symbol:string;close:number;change:number;history:number[]}
+export function useMarkets(){
+  const [rows,setRows]=useState<Quote[]>([])
+  useEffect(()=>{
+    const controller=new AbortController()
+    async function update(){
+      const quotes=await Promise.all(symbols.map(async symbol=>{
+        const fields=['close','change',...Array.from({length:14},(_,i)=>'close['+(i+1)+']')]
+        try{
+          const response=await fetch('https://scanner.tradingview.com/symbol?'+new URLSearchParams({symbol:'NASDAQ:'+symbol,fields:fields.join(',')}),{signal:controller.signal})
+          if(!response.ok)return null
+          const values=await response.json()
+          if(!Number.isFinite(values.close)||!Number.isFinite(values.change))return null
+          return {symbol,close:values.close,change:values.change,history:[...fields.slice(2).reverse(),'close'].map(k=>values[k]).filter(Number.isFinite)}
+        }catch{return null}
+      }))
+      if(!controller.signal.aborted)setRows(old=>symbols.flatMap((symbol,i)=>quotes[i]||old.find(q=>q.symbol===symbol)||[]))
+    }
+    void update()
+    const timer=setInterval(update,300000)
+    return ()=>{controller.abort();clearInterval(timer)}
+  },[])
+  return rows
+}
+const price=(n:number)=>n.toLocaleString('fr',{minimumFractionDigits:2,maximumFractionDigits:2})
+export function Market({chart,rows}:{chart:boolean;rows:Quote[]}){
+  const quote=rows.find(q=>q.symbol==='AAPL')
+  if(chart){
+    const data=quote?.history||[], min=Math.min(...data), range=Math.max(...data)-min
+    const points=data.map((n,i)=>(i*100/(data.length-1))+','+(24-(n-min)/(range||1)*22)).join(' ')
+    return <div className="marketChart"><header><b>AAPL</b><strong>{quote?price(quote.close):'—'}</strong></header>
+      {data.length>1?<svg viewBox="0 0 100 26" preserveAspectRatio="none" role="img" aria-label="Évolution des clôtures Apple"><polyline points={points}/></svg>:<small>Cours indisponible</small>}</div>
+  }
+  return <div className="marketRows" aria-label="Cours en dollars">{symbols.map(symbol=>{
+    const q=rows.find(item=>item.symbol===symbol)
+    return <div key={symbol}><b>{symbol}</b><span>{q?price(q.close):'—'}</span><em data-up={(q?.change??0)>=0}>{q?(q.change>0?'+':'')+price(q.change)+' %':'—'}</em></div>
+  })}</div>
 }
 export function spotifyPath(link:string){
   return /^https:\/\/open\.spotify\.com\/(?:intl-[a-z]+\/)?((?:track|album|playlist|episode)\/[a-zA-Z0-9]{22})(?:[?#].*)?$/.exec(link.trim())?.[1]
-}
-export function SpotifyArt({link}:{link:string}){
-  const [art,setArt]=useState('')
-  useEffect(()=>{
-    setArt('')
-    if(!spotifyPath(link))return
-    const c=new AbortController()
-    fetch('https://open.spotify.com/oembed?url='+encodeURIComponent(link),{signal:c.signal}).then(r=>r.json()).then(data=>{if(!c.signal.aborted && data.thumbnail_url?.startsWith('https://'))setArt(data.thumbnail_url)}).catch(()=>{})
-    return ()=>c.abort()
-  },[link])
-  return art?<img src={art} alt="" className="albumArt"/>:null
 }
