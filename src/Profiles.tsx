@@ -1,3 +1,4 @@
+import {ProfileListening} from './Spotify'
 import { webLink } from './recommendation'
 import { Music2, Palette } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
@@ -63,6 +64,7 @@ export function ProfilePage({
           </div>
         </div>
         <p>{p.bio || 'Aucune biographie pour le moment.'}</p>
+        <ProfileListening key={p.id} id={p.id}/>
         {p.music && (
           <p className="musicLine">
             <Music2 size={18} /> {p.music}

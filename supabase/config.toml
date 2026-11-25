@@ -10,3 +10,6 @@ verify_jwt = false
 
 [functions.recommendation-preview]
 verify_jwt = false
+
+[functions.spotify]
+verify_jwt = false

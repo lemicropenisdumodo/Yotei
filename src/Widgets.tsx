@@ -64,6 +64,3 @@ export function Market({chart,rows}:{chart:boolean;rows:Quote[]}){
     return <div key={symbol}><b>{symbol}</b><span>{q?price(q.close):'—'}</span><em data-up={(q?.change??0)>=0}>{q?(q.change>0?'+':'')+price(q.change)+' %':'—'}</em></div>
   })}</div>
 }
-export function spotifyPath(link:string){
-  return /^https:\/\/open\.spotify\.com\/(?:intl-[a-z]+\/)?((?:track|album|playlist|episode)\/[a-zA-Z0-9]{22})(?:[?#].*)?$/.exec(link.trim())?.[1]
-}

@@ -14,6 +14,8 @@ let companion
 let posted
 const browser = await chromium.launch({ channel: 'chrome', executablePath:process.env.CHROME_PATH, headless: true })
 try {
+  let spotifyConnected=false, playing=true, sharing=true
+  const spotifyClient="1".repeat(32)
   let maintenance = {enabled:true,owner:true}
   const page = await browser.newPage({ isMobile: true, hasTouch: true })
   await page.routeWebSocket('**/*', () => {})
@@ -22,6 +24,28 @@ try {
     if (url.hostname === 'yotei.test') {
       const path = url.pathname.replace(/^\/Yotei\//, '') || 'index.html'
       return route.fulfill({ path: resolve('dist', path) })
+    }
+    if (url.hostname==='accounts.spotify.com' && url.pathname==='/authorize'){
+      assert.equal(url.searchParams.get('code_challenge_method'),'S256')
+      assert.ok(url.searchParams.get('code_challenge')?.length===43)
+      const redirect=new URL(url.searchParams.get('redirect_uri'))
+      redirect.searchParams.set('code','fixture-code')
+      redirect.searchParams.set('state',url.searchParams.get('state'))
+      return route.fulfill({contentType:'text/html',body:'<script>location.replace('+JSON.stringify(redirect.href)+')</script>'})
+    }
+    if(url.pathname.endsWith('/functions/v1/spotify')){
+      const body=route.request().postDataJSON()
+      if(body.action==='connect'){
+        assert.equal(body.code,'fixture-code')
+        assert.ok(body.verifier.length>=43)
+        spotifyConnected=true
+        return route.fulfill({json:{ok:true}})
+      }
+      if(body.action==='pause')playing=false
+      if(body.action==='play')playing=true
+      if(body.action==='sharing')sharing=body.share
+      return route.fulfill({json:{configured:true,clientId:spotifyConnected?undefined:spotifyClient,connected:spotifyConnected,playing,sharing,
+        track:spotifyConnected?{title:'Titre de test',artist:'Artiste de test',image:'',url:'https://open.spotify.com/track/test'}:null}})
     }
     if (url.hostname === 'geocoding-api.open-meteo.com')
       return route.fulfill({
@@ -117,6 +141,13 @@ try {
     assert.equal(await page.locator('.rail').count(), 0)
   }
   const home = page.locator('.widgetBoard')
+  await home.getByRole('button',{name:'Ouvrir Spotify'}).click()
+  await page.getByRole('button',{name:'Connecter mon compte Spotify'}).click()
+  await page.getByRole('button',{name:'Déconnecter Spotify'}).waitFor()
+  await page.getByRole('button',{name:'Fermer et revenir à l’accueil'}).click()
+  await home.getByRole('button',{name:'Pause',exact:true}).click()
+  await home.getByRole('button',{name:'Reprendre'}).click()
+  await home.getByRole('button',{name:'Pause',exact:true}).waitFor()
   await home.getByRole('button',{name:'Mon personnage',exact:true}).click()
   const companionDialog = page.getByRole('dialog')
   await companionDialog.getByRole('button',{name:'Nonna',exact:true}).click()
@@ -161,6 +192,7 @@ try {
   await page.setViewportSize({width:360,height:640})
   await page.getByRole('button',{name:'Ouvrir mon profil'}).click()
   await page.getByRole('button',{name:'Déconnexion'}).waitFor()
+  await page.getByRole('heading',{name:'Écoute en ce moment'}).waitFor()
   await close()
   const rec=home.getByRole('button',{name:'Recommandations'})
   await rec.scrollIntoViewIfNeeded()

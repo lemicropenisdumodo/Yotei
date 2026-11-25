@@ -1,0 +1,5 @@
+<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="referrer" content="no-referrer"><title>Connexion à Yotei</title><script>
+const params=new URLSearchParams(location.search), dest=new URL('./',location.href);
+for(const key of ['state','code','error'])if(params.has(key))dest.searchParams.set('spotify_'+key,params.get(key));
+location.replace(dest.href);
+</script><p>Retour à Yotei…</p></html>

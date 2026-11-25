@@ -104,3 +104,10 @@ body:has(.widgetShell){background:var(--canvas,#101113)}
 .weatherChip b{font-size:clamp(1rem,4.6cqw,1.9rem)}
 
 .layoutActions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.liveMusic{height:100%;position:relative;display:flex;flex-direction:column;justify-content:flex-end;isolation:isolate}
+.liveMusic>img,.liveMusic>.recordSleeve{position:absolute;inset:0;height:100%;width:100%;object-fit:cover;z-index:-2}
+.liveMusic::before{content:"";position:absolute;inset:0;background:linear-gradient(transparent,#121018ed);z-index:-1}
+.liveMusic .musicDetails{flex:1;min-height:0;width:100%;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;text-align:left;background:none;border:0;padding:6px;color:white}
+.musicDetails>*{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.musicDetails small{font-size:.7rem}
+.playButtons{display:flex;justify-content:space-evenly}.playButtons button{min-height:32px;padding:3px 6px;border:0;background:transparent;color:white}.playButtons svg{width:17px}
+.spotifyTrack{display:flex;gap:10px;align-items:center;margin:12px 0}.spotifyTrack img{width:64px;height:64px;object-fit:cover;border-radius:8px}.spotifyTrack span{display:grid}.spotifyTrack small{color:var(--muted)}

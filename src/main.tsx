@@ -27,7 +27,7 @@ import {
   type Category,
 } from './Home'
 import {thumbnail} from './TileSettings'
-import {spotifyPath} from './Widgets'
+import {useSpotify,SpotifyPage} from './Spotify'
 import { Settings, LogOut, X } from 'lucide-react'
 import '@fontsource-variable/manrope/index.css'
 import '@fontsource-variable/space-grotesk/index.css'
@@ -47,9 +47,9 @@ function Network({ session }: { session: Session }) {
     [postId, setPostId] = useState(''),
     [revision, bump] = useState(0)
   const prefKey = 'yotei-dashboard-'+id
-  const [prefs,setPrefs] = useState<{theme:string;photo:string;spotify:string}>(()=>{
-    try { const saved=JSON.parse(localStorage.getItem(prefKey)||'{}');return {theme:saved.theme||'Graphite',photo:saved.photo||'',spotify:saved.spotify||''} }
-    catch {return {theme:'Graphite',photo:'',spotify:''}}
+  const [prefs,setPrefs] = useState<{theme:string;photo:string}>(()=>{
+    try { const saved=JSON.parse(localStorage.getItem(prefKey)||'{}');return {theme:saved.theme||'Graphite',photo:saved.photo||''} }
+    catch {return {theme:'Graphite',photo:''}}
   })
   const [editing,setEditing]=useState(false)
   const [custom,setCustom]=useState(false)
@@ -59,6 +59,8 @@ function Network({ session }: { session: Session }) {
     try {localStorage.setItem(prefKey,JSON.stringify(next));setPrefs(next);setNotice('')}
     catch {setNotice('Impossible d’enregistrer sur cet appareil.')}
   }
+  const spotifyReturn=useRef(new URLSearchParams(location.search).has('spotify_state'))
+  const spotify=useSpotify(id,page==='Accueil'||page==='Spotify')
   const homeScroll = useRef(0)
   const lastWidget = useRef<HTMLElement | null>(null)
   const closeButton = useRef<HTMLButtonElement>(null)
@@ -76,6 +78,7 @@ function Network({ session }: { session: Session }) {
     const previous = history.scrollRestoration
     history.scrollRestoration = 'manual'
     history.replaceState({ yotei: id, page: 'Accueil' }, '')
+    if(spotifyReturn.current){spotifyReturn.current=false;go('Spotify')}
     const back = () => {
       const state = history.state
       setPage(state?.yotei === id ? state.page : 'Accueil')
@@ -203,7 +206,7 @@ function Network({ session }: { session: Session }) {
           )}
         </header>
         <div hidden={page !== 'Accueil'}>
-          <Home key={id} d={d} go={navigate} openPost={post=>{setPostId(post);setCategory('');go('Fil')}} recent={latest.data} editing={editing} finish={()=>setEditing(false)} photo={prefs.photo} spotify={prefs.spotify}/>
+          <Home key={id} d={d} go={navigate} openPost={post=>{setPostId(post);setCategory('');go('Fil')}} recent={latest.data} editing={editing} finish={()=>setEditing(false)} photo={prefs.photo} spotify={spotify}/>
         </div>
         {page === 'Paramètres' && <Window title="Paramètres"><h1>Paramètres</h1>
           <button onClick={()=>setCustom(!custom)} aria-expanded={custom}>Personnalisation</button>
@@ -217,14 +220,7 @@ function Network({ session }: { session: Session }) {
             }}/></label>{prefs.photo && <button onClick={()=>preference({photo:''})}>Retirer la photo</button>}
           </div>}
           {notice && <p role="status">{notice}</p>}</Window>}
-        {page === 'Spotify' && <Window title="Spotify"><h1>Spotify</h1>
-          {spotifyPath(prefs.spotify) && <iframe title="Lecteur Spotify" className="spotifyPlayer" src={'https://open.spotify.com/embed/'+spotifyPath(prefs.spotify)} allow="encrypted-media; autoplay"/>}
-          <form onSubmit={e=>{e.preventDefault();const url=String(new FormData(e.currentTarget).get('link')||'').trim()
-            if(url && !spotifyPath(url)){setNotice('Choisis un lien Spotify de morceau, album, playlist ou épisode.');return}
-            preference({spotify:url})}}>
-            <label>Lien Spotify<input name="link" type="url" defaultValue={prefs.spotify} placeholder="https://open.spotify.com/…"/></label>
-            <button>Enregistrer</button>{notice && <p role="status">{notice}</p>}
-          </form></Window>}
+        {page === 'Spotify' && <Window title="Spotify"><SpotifyPage control={spotify} admin={me.admin}/></Window>}
         {page === 'Fil' && (<><button className="newRec" onClick={()=>navigate('Publier')}>Nouvelle recommandation</button>
           <Feed d={d} filter={category} postId={postId} setFilter={c => {setPostId(''); setCategory(c)}} /></>
         )}

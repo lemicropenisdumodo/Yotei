@@ -1,6 +1,7 @@
 import {CompanionDialog, CompanionTile, useCompanion, type PetTile} from './Companion'
 import { webLink, type Recommendation } from './recommendation'
-import { ClockTiles, Market, useMarkets, spotifyPath } from './Widgets'
+import {SpotifyTile, type useSpotify} from './Spotify'
+import { ClockTiles, Market, useMarkets } from './Widgets'
 import {
   Aperture,
   Grip, Check, ChevronLeft, ChevronRight, Music2, Image as Picture,
@@ -59,7 +60,7 @@ function readLayout(key: string): Widget[] {
   return [...widgets]
 }
 export function Home({d, recent, openPost, go, editing, finish, photo, spotify}: {
-  d: Directory; recent?: Recommendation; openPost:(id:string)=>void; go: (p: Page) => void; editing:boolean; finish:()=>void; photo:string; spotify:string
+  d: Directory; recent?: Recommendation; openPost:(id:string)=>void; go: (p: Page) => void; editing:boolean; finish:()=>void; photo:string; spotify:ReturnType<typeof useSpotify>
 }) {
   const key = 'yotei-board-v2-' + d.me.id
   const [layout, setLayout] = useState(() => readLayout(key))
@@ -117,10 +118,7 @@ export function Home({d, recent, openPost, go, editing, finish, photo, spotify}:
     if (id === 'Date' || id === 'Heure' || id === 'Batterie') return <ClockTiles kind={id}/>
     if (id === 'Photo') return photo ? <img className="memoryPhoto" src={photo} alt="Ma photo"/> : <div className="stillTile"><Picture/><strong>Ma photo</strong></div>
     if (id === 'Décor') return <span className="bang" aria-hidden="true">!</span>
-    if (id === 'Spotify') return <div className="spotifyTile">{spotifyPath(spotify) ?
-      <iframe className="miniPlayer" title="Lecture Spotify" src={'https://open.spotify.com/embed/'+spotifyPath(spotify)+'?theme=0'} allow="encrypted-media; autoplay"/> :
-      <div className="recordSleeve"><span className="vinyl"/><Music2/></div>}
-      <button aria-label="Ouvrir Spotify" onClick={()=>go('Spotify')}>Spotify ↗</button></div>
+    if (id === 'Spotify') return <SpotifyTile control={spotify} open={()=>go('Spotify')}/>
     return <button className="widgetLink friendsTile" aria-label="Amis" title={'Amis · '+online+' en ligne'} onClick={()=>go('Amis')}><span>{d.people.filter(p=>!p.suspended).slice(0,3).map(p=><Avatar key={p.id} person={p}/>)}</span></button>
   }
   return <>
