@@ -8,7 +8,7 @@ const server = await preview({
   preview: { host: '127.0.0.1', port: 4173 },
   logLevel: 'error',
 })
-const browser = await chromium.launch({ channel: 'chrome' })
+const browser = await chromium.launchPersistentContext('', { channel: 'chrome' })
 try {
   const page = await browser.newPage()
   await page.goto('http://127.0.0.1:'+server.httpServer.address().port+'/Yotei/')
