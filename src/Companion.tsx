@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { type CSSProperties, useEffect, useRef, useState } from 'react'
 import { Heart, Settings2, X, Flame, Utensils, Sunrise } from 'lucide-react'
 import { base, db, message } from './core'
 import {useGameColor} from './GameButtons'
@@ -100,13 +100,16 @@ export function CompanionDialog({kind,state,close,wallpaper,userId}:{userId:stri
   }
   const pose = p?.asleep ? 'sleep' : motion.pose
   const counter = kind === 'Jours ensemble' && p
-  const room=p?.model==='Tsunade' && !counter
+  const nonna = p?.model === 'Nonna'
+  const room = (nonna || p?.model === 'Tsunade') && !counter
   const hour=new Date().getHours()
   const phase=p?.asleep?'night':hour>=7 && hour<18?'day':'dusk'
+  const scene = nonna ? 'nonna/'+(phase==='night'?'night':'day') : phase
+  const sceneryStyle = {'--scene': 'url('+base+'companions/room/'+scene+'.webp)'} as CSSProperties
   return <dialog style={palette.style} className={'petDialog'+(room?' roomDialog':'')} data-phase={room?phase:undefined} ref={dialog} onClose={close} aria-label={kind}>
-    {room && <div className="roomScenery" aria-hidden={!p.asleep} role={p.asleep?'img':undefined} aria-label={p.asleep?'Tsunade dort de dos sous la couverture.':undefined}>
-      <div className="roomCanvas" style={{backgroundImage:'url('+base+'companions/room/'+phase+'.webp)'}}>
-        {p.asleep ? <><i className="lanternGlow"/><i className="quiltBreath"/></> : <><i className="crtGlow"/><i className="tankGlow"/></>}
+    {room && <div className="roomScenery" style={sceneryStyle} data-model={p.model} aria-hidden={!p.asleep} role={p.asleep?'img':undefined} aria-label={p.asleep?p.model+' dort de dos sous la couverture.':undefined}>
+      <div className="roomCanvas">
+        {p.asleep ? <><i className="lanternGlow"/><i className="quiltBreath"/></> : !nonna && <><i className="crtGlow"/><i className="tankGlow"/></>}
       </div></div>}
     <header><h2>{room && <small>Chambre · {phase==='day'?'Jour':phase==='dusk'?'Soir':'Nuit'}</small>}{counter ? kind : p ? p.nickname || p.model : 'Choisis ton personnage'}{room && p && <span className="roomStatus">{label(p)}</span>}</h2>
       <div className="gameHeaderActions"><button aria-label="Paramètres du jeu" title="Paramètres du jeu" aria-expanded={settings} onClick={()=>setSettings(!settings)}><Settings2 size={19}/></button>

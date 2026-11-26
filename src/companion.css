@@ -43,10 +43,9 @@ html:has(dialog.roomDialog[open]){overflow:hidden}
 dialog.roomDialog[open]{position:fixed;inset:0;margin:0;width:100%;height:100dvh;max-width:none;max-height:none;overflow:auto;isolation:isolate;border:0;border-radius:0;padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));display:flex;flex-direction:column;background:#171620;color:white}
 .roomScenery{position:fixed;inset:0;z-index:-1;overflow:hidden;background:#181722;pointer-events:none}
 .roomScenery::before{content:"";position:absolute;inset:-20px;background:var(--scene) center/cover;filter:blur(16px) brightness(.55)}
-.roomDialog[data-phase=day]{--scene:url('/companions/room/day.webp')}
-.roomDialog[data-phase=dusk]{--scene:url('/companions/room/dusk.webp')}
-.roomDialog[data-phase=night]{--scene:url('/companions/room/night.webp')}
-.roomCanvas{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);height:max(100%,min(177.78vw,115dvh));aspect-ratio:9/16;background-size:100% 100%;image-rendering:pixelated}
+.roomDialog[data-phase=dusk] .roomScenery[data-model=Nonna]{filter:brightness(.72) sepia(.14)}
+.roomScenery[data-model=Nonna] .lanternGlow{left:18%;top:43%;width:9%;height:3.5%}
+.roomCanvas{background-image:var(--scene);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);height:max(100%,min(177.78vw,115dvh));aspect-ratio:9/16;background-size:100% 100%;image-rendering:pixelated}
 .roomCanvas i{position:absolute;display:block;pointer-events:none}
 .crtGlow{left:30%;top:49.2%;width:8%;height:3.6%;background:repeating-linear-gradient(0deg,#a1d9ff60 0 2px,transparent 2px 5px);box-shadow:0 0 12px #6d99ff80}
 .tankGlow{left:6%;top:44%;height:3.8%;width:14%;background:radial-gradient(ellipse at 25% 80%,#70fcff75,transparent 65%);background-size:150% 120%}
