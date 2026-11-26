@@ -37,7 +37,7 @@ body:has(.widgetShell){background:var(--canvas,#101113)}
 .orderTools{position:sticky;top:4px;z-index:4;display:flex;align-items:center;gap:8px;padding:5px 12px;background:var(--surface);border-radius:14px;margin-bottom:8px}
 .orderTools strong{margin-right:auto}
 .spotifyPlayer{width:100%;height:352px;border:0;border-radius:14px}
-.newRec{margin-bottom:12px}
+.newRec{margin-top:16px;display:inline-flex;align-items:center;gap:8px}
 .fixedBoard [data-widget=Date]{grid-column:span 1}
 .fixedBoard [data-widget=Météo],.fixedBoard [data-widget=Prévisions]{grid-column:span 4}
 .fixedBoard .weatherChip{flex-direction:row;align-items:center;justify-content:space-evenly}
@@ -138,8 +138,16 @@ dialog.musicDialog{padding:0;width:min(92vw,420px);max-height:90dvh;background:#
 .miniForecast span{display:grid;grid-template-columns:auto auto;justify-content:center;align-items:center;gap:2px 4px}
 .miniForecast span small{grid-column:span 2;line-height:1.2}.miniForecast span+span{border-left:1px solid var(--line)}
 .post header{flex-wrap:nowrap;gap:6px}
-.post header>.link{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.post header>.postAuthor{display:flex;justify-content:flex-start;align-items:center;gap:6px;flex:1;min-width:0;min-height:44px;text-align:left}
+.postAuthor .avatar{width:30px;height:30px}
+.postAuthorName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .widgetShell .post header .postPencil{order:1;flex:none;display:grid;place-items:center;min-width:44px;height:44px;padding:6px;border-radius:50%;color:var(--accent)}
 .postOptions{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 .postOptions button{min-height:44px;padding:4px 8px;font-size:.875rem}
+.postOptions button svg{display:none}
+@media(max-width:360px){
+  .postOptions button{position:relative;display:grid;place-items:center;width:44px}
+  .postOptions button svg{display:block}
+  .postOptions button span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+}
 .post .tag + h2{margin-top:.875rem}

@@ -1,5 +1,5 @@
-import { categories, type Category } from './Home'
-import { Pencil, Star } from 'lucide-react'
+import { Avatar, categories, type Category } from './Home'
+import { Pencil, SquarePen, Star, Trash2 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import {
   accept,
@@ -74,16 +74,19 @@ export function Feed({
       )}
       {list.data?.map((p) => {
         const own=p.user_id===d.me.id
+        const author = own ? d.me : d.people.find(person => person.id === p.user_id)
+        const authorName = d.name(p.user_id)
         return (
           <article className="post" key={p.id}>
             <header>
-              <button className="link" onClick={() => d.open(p.user_id)}>
-                {d.name(p.user_id)}
+              <button className="link postAuthor" onClick={() => d.open(p.user_id)} aria-label={authorName}>
+                {author ? <Avatar person={author}/> : <span className="avatar" aria-hidden="true">{authorName.slice(0,1)}</span>}
+                <span className="postAuthorName">{authorName}</span>
               </button>
               {(own||d.me.admin) && <button className="postPencil" aria-label="Actions sur la publication" aria-expanded={menu===p.id}
                 onClick={()=>setMenu(menu===p.id?null:p.id)}><Pencil size={17}/></button>}
               {menu===p.id && (own||d.me.admin) && <div className="postOptions">
-                {own && <button onClick={()=>{setEditing(p);setMenu(null)}}>Modifier</button>}
+                {own && <button onClick={()=>{setEditing(p);setMenu(null)}}><SquarePen size={17} aria-hidden="true"/><span>Modifier</span></button>}
                   <Task
                     run={async () => {
                       if (
@@ -98,7 +101,7 @@ export function Feed({
                       list.refresh()
                     }}
                   >
-                    Supprimer
+                    <Trash2 size={17} aria-hidden="true"/><span>Supprimer</span>
                   </Task>
               </div>}
             </header>

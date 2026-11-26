@@ -4,7 +4,7 @@ import { chromium } from 'playwright-core'
 import { resolve } from 'node:path'
 
 const id = 'e3b7bc25-8b22-4777-8b8d-9ae04cca82e0'
-const profile = { id, username: 'Membre du cercle', theme_color: '#198563' }
+const profile = { id, username: 'Membre du cercle', theme_color: '#198563', avatar_url:id+'/portrait.svg' }
 const peer = {
   ...profile,
   id: '6792ee8d-67dc-43bf-997b-842d84bf8663',
@@ -22,6 +22,8 @@ try {
   await page.routeWebSocket('**/*', () => {})
   await page.route('**/*', async (route) => {
     const url = new URL(route.request().url())
+    if (url.pathname.endsWith(profile.avatar_url))
+      return route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="16"/></svg>'})
     if (url.hostname === 'yotei.test') {
       const path = url.pathname.replace(/^\/Yotei\//, '') || 'index.html'
       return route.fulfill({ path: resolve('dist', path) })
@@ -312,9 +314,16 @@ try {
   const post=page.locator('article.post').first()
   assert.equal(await post.locator('time').count(),0)
   assert.doesNotMatch(await post.innerText(),/J’aime|Commentaires/)
-  await post.getByLabel('Actions sur la publication').click()
+  await post.locator('header .avatar img').waitFor()
+  const toggle = post.getByLabel('Actions sur la publication')
   for (const width of [320, 390, 430]) {
     await page.setViewportSize({width,height:844})
+    const name = post.locator('.postAuthorName')
+    await toggle.scrollIntoViewIfNeeded()
+    const before = await name.boundingBox()
+    await toggle.click()
+    const after = await name.boundingBox()
+    assert.ok(after.width > 14 && Math.abs(before.x - after.x) < 1 && Math.abs(before.y - after.y) < 1, JSON.stringify({width,before,after}))
     const author = await post.locator('header .link').boundingBox()
     const pencil = await post.getByLabel('Actions sur la publication').boundingBox()
     for (const name of ['Modifier', 'Supprimer']) {
@@ -325,7 +334,9 @@ try {
     const badge = await post.locator('.tag').boundingBox()
     const title = await post.getByRole('heading').boundingBox()
     assert.ok(title.y - badge.y - badge.height >= 12)
+    await toggle.click()
   }
+  await toggle.click()
   await post.getByRole('button',{name:'Modifier',exact:true}).click()
   await post.getByLabel('Message',{exact:true}).fill('Mon nouveau message')
   await post.getByRole('button',{name:'Enregistrer les modifications'}).click()

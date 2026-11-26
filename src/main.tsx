@@ -28,7 +28,7 @@ import {
 } from './Home'
 import {thumbnail} from './TileSettings'
 import {useSpotify,SpotifyPage,SpotifyConnection} from './Spotify'
-import { Settings, LogOut, X } from 'lucide-react'
+import { Settings, LogOut, Plus, X } from 'lucide-react'
 import '@fontsource-variable/manrope/index.css'
 import '@fontsource-variable/space-grotesk/index.css'
 import './style.css'
@@ -222,7 +222,7 @@ function Network({ session }: { session: Session }) {
           </div>}
           {notice && <p role="status">{notice}</p>}</Window>}
         {page === 'Spotify' && <SpotifyPage control={spotify} admin={me.admin} close={()=>history.back()}/>}
-        {page === 'Fil' && (<><button className="newRec" onClick={()=>navigate('Publier')}>Nouvelle recommandation</button>
+        {page === 'Fil' && (<><button className="newRec primary" onClick={()=>navigate('Publier')}><Plus size={18} aria-hidden="true"/>Nouvelle recommandation</button>
           <Feed d={d} filter={category} postId={postId} setFilter={c => {setPostId(''); setCategory(c)}} /></>
         )}
         {page === 'Publier' && (
