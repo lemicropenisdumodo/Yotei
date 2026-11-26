@@ -41,29 +41,16 @@
 
 html:has(dialog.roomDialog[open]){overflow:hidden}
 dialog.roomDialog[open]{position:fixed;inset:0;margin:0;width:100%;height:100dvh;max-width:none;max-height:none;overflow:auto;isolation:isolate;border:0;border-radius:0;padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));display:flex;flex-direction:column;background:#171620;color:white}
-.roomScenery{position:fixed;inset:0;z-index:-1;overflow:hidden;background:#181722;pointer-events:none}
-.roomScenery::before{content:"";position:absolute;inset:-20px;background:var(--scene) center/cover;filter:blur(16px) brightness(.55)}
-.roomDialog[data-room=Chambre][data-phase=dusk] .roomScenery[data-model=Nonna]{filter:brightness(.72) sepia(.14)}
-.roomDialog[data-room=Chambre][data-phase=dusk] .roomScenery:is([data-model=Tsunade],[data-model=Rias]){filter:brightness(.70) sepia(.15)}
-.roomScenery[data-model=Nonna] .lanternGlow{left:18%;top:43%;width:9%;height:3.5%}
-.roomCanvas{background-image:var(--scene);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);height:max(100%,min(177.78vw,115dvh));aspect-ratio:9/16;background-size:100% 100%;image-rendering:pixelated}
-.roomCanvas i{position:absolute;display:block;pointer-events:none}
-.quiltBreath{inset:0;background:inherit;clip-path:ellipse(32% 5.3% at 44% 63%);transform-origin:50% 67%}
-@media(prefers-reduced-motion:no-preference){.quiltBreath{animation:roomBreath 4.6s ease-in-out infinite}
-@keyframes roomBreath{50%{transform:scaleY(1.012)}}}
 .roomDialog header,.roomDialog .roomPanel,.roomDialog>p{width:min(100%,460px);align-self:center}
 .roomDialog header{align-items:flex-start;margin:0;position:relative;z-index:2}
 .roomDialog h2,.roomDialog header button,.roomPanel,.roomDialog>p{background:#12131ce8;color:#fff;border:1px solid #ffffff38;border-radius:17px}
 .roomDialog header h2{padding:8px 14px;line-height:1.12}.roomDialog h2 small{display:block;font:500 .72rem/1.6 sans-serif;color:#d0cbd4}.roomDialog header button{min-width:44px;min-height:44px}
-.roomDialog .petStage{flex:1 0 160px;isolation:auto;background:none;overflow:visible;width:min(100%,460px);align-self:center}
-.roomDialog .petStage .petBadge{top:6px;left:4px}
-.roomDialog .petStage .petFigure{position:absolute;bottom:0;left:0;height:min(48dvh,470px);width:65%;min-height:0;padding:0;background:transparent}
-.roomDialog .petFigure img{max-height:100%;max-width:100%;object-fit:contain;filter:drop-shadow(0 5px 4px #12101966)}
+.roomDialog .petStage{flex:1 0 160px;display:grid;place-items:center;background:none;width:min(100%,460px);align-self:center}
+.roomDialog .petStage .petFigure,.roomDialog .sleepingFigure{position:absolute;width:80%;height:90%;max-height:470px;min-height:0;padding:0;background:transparent}
+.roomDialog .petFigure img,.roomDialog .sleepingFigure{object-fit:contain;image-rendering:pixelated}
+.roomDialog .petFigure img{width:100%;height:100%;max-height:100%}
 .roomPanel{padding:8px 14px}.roomPanel .petNeeds{margin:0;gap:4px}.roomPanel .petNeeds button{padding:5px 8px;font-size:.83rem}.roomPanel .petNeeds progress{height:6px}
 .roomPanel .petAffection,.roomPanel details{display:inline-block;margin:4px 10px 0 0;font-size:.78rem}.roomPanel details[open]{display:block}
-
-.lanternGlow{left:15%;top:47.7%;width:8%;height:3.5%;border-radius:35%;background:#ffc56318;box-shadow:0 0 14px #ffae5640}
-@media(prefers-reduced-motion:no-preference){.lanternGlow{animation:lanternLight 3.6s ease-in-out infinite alternate}@keyframes lanternLight{to{opacity:.45}}}
 
 dialog.petDialog{--mist:color-mix(in srgb,var(--game-fill) 32%,#f2e9ec);--glass:#1b1924ec;--edge:#f2e7f121}
 .petDialog .gameHeaderActions,.roomDialog header h2,.roomDialog .roomPanel,.petDialog .gameSettings{background:var(--glass);border:1px solid var(--edge);box-shadow:0 4px 20px #0d0c141f;backdrop-filter:blur(12px)}
@@ -90,30 +77,6 @@ dialog.petDialog{--mist:color-mix(in srgb,var(--game-fill) 32%,#f2e9ec);--glass:
 .widgetShell dialog.petDialog .needCard button{min-width:0;padding:6px}
 .careFoot{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--edge);margin-top:10px;padding-top:8px;font-size:.74rem;color:#d7cdd6}
 
-.roomDialog[data-room=Salon] .petStage{container-type:size;width:100vw;max-width:none;pointer-events:none}
-.salonScene{position:absolute;left:50%;bottom:0;transform:translate(-50%,17%);height:min(211.92cqw,168.42cqh);aspect-ratio:151/320;background:var(--scene) center/100% 100%;image-rendering:pixelated;isolation:isolate}
-.roomDialog .salonScene .petFigure{left:5.298%;top:34.375%;bottom:auto;width:65.563%;height:46.5625%;overflow:visible;pointer-events:auto}
-.roomDialog .salonScene .petFigure img{display:block;width:100%;height:100%;image-rendering:pixelated;filter:none;animation:none}
-.roomDialog .salonScene .petFigure::before{content:"";position:absolute;left:26%;bottom:0;width:49%;height:2.7%;border-radius:50%;background:#554839;z-index:-1}
-@media(prefers-reduced-motion:no-preference){
-  .roomDialog .salonScene .pose-idle{animation:salonIdle 3s steps(1,end) infinite}
-  .roomDialog .salonScene .pose-feed{animation:salonIdle .32s steps(1,end) 4}
-  .roomDialog .salonScene .pose-pat{animation:salonPat .55s steps(1,end) 2}
-  @keyframes salonIdle{50%{transform:translateY(-.67114%)}}
-  @keyframes salonPat{50%{transform:translateX(1.0101%)}}
-}
-.roomDialog[data-phase=dusk] .salonScene .petFigure img{filter:brightness(.86)}
-.roomDialog[data-room=Salon] .roomPanel{position:relative;z-index:1}
-/* On a portrait phone the illustration spans both edges above a separate care panel. */
-@media (orientation:portrait) and (max-width:700px){
-  dialog.roomDialog[data-room=Salon][open]{padding:0;background:#201b23;overflow-x:hidden}
-  .roomDialog[data-room=Salon] .roomScenery{display:none}
-  .roomDialog[data-room=Salon] header{position:absolute;top:max(14px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(460px,calc(100% - 28px))}
-  .roomDialog[data-room=Salon] .gameSettings{position:absolute;top:max(100px,calc(env(safe-area-inset-top) + 96px));left:50%;transform:translateX(-50%);width:min(460px,calc(100% - 28px))}
-  .roomDialog[data-room=Salon] .petStage{flex:1 0 max(245px,90vw);width:100%;border-radius:0;overflow:hidden}
-  .roomDialog[data-room=Salon] .salonScene{height:max(211.921cqw,121cqh)}
-  .roomDialog[data-room=Salon] .roomPanel{align-self:stretch;width:100%;margin:0;padding:10px max(16px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));border-radius:0;border:0;border-top:1px solid var(--edge);background:#201b23}
-}
 .roomPicker{display:flex;gap:4px;padding:3px;margin-bottom:12px;background:#0d0c144d;border-radius:15px}
 .widgetShell dialog.petDialog .roomPicker button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:transparent;border-color:transparent;color:#d6d0d6}
 .widgetShell dialog.petDialog .roomPicker button[aria-pressed=true]{background:color-mix(in srgb,var(--game-fill) 32%,#282631);border-color:var(--edge);color:#fff}

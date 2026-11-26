@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Heart, Settings2, X, Flame, Utensils, Sunrise, Sofa, BedDouble } from 'lucide-react'
 import { base, db, message } from './core'
 import {useGameColor} from './GameButtons'
@@ -13,15 +13,6 @@ type Pet = {
 }
 type Pose = 'idle' | 'feed' | 'pat' | 'sleep'
 type Room = 'Salon' | 'Chambre'
-type Phase = 'day' | 'dusk' | 'night'
-
-function roomArt(model: Model, room: Room, phase: Phase) {
-  if (room === 'Salon') return 'salon/'+(phase === 'day' ? 'day' : 'night')
-  if (model === 'Nonna') return 'nonna/'+(phase === 'night' ? 'night' : 'day')
-  if (model === 'Rias' && phase === 'night') return 'rias/night'
-  return 'tsunade/'+(phase === 'night' ? 'night' : 'day')
-}
-
 const art = (model: Model, pose: Pose = 'idle') =>
   base+'companions/'+model+(pose === 'idle' ? '' : '-'+pose)+'.webp'
 
@@ -116,17 +107,9 @@ export function CompanionDialog({kind,state,close,userId}:{userId:string;kind:Pe
   const homeRoom: Room = p?.asleep ? 'Chambre' : 'Salon'
   const currentRoom = selectedRoom ?? homeRoom
   const present = currentRoom === homeRoom
-  const inBedroom = currentRoom === 'Chambre'
-  const sleepingHere = !!p?.asleep && inBedroom
   const hour=new Date().getHours()
   const phase=p?.asleep?'night':hour>=7 && hour<18?'day':'dusk'
-  const scene = p ? roomArt(p.model,currentRoom,phase) : ''
-  const sceneryStyle = {'--scene': 'url('+base+'companions/room/'+scene+'.webp)'} as CSSProperties
   return <dialog style={palette.style} className={'petDialog'+(room?' roomDialog':'')} data-phase={room?phase:undefined} data-room={room?currentRoom:undefined} ref={dialog} onClose={close} aria-label={kind}>
-    {room && <div className="roomScenery" style={sceneryStyle} data-model={p.model} aria-hidden={!sleepingHere} role={sleepingHere?'img':undefined} aria-label={sleepingHere?p.model+' dort de dos sous la couverture.':undefined}>
-      {inBedroom && <div className="roomCanvas">
-        {inBedroom && p.asleep && <><i className="lanternGlow"/><i className="quiltBreath"/></>}
-      </div>}</div>}
     <header><h2>{room && <small>{currentRoom} · {phase==='day'?'Jour':phase==='dusk'?'Soir':'Nuit'}</small>}{counter ? kind : p ? p.nickname || p.model : 'Choisis ton personnage'}{room && p && <span className="roomStatus">{label(p)}</span>}</h2>
       <div className="gameHeaderActions"><button aria-label="Paramètres du jeu" title="Paramètres du jeu" aria-expanded={settings} onClick={()=>setSettings(!settings)}><Settings2 size={19}/></button>
       <button onClick={()=>dialog.current?.close()} aria-label="Fermer le personnage"><X size={20}/></button></div></header>
@@ -142,12 +125,11 @@ export function CompanionDialog({kind,state,close,userId}:{userId:string;kind:Pe
       <p>{p.days.includes(p.today) ? 'Le soin du jour est terminé.' : 'Termine un repas ou une séance de caresses pour valider la journée.'}</p>
       <p>Record · {p.best}　 ♥ {p.affection}</p></section> : <>
       <div className="petStage">
-        {!inBedroom && <div className="salonScene" style={sceneryStyle}>
+        {present && p.asleep && <img className="sleepingFigure pose-sleep" src={art(p.model,'sleep')} alt={p.model+' dort.'}/>}
         {present && !p.asleep && <button className="petFigure" disabled={p.asleep || !p.mood || busy} aria-label="Caresser le personnage" onClick={()=>care('pat')}>
           <img key={motion.key+'-'+pose} className={'pose-'+pose} src={base+'companions/room/salon/'+p.model+(pose==='idle'?'':'-'+pose)+'.png'} alt={p.model}/>
         </button>}
         {present && pose==='pat' && <Heart key={motion.key} className="petEffect"/>}
-        </div>}
       </div>
       <div className="roomPanel">
         <div role="group" aria-label="Pièces de la maison" className="roomPicker">

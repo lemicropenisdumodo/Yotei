@@ -187,19 +187,14 @@ try {
   for (const [width,height] of [[320,568],[393,765],[430,932]]) {
     await page.setViewportSize({width,height})
     const stage = await companionDialog.locator('.petStage').boundingBox()
-    const scene = await companionDialog.locator('.salonScene').boundingBox()
     const figure = await companionDialog.locator('.petFigure').boundingBox()
     const panel = await companionDialog.locator('.roomPanel').boundingBox()
-    assert.ok(stage.x <= 1 && stage.width >= width-1)
-    assert.ok(scene.x <= 1 && scene.x+scene.width >= width-1)
-    assert.ok(scene.y <= stage.y+1 && scene.y+scene.height >= stage.y+stage.height-1)
+    assert.ok(Math.abs((figure.x + figure.width / 2) - width / 2) < 1)
     assert.ok(figure.y >= stage.y && figure.y+figure.height <= panel.y)
   }
   await page.setViewportSize(originalViewport)
   await bedroom.click()
   await companionDialog.getByText('Tsunade est au salon.').waitFor()
-  assert.match(await companionDialog.locator('.roomScenery').getAttribute('style'), /room\/tsunade\/day\.webp/)
-  assert.equal(await companionDialog.locator('.crtGlow,.tankGlow').count(),0)
   assert.equal(await companionDialog.locator('.petFigure').count(),0)
   await salon.click()
   await companionDialog.getByRole('button',{name:'Donner une bouchée'}).click()
@@ -210,7 +205,7 @@ try {
   companion.asleep=true
   await page.reload()
   await home.getByRole('button',{name:'Mon personnage',exact:true}).click()
-  await companionDialog.getByRole('img',{name:'Tsunade dort de dos sous la couverture.'}).waitFor()
+  await companionDialog.getByRole('img',{name:'Tsunade dort.'}).waitFor()
   assert.equal(await companionDialog.evaluate(el=>el.style.getPropertyValue('--game-fill')),'#91d8b5')
   assert.equal(await companionDialog.getByRole('button',{name:'Donner une bouchée'}).count(),0)
   await salon.click()
@@ -221,18 +216,18 @@ try {
   await companionDialog.getByText('Réveil à 7 h').waitFor()
   assert.equal(await companionDialog.evaluate(el=>el.clientHeight),await page.evaluate(()=>innerHeight))
   await companionDialog.getByRole('button',{name:'Fermer le personnage'}).click()
-  // A single bedroom must stay in use across the evening and sleep transitions.
+  // Switching phases keeps the room plain and shows the sleeping character at night.
   companion.model='Rias'
-  for (const [hour,phase,asset] of [[12,'day','tsunade/day'],[19,'dusk','tsunade/day'],[23,'night','rias/night']]) {
+  for (const [hour,phase] of [[12,'day'],[19,'dusk'],[23,'night']]) {
     companion.asleep=phase==='night'
     await page.reload()
     await page.evaluate(localHour => { Date.prototype.getHours = () => localHour }, hour)
     await home.getByRole('button',{name:'Mon personnage',exact:true}).click()
     await bedroom.click()
-    await companionDialog.locator('.roomScenery[data-model="Rias"]').waitFor()
+    await companionDialog.getByRole('button',{name:'Chambre',pressed:true}).waitFor()
     assert.equal(await companionDialog.getAttribute('data-phase'),phase)
-    assert.ok((await companionDialog.locator('.roomScenery').getAttribute('style')).includes('room/'+asset+'.webp'))
-    assert.equal(await companionDialog.locator('.crtGlow,.tankGlow').count(),0)
+    assert.equal(await companionDialog.locator('.petStage').evaluate(el=>getComputedStyle(el).backgroundImage),'none')
+    assert.equal(await companionDialog.getByRole('img',{name:'Rias dort.'}).count(),phase==='night'?1:0)
     await companionDialog.getByRole('button',{name:'Fermer le personnage'}).click()
   }
   const close = () => page.getByRole('button', { name: 'Fermer et revenir à l’accueil' }).click()
