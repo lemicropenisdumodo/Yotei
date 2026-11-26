@@ -147,6 +147,13 @@ try {
     await page.getByRole('heading', { name: 'Salut, Membre du cercle !' }).waitFor()
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
     assert.equal(await page.locator('.rail').count(), 0)
+    const photo = await page.locator('[data-widget="Photo"]').boundingBox()
+    const spotify = await page.locator('[data-widget="Spotify"]').boundingBox()
+    const recommendation = await page.locator('[data-widget="Recommandations"]').boundingBox()
+    assert.ok(Math.abs(photo.y - spotify.y) < 1)
+    assert.ok(Math.abs(photo.height - spotify.height) < 1)
+    const gap = recommendation.y - photo.y - photo.height
+    assert.ok(gap > 0 && gap < 12)
   }
   const home = page.locator('.widgetBoard')
   const square=await home.locator('[data-widget="Spotify"]').boundingBox()

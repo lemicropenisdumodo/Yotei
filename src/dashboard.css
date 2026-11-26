@@ -59,7 +59,7 @@ body:has(.widgetShell){background:var(--canvas,#101113)}
 .fixedBoard [data-widget=Amis]{grid-column:span 13;grid-row:span 16}
 .fixedBoard [data-widget="Jours ensemble"]{grid-column:span 9;grid-row:span 39;background:radial-gradient(ellipse at 50% 25%,#64233a,transparent 64%),#161517}
 .fixedBoard [data-widget=Décor]{grid-column:span 4;grid-row:span 39;background:transparent;border:0}
-.fixedBoard [data-widget=Photo],.fixedBoard [data-widget=Spotify]{grid-row:span 32}
+.fixedBoard [data-widget=Photo],.fixedBoard [data-widget=Spotify]{grid-row:auto / span 32}
 .fixedBoard [data-widget=Spotify]{grid-column:span 13}
 .fixedBoard [data-widget=Recommandations]{grid-column:span 30;grid-row:span 29;background:#0d0d10;border:2px solid color-mix(in srgb,var(--accent),transparent 77%);box-shadow:inset 0 0 7px #ffffff12}
 .fixedBoard .petShortcut{padding:6%;gap:3px;isolation:isolate}
@@ -111,7 +111,8 @@ body:has(.widgetShell){background:var(--canvas,#101113)}
 .musicDetails>*{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.musicDetails small{font-size:.7rem}
 .playButtons{display:flex;justify-content:space-evenly}.playButtons button{min-height:32px;padding:3px 6px;border:0;background:transparent;color:white}.playButtons svg{width:17px}
 .spotifyTrack{display:flex;gap:10px;align-items:center;margin:12px 0}.spotifyTrack img{width:64px;height:64px;object-fit:cover;border-radius:8px}.spotifyTrack span{display:grid}.spotifyTrack small{color:var(--muted)}
-.fixedBoard [data-widget=Spotify]{grid-row-start:auto;align-self:start;aspect-ratio:1;width:calc(100% - 6px)}
+.fixedBoard [data-widget=Photo]{height:var(--photo-height,auto)}
+.fixedBoard [data-widget=Spotify]{align-self:start;aspect-ratio:1;width:calc(100% - 6px)}
 .liveMusic .musicDetails>*{flex-shrink:0;line-height:1.25}
 .liveMusic .musicDetails strong,.liveMusic .musicDetails small:last-child{white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
 html:has(.musicDialog[open]){overflow:hidden}

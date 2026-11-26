@@ -80,7 +80,9 @@ export function Home({d, recent, openPost, go, editing, finish, photo, spotify}:
     const fit=()=>{
       if(!tile.offsetWidth)return
       const style=getComputedStyle(tile)
-      const outer=tile.getBoundingClientRect().width+parseFloat(style.marginTop)+parseFloat(style.marginBottom)
+      const size=tile.getBoundingClientRect().width
+      grid.style.setProperty('--photo-height',size+'px')
+      const outer=size+parseFloat(style.marginTop)+parseFloat(style.marginBottom)
       const row=parseFloat(getComputedStyle(grid).gridAutoRows)
       const span='span '+Math.ceil(outer/row)
       tile.style.gridRowEnd=span
