@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { Cookie, Heart, Moon, X, Flame } from 'lucide-react'
+import { Heart, Moon, Flame } from 'lucide-react'
 import { base, db, message } from './core'
+import {GameIcon,useGameColor} from './GameButtons'
 import './companion.css'
 
 const models = ['Nonna', 'Rias', 'Tsunade'] as const
@@ -81,7 +82,9 @@ export function CompanionTile({kind,state,open,wide}:{kind:PetTile;state:State;o
     <img src={art(p?.model||'Tsunade',p?.asleep?'sleep':'idle')} alt=""/>
   </button>
 }
-export function CompanionDialog({kind,state,close,wallpaper}:{kind:PetTile;state:State;close:()=>void;wallpaper?:string}) {
+export function CompanionDialog({kind,state,close,wallpaper,userId}:{userId:string;kind:PetTile;state:State;close:()=>void;wallpaper?:string}) {
+  const palette=useGameColor(userId)
+  const [settings,setSettings]=useState(false)
   const {pet:p,act,busy,error} = state
   const dialog = useRef<HTMLDialogElement>(null)
   const [motion,setMotion] = useState<{pose:Pose; key:number}>({pose:'idle',key:0})
@@ -100,13 +103,16 @@ export function CompanionDialog({kind,state,close,wallpaper}:{kind:PetTile;state
   const room=p?.model==='Tsunade' && !counter
   const hour=new Date().getHours()
   const phase=p?.asleep?'night':hour>=7 && hour<18?'day':'dusk'
-  return <dialog className={'petDialog'+(room?' roomDialog':'')} data-phase={room?phase:undefined} ref={dialog} onClose={close} aria-label={kind}>
+  return <dialog style={palette.style} className={'petDialog'+(room?' roomDialog':'')} data-phase={room?phase:undefined} ref={dialog} onClose={close} aria-label={kind}>
     {room && <div className="roomScenery" aria-hidden={!p.asleep} role={p.asleep?'img':undefined} aria-label={p.asleep?'Tsunade dort de dos sous la couverture.':undefined}>
       <div className="roomCanvas" style={{backgroundImage:'url('+base+'companions/room/'+phase+'.webp)'}}>
         {p.asleep ? <><i className="lanternGlow"/><i className="quiltBreath"/></> : <><i className="crtGlow"/><i className="tankGlow"/></>}
       </div></div>}
     <header><h2>{room && <small>Chambre · {phase==='day'?'Jour':phase==='dusk'?'Soir':'Nuit'}</small>}{counter ? kind : p ? p.nickname || p.model : 'Choisis ton personnage'}</h2>
-      <button onClick={()=>dialog.current?.close()} aria-label="Fermer le personnage"><X/></button></header>
+      <div className="gameHeaderActions"><button aria-label="Paramètres du jeu" title="Paramètres du jeu" aria-expanded={settings} onClick={()=>setSettings(!settings)}><GameIcon name="gear"/></button>
+      <button onClick={()=>dialog.current?.close()} aria-label="Fermer le personnage"><GameIcon name="close"/></button></div></header>
+    {settings && <section className="gameSettings"><label>Couleur des boutons<input type="color" value={palette.color} onChange={e=>palette.change(e.target.value)}/></label>
+      {palette.temporary&&<small>Couleur appliquée pour cette session.</small>}</section>}
     {error && <p role="alert">{error} <button onClick={()=>act()}>Réessayer</button></p>}
     {p === undefined ? <p>Ouverture…</p> : !p ? <><label>Surnom facultatif<input value={nickname} onChange={e=>setNickname(e.target.value)} maxLength={28}/></label><div className="petChoices">{models.map(model=>
       <button key={model} disabled={busy} onClick={async ()=>{if (await act('adopt',model) && nickname.trim()) await act('rename',nickname.trim())}}><img src={art(model)} alt=""/>{model}</button>
@@ -124,7 +130,7 @@ export function CompanionDialog({kind,state,close,wallpaper}:{kind:PetTile;state
       <div className={room?"roomPanel":undefined}><div className="petNeeds">{(['feed','pat'] as const).map(action=>{
         const food=action==='feed', remaining=food?p.food:p.mood
         return <div key={action}><label>{food?'Repas':'Moral'}<progress max={5} value={5-remaining}/></label>
-          <button disabled={busy || p.asleep || !remaining} onClick={()=>care(action)}>{food?<Cookie size={18}/>:<Heart size={18}/>}
+          <button disabled={busy || p.asleep || !remaining} onClick={()=>care(action)}><GameIcon name={food?'rice':'heart'}/>
           {remaining ? food?'Donner une bouchée':'Caresser' : food?'Rassasiée':'Contente'}</button></div>
       })}</div>
       <p className="petAffection">{p.asleep?'Réveil à 7 h · ':''}♥ {p.affection} · Affection</p>

@@ -176,6 +176,6 @@ export function Home({d, recent, openPost, go, editing, finish, photo, spotify}:
         </>}
       </section>)}
     </div>
-    {petPage && <CompanionDialog kind={petPage} state={companion} close={()=>setPetPage(null)}/>}
+    {petPage && <CompanionDialog userId={d.me.id} kind={petPage} state={companion} close={()=>setPetPage(null)}/>}
   </>
 }
