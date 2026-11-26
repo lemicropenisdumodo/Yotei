@@ -103,7 +103,7 @@ export function CompanionDialog({kind,state,close,wallpaper}:{kind:PetTile;state
   return <dialog className={'petDialog'+(room?' roomDialog':'')} data-phase={room?phase:undefined} ref={dialog} onClose={close} aria-label={kind}>
     {room && <div className="roomScenery" aria-hidden={!p.asleep} role={p.asleep?'img':undefined} aria-label={p.asleep?'Tsunade dort de dos sous la couverture.':undefined}>
       <div className="roomCanvas" style={{backgroundImage:'url('+base+'companions/room/'+phase+'.webp)'}}>
-        <i className="crtGlow"/><i className="tankGlow"/>{p.asleep && <i className="quiltBreath"/>}
+        {p.asleep ? <><i className="lanternGlow"/><i className="quiltBreath"/></> : <><i className="crtGlow"/><i className="tankGlow"/></>}
       </div></div>}
     <header><h2>{room && <small>Chambre · {phase==='day'?'Jour':phase==='dusk'?'Soir':'Nuit'}</small>}{counter ? kind : p ? p.nickname || p.model : 'Choisis ton personnage'}</h2>
       <button onClick={()=>dialog.current?.close()} aria-label="Fermer le personnage"><X/></button></header>
