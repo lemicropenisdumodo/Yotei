@@ -212,6 +212,20 @@ try {
   await companionDialog.getByText('Réveil à 7 h').waitFor()
   assert.equal(await companionDialog.evaluate(el=>el.clientHeight),await page.evaluate(()=>innerHeight))
   await companionDialog.getByRole('button',{name:'Fermer le personnage'}).click()
+  // A single bedroom must stay in use across the evening and sleep transitions.
+  companion.model='Rias'
+  for (const [hour,phase,asset] of [[12,'day','tsunade/day'],[19,'dusk','tsunade/day'],[23,'night','rias/night']]) {
+    companion.asleep=phase==='night'
+    await page.reload()
+    await page.evaluate(localHour => { Date.prototype.getHours = () => localHour }, hour)
+    await home.getByRole('button',{name:'Mon personnage',exact:true}).click()
+    await bedroom.click()
+    await companionDialog.locator('.roomScenery[data-model="Rias"]').waitFor()
+    assert.equal(await companionDialog.getAttribute('data-phase'),phase)
+    assert.ok((await companionDialog.locator('.roomScenery').getAttribute('style')).includes('room/'+asset+'.webp'))
+    assert.equal(await companionDialog.locator('.crtGlow,.tankGlow').count(),0)
+    await companionDialog.getByRole('button',{name:'Fermer le personnage'}).click()
+  }
   const close = () => page.getByRole('button', { name: 'Fermer et revenir à l’accueil' }).click()
   const widgets=home.locator('section')
   const rects=()=>widgets.evaluateAll(els=>Object.fromEntries(els.map(e=>[e.dataset.widget,[e.offsetWidth,e.offsetHeight]])))

@@ -44,16 +44,12 @@ dialog.roomDialog[open]{position:fixed;inset:0;margin:0;width:100%;height:100dvh
 .roomScenery{position:fixed;inset:0;z-index:-1;overflow:hidden;background:#181722;pointer-events:none}
 .roomScenery::before{content:"";position:absolute;inset:-20px;background:var(--scene) center/cover;filter:blur(16px) brightness(.55)}
 .roomDialog[data-room=Chambre][data-phase=dusk] .roomScenery[data-model=Nonna]{filter:brightness(.72) sepia(.14)}
-.roomDialog[data-room=Chambre][data-phase=dusk] .roomScenery[data-model=Tsunade]{filter:brightness(.70) sepia(.15)}
+.roomDialog[data-room=Chambre][data-phase=dusk] .roomScenery:is([data-model=Tsunade],[data-model=Rias]){filter:brightness(.70) sepia(.15)}
 .roomScenery[data-model=Nonna] .lanternGlow{left:18%;top:43%;width:9%;height:3.5%}
 .roomCanvas{background-image:var(--scene);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);height:max(100%,min(177.78vw,115dvh));aspect-ratio:9/16;background-size:100% 100%;image-rendering:pixelated}
 .roomCanvas i{position:absolute;display:block;pointer-events:none}
-.crtGlow{left:30%;top:49.2%;width:8%;height:3.6%;background:repeating-linear-gradient(0deg,#a1d9ff60 0 2px,transparent 2px 5px);box-shadow:0 0 12px #6d99ff80}
-.tankGlow{left:6%;top:44%;height:3.8%;width:14%;background:radial-gradient(ellipse at 25% 80%,#70fcff75,transparent 65%);background-size:150% 120%}
 .quiltBreath{inset:0;background:inherit;clip-path:ellipse(32% 5.3% at 44% 63%);transform-origin:50% 67%}
-@media(prefers-reduced-motion:no-preference){.crtGlow{animation:roomMonitor 2.8s steps(4) infinite}.tankGlow{animation:roomWater 4.2s ease-in-out infinite alternate}.quiltBreath{animation:roomBreath 4.6s ease-in-out infinite}
-@keyframes roomMonitor{0%,100%{opacity:.5;background-position:0 0}45%{opacity:.85;background-position:0 4px}70%{opacity:.4}}
-@keyframes roomWater{to{background-position:100% 40%;opacity:.45}}
+@media(prefers-reduced-motion:no-preference){.quiltBreath{animation:roomBreath 4.6s ease-in-out infinite}
 @keyframes roomBreath{50%{transform:scaleY(1.012)}}}
 .roomDialog header,.roomDialog .roomPanel,.roomDialog>p{width:min(100%,460px);align-self:center}
 .roomDialog header{align-items:flex-start;margin:0;position:relative;z-index:2}
