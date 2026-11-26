@@ -13,8 +13,8 @@
 .petDialog .petFigure{display:grid;place-items:end center;height:clamp(160px,36dvh,350px);width:100%;padding:12px;border:0;background:transparent;border-radius:0;overflow:hidden}
 .petDialog .petFigure:disabled{opacity:1;cursor:default}
 .petFigure img{height:100%;max-height:calc(clamp(160px,36dvh,350px) - 24px);max-width:100%;object-fit:contain;transform-origin:center bottom}
-.petEffect,.petMoon{position:absolute;right:18%;top:22%;color:#ffb8ca}
-.petMoon{color:#eee2a7}
+.petEffect{position:absolute;right:18%;top:22%;color:#ffb8ca}
+
 .petNeeds{display:grid;gap:10px;margin-block:15px}
 .petNeeds label{margin:0;flex:1;min-width:0}
 .petNeeds progress{display:block;width:90%;accent-color:#c6deab}
@@ -69,23 +69,27 @@ dialog.roomDialog[open]{position:fixed;inset:0;margin:0;width:100%;height:100dvh
 .lanternGlow{left:15%;top:47.7%;width:8%;height:3.5%;border-radius:35%;background:#ffc56318;box-shadow:0 0 14px #ffae5640}
 @media(prefers-reduced-motion:no-preference){.lanternGlow{animation:lanternLight 3.6s ease-in-out infinite alternate}@keyframes lanternLight{to{opacity:.45}}}
 
-.petDialog .gameHeaderActions{display:flex;gap:6px;align-items:flex-start}
-.petDialog .gameSettings{align-self:center;width:min(100%,460px);background:#191822;color:#fff;border:2px solid #37323d;padding:8px 12px;z-index:2}
-.petDialog .gameSettings label{display:flex;justify-content:space-between;align-items:center;color:inherit;margin:0;gap:8px}
-.gameSettings input[type=color]{width:52px;height:40px;padding:3px;cursor:pointer}
-dialog.petDialog{--pixel-corners:polygon(0 6px,3px 6px,3px 3px,6px 3px,6px 0,calc(100% - 6px) 0,calc(100% - 6px) 3px,calc(100% - 3px) 3px,calc(100% - 3px) 6px,100% 6px,100% calc(100% - 6px),calc(100% - 3px) calc(100% - 6px),calc(100% - 3px) calc(100% - 3px),calc(100% - 6px) calc(100% - 3px),calc(100% - 6px) 100%,6px 100%,6px calc(100% - 3px),3px calc(100% - 3px),3px calc(100% - 6px),0 calc(100% - 6px))}
-.widgetShell dialog.petDialog button:not(.petFigure),.widgetShell dialog.petDialog summary{
-  position:relative;isolation:isolate;clip-path:var(--pixel-corners);border:0;border-radius:0;background:#211725;color:var(--game-ink);min-height:44px;padding:8px 14px 13px;box-shadow:none;
-  font:600 1rem/1.12 'Pixelify Sans',monospace;letter-spacing:.01em;text-shadow:none;cursor:pointer
-}
-.widgetShell dialog.petDialog button:not(.petFigure)::before,.widgetShell dialog.petDialog summary::before{
-  content:"";position:absolute;inset:3px;z-index:-1;clip-path:var(--pixel-corners);background:var(--game-fill);
-  box-shadow:inset 0 2px color-mix(in srgb,var(--game-fill),white 42%),inset -3px -6px color-mix(in srgb,var(--game-fill),#231128 42%),inset 3px -8px color-mix(in srgb,var(--game-fill),white 32%)
-}
-.widgetShell dialog.petDialog :is(button:not(.petFigure),summary):focus-visible::before{outline:3px dashed var(--game-ink);outline-offset:-7px}
-.widgetShell dialog.petDialog :is(button:not(.petFigure):enabled,summary):active{transform:translateY(2px)}
-.widgetShell dialog.petDialog button:not(.petFigure):disabled{filter:saturate(.28);opacity:.65;cursor:default}
-.widgetShell dialog.petDialog .gameHeaderActions button{display:grid;place-items:center;width:44px;padding:6px 6px 10px}
-.widgetShell dialog.petDialog .petChoices button{padding:6px 4px 13px}
-.widgetShell dialog.petDialog .petNeeds button{display:inline-flex;justify-content:center;align-items:center;gap:6px}
-.widgetShell dialog.petDialog summary{display:inline-flex;align-items:center}
+dialog.petDialog{--mist:color-mix(in srgb,var(--game-fill) 32%,#f2e9ec);--glass:#1b1924ec;--edge:#f2e7f121}
+.petDialog .gameHeaderActions,.roomDialog header h2,.roomDialog .roomPanel,.petDialog .gameSettings{background:var(--glass);border:1px solid var(--edge);box-shadow:0 4px 20px #0d0c141f;backdrop-filter:blur(12px)}
+.roomDialog header h2{padding:10px 14px;border-radius:17px;font-size:clamp(1.2rem,5vw,1.65rem)}
+.roomDialog header h2 small{color:#d4c6cd;font-size:.71rem;letter-spacing:.03em}
+.roomStatus{display:block;color:var(--mist);font-size:.75rem;font-weight:500;margin-top:4px}
+.petDialog .gameHeaderActions{display:flex;align-items:center;padding:2px;border-radius:18px;margin-left:8px}
+.widgetShell dialog.petDialog button:not(.petFigure){min-height:44px;border:1px solid var(--edge);border-radius:12px;background:color-mix(in srgb,var(--game-fill) 20%,#262330);color:#fff;font-family:inherit;font-size:.9rem;line-height:1.2;font-weight:600;box-shadow:none}
+.widgetShell dialog.petDialog .gameHeaderActions button{display:grid;place-items:center;background:transparent;border:0;width:44px;padding:0;color:#f3ecee}
+.widgetShell dialog.petDialog .gameHeaderActions button[aria-expanded=true]{background:#ffffff14}
+.petDialog button:focus-visible{outline:2px solid var(--mist);outline-offset:1px}
+.petDialog .gameSettings{align-self:center;width:min(100%,460px);border-radius:16px;margin:8px 0;padding:12px;z-index:2}
+.petDialog .gameSettings label{margin:0;padding:4px 0;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.petDialog .gameSettings input[type=color]{width:52px;height:44px;padding:4px}.gameSettings input:not([type=color]){min-width:0}
+.roomDialog .roomPanel{padding:14px 16px 10px;border-radius:20px}
+.petDialog .petNeeds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:0;gap:16px}
+.petDialog .petNeeds .needCard{display:flex;flex-direction:column;align-items:stretch;gap:5px;min-width:0}
+.needTitle,.careFoot span{display:flex;align-items:center;gap:6px}
+.needTitle{color:#f7f2f4;font-size:.89rem;font-weight:650}
+.needTitle svg,.careFoot svg{color:var(--mist)}
+.petDialog .needCard progress{appearance:none;border:0;border-radius:5px;overflow:hidden;background:#ffffff19;width:100%;height:4px;margin:8px 0 0}
+.needCard progress::-webkit-progress-bar{background:#ffffff19}.needCard progress::-webkit-progress-value{background:var(--mist)}.needCard progress::-moz-progress-bar{background:var(--mist)}
+.petDialog .needCard small{color:#d7cdd6;font-size:.76rem}
+.widgetShell dialog.petDialog .needCard button{min-width:0;padding:6px}
+.careFoot{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--edge);margin-top:10px;padding-top:8px;font-size:.74rem;color:#d7cdd6}
