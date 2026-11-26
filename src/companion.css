@@ -44,6 +44,7 @@ dialog.roomDialog[open]{position:fixed;inset:0;margin:0;width:100%;height:100dvh
 .roomScenery{position:fixed;inset:0;z-index:-1;overflow:hidden;background:#181722;pointer-events:none}
 .roomScenery::before{content:"";position:absolute;inset:-20px;background:var(--scene) center/cover;filter:blur(16px) brightness(.55)}
 .roomDialog[data-room=Chambre][data-phase=dusk] .roomScenery[data-model=Nonna]{filter:brightness(.72) sepia(.14)}
+.roomDialog[data-room=Chambre][data-phase=dusk] .roomScenery[data-model=Tsunade]{filter:brightness(.70) sepia(.15)}
 .roomScenery[data-model=Nonna] .lanternGlow{left:18%;top:43%;width:9%;height:3.5%}
 .roomCanvas{background-image:var(--scene);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);height:max(100%,min(177.78vw,115dvh));aspect-ratio:9/16;background-size:100% 100%;image-rendering:pixelated}
 .roomCanvas i{position:absolute;display:block;pointer-events:none}
@@ -107,6 +108,16 @@ dialog.petDialog{--mist:color-mix(in srgb,var(--game-fill) 32%,#f2e9ec);--glass:
 }
 .roomDialog[data-phase=dusk] .salonScene .petFigure img{filter:brightness(.86)}
 .roomDialog[data-room=Salon] .roomPanel{position:relative;z-index:1}
+/* On a portrait phone the illustration spans both edges above a separate care panel. */
+@media (orientation:portrait) and (max-width:700px){
+  dialog.roomDialog[data-room=Salon][open]{padding:0;background:#201b23;overflow-x:hidden}
+  .roomDialog[data-room=Salon] .roomScenery{display:none}
+  .roomDialog[data-room=Salon] header{position:absolute;top:max(14px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(460px,calc(100% - 28px))}
+  .roomDialog[data-room=Salon] .gameSettings{position:absolute;top:max(100px,calc(env(safe-area-inset-top) + 96px));left:50%;transform:translateX(-50%);width:min(460px,calc(100% - 28px))}
+  .roomDialog[data-room=Salon] .petStage{flex:1 0 max(245px,90vw);width:100%;border-radius:0;overflow:hidden}
+  .roomDialog[data-room=Salon] .salonScene{height:max(211.921cqw,121cqh)}
+  .roomDialog[data-room=Salon] .roomPanel{align-self:stretch;width:100%;margin:0;padding:10px max(16px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));border-radius:0;border:0;border-top:1px solid var(--edge);background:#201b23}
+}
 .roomPicker{display:flex;gap:4px;padding:3px;margin-bottom:12px;background:#0d0c144d;border-radius:15px}
 .widgetShell dialog.petDialog .roomPicker button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:transparent;border-color:transparent;color:#d6d0d6}
 .widgetShell dialog.petDialog .roomPicker button[aria-pressed=true]{background:color-mix(in srgb,var(--game-fill) 32%,#282631);border-color:var(--edge);color:#fff}

@@ -17,6 +17,7 @@ type Phase = 'day' | 'dusk' | 'night'
 
 function roomArt(model: Model, room: Room, phase: Phase) {
   if (room === 'Salon') return 'salon/'+(phase === 'day' ? 'day' : 'night')
+  if (model === 'Tsunade') return 'tsunade/'+(phase === 'night' ? 'night' : 'day')
   if (model === 'Nonna') return 'nonna/'+(phase === 'night' ? 'night' : 'day')
   if (model === 'Rias' && phase === 'night') return 'rias/night'
   return phase
@@ -112,7 +113,6 @@ export function CompanionDialog({kind,state,close,userId}:{userId:string;kind:Pe
   }
   const pose = p?.asleep ? 'sleep' : motion.pose
   const counter = kind === 'Jours ensemble' && p
-  const nonna = p?.model === 'Nonna'
   const room = !!p && !counter
   const homeRoom: Room = p?.asleep ? 'Chambre' : 'Salon'
   const currentRoom = selectedRoom ?? homeRoom
@@ -126,7 +126,7 @@ export function CompanionDialog({kind,state,close,userId}:{userId:string;kind:Pe
   return <dialog style={palette.style} className={'petDialog'+(room?' roomDialog':'')} data-phase={room?phase:undefined} data-room={room?currentRoom:undefined} ref={dialog} onClose={close} aria-label={kind}>
     {room && <div className="roomScenery" style={sceneryStyle} data-model={p.model} aria-hidden={!sleepingHere} role={sleepingHere?'img':undefined} aria-label={sleepingHere?p.model+' dort de dos sous la couverture.':undefined}>
       {inBedroom && <div className="roomCanvas">
-        {inBedroom && (p.asleep ? <><i className="lanternGlow"/><i className="quiltBreath"/></> : !nonna && <><i className="crtGlow"/><i className="tankGlow"/></>)}
+        {inBedroom && (p.asleep ? <><i className="lanternGlow"/><i className="quiltBreath"/></> : p.model === 'Rias' && <><i className="crtGlow"/><i className="tankGlow"/></>)}
       </div>}</div>}
     <header><h2>{room && <small>{currentRoom} · {phase==='day'?'Jour':phase==='dusk'?'Soir':'Nuit'}</small>}{counter ? kind : p ? p.nickname || p.model : 'Choisis ton personnage'}{room && p && <span className="roomStatus">{label(p)}</span>}</h2>
       <div className="gameHeaderActions"><button aria-label="Paramètres du jeu" title="Paramètres du jeu" aria-expanded={settings} onClick={()=>setSettings(!settings)}><Settings2 size={19}/></button>
