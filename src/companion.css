@@ -93,8 +93,20 @@ dialog.petDialog{--mist:color-mix(in srgb,var(--game-fill) 32%,#f2e9ec);--glass:
 .widgetShell dialog.petDialog .needCard button{min-width:0;padding:6px}
 .careFoot{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--edge);margin-top:10px;padding-top:8px;font-size:.74rem;color:#d7cdd6}
 
-.roomDialog[data-room=Salon] .roomCanvas{background-size:cover;background-position:center}
-.roomDialog[data-room=Salon] .petStage .petFigure{left:12%;width:76%;height:min(50dvh,490px);bottom:3%}
+.roomDialog[data-room=Salon] .petStage{container-type:size;width:100vw;max-width:none;pointer-events:none}
+.salonScene{position:absolute;left:50%;bottom:0;transform:translate(-50%,17%);height:min(211.92cqw,168.42cqh);aspect-ratio:151/320;background:var(--scene) center/100% 100%;image-rendering:pixelated;isolation:isolate}
+.roomDialog .salonScene .petFigure{left:5.298%;top:34.375%;bottom:auto;width:65.563%;height:46.5625%;overflow:visible;pointer-events:auto}
+.roomDialog .salonScene .petFigure img{display:block;width:100%;height:100%;image-rendering:pixelated;filter:none;animation:none}
+.roomDialog .salonScene .petFigure::before{content:"";position:absolute;left:26%;bottom:0;width:49%;height:2.7%;border-radius:50%;background:#554839;z-index:-1}
+@media(prefers-reduced-motion:no-preference){
+  .roomDialog .salonScene .pose-idle{animation:salonIdle 3s steps(1,end) infinite}
+  .roomDialog .salonScene .pose-feed{animation:salonIdle .32s steps(1,end) 4}
+  .roomDialog .salonScene .pose-pat{animation:salonPat .55s steps(1,end) 2}
+  @keyframes salonIdle{50%{transform:translateY(-.67114%)}}
+  @keyframes salonPat{50%{transform:translateX(1.0101%)}}
+}
+.roomDialog[data-phase=dusk] .salonScene .petFigure img{filter:brightness(.86)}
+.roomDialog[data-room=Salon] .roomPanel{position:relative;z-index:1}
 .roomPicker{display:flex;gap:4px;padding:3px;margin-bottom:12px;background:#0d0c144d;border-radius:15px}
 .widgetShell dialog.petDialog .roomPicker button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:transparent;border-color:transparent;color:#d6d0d6}
 .widgetShell dialog.petDialog .roomPicker button[aria-pressed=true]{background:color-mix(in srgb,var(--game-fill) 32%,#282631);border-color:var(--edge);color:#fff}

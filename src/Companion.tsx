@@ -125,9 +125,9 @@ export function CompanionDialog({kind,state,close,userId}:{userId:string;kind:Pe
   const sceneryStyle = {'--scene': 'url('+base+'companions/room/'+scene+'.webp)'} as CSSProperties
   return <dialog style={palette.style} className={'petDialog'+(room?' roomDialog':'')} data-phase={room?phase:undefined} data-room={room?currentRoom:undefined} ref={dialog} onClose={close} aria-label={kind}>
     {room && <div className="roomScenery" style={sceneryStyle} data-model={p.model} aria-hidden={!sleepingHere} role={sleepingHere?'img':undefined} aria-label={sleepingHere?p.model+' dort de dos sous la couverture.':undefined}>
-      <div className="roomCanvas">
+      {inBedroom && <div className="roomCanvas">
         {inBedroom && (p.asleep ? <><i className="lanternGlow"/><i className="quiltBreath"/></> : !nonna && <><i className="crtGlow"/><i className="tankGlow"/></>)}
-      </div></div>}
+      </div>}</div>}
     <header><h2>{room && <small>{currentRoom} · {phase==='day'?'Jour':phase==='dusk'?'Soir':'Nuit'}</small>}{counter ? kind : p ? p.nickname || p.model : 'Choisis ton personnage'}{room && p && <span className="roomStatus">{label(p)}</span>}</h2>
       <div className="gameHeaderActions"><button aria-label="Paramètres du jeu" title="Paramètres du jeu" aria-expanded={settings} onClick={()=>setSettings(!settings)}><Settings2 size={19}/></button>
       <button onClick={()=>dialog.current?.close()} aria-label="Fermer le personnage"><X size={20}/></button></div></header>
@@ -143,10 +143,12 @@ export function CompanionDialog({kind,state,close,userId}:{userId:string;kind:Pe
       <p>{p.days.includes(p.today) ? 'Le soin du jour est terminé.' : 'Termine un repas ou une séance de caresses pour valider la journée.'}</p>
       <p>Record · {p.best}　 ♥ {p.affection}</p></section> : <>
       <div className="petStage">
+        {!inBedroom && <div className="salonScene" style={sceneryStyle}>
         {present && !p.asleep && <button className="petFigure" disabled={p.asleep || !p.mood || busy} aria-label="Caresser le personnage" onClick={()=>care('pat')}>
-          <img key={motion.key+'-'+pose} className={'pose-'+pose} src={art(p.model,pose)} alt={p.model}/>
+          <img key={motion.key+'-'+pose} className={'pose-'+pose} src={base+'companions/room/salon/'+p.model+(pose==='idle'?'':'-'+pose)+'.png'} alt={p.model}/>
         </button>}
         {present && pose==='pat' && <Heart key={motion.key} className="petEffect"/>}
+        </div>}
       </div>
       <div className="roomPanel">
         <div role="group" aria-label="Pièces de la maison" className="roomPicker">
