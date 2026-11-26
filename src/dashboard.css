@@ -137,5 +137,9 @@ dialog.musicDialog{padding:0;width:min(92vw,420px);max-height:90dvh;background:#
 .miniForecast{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);align-items:center;text-align:center;gap:2px}
 .miniForecast span{display:grid;grid-template-columns:auto auto;justify-content:center;align-items:center;gap:2px 4px}
 .miniForecast span small{grid-column:span 2;line-height:1.2}.miniForecast span+span{border-left:1px solid var(--line)}
-.widgetShell .post header .postPencil{margin-left:auto;display:grid;place-items:center;min-width:44px;height:44px;padding:6px;border-radius:50%;color:var(--accent)}
-.postOptions{display:flex;justify-content:flex-end;gap:6px;margin-bottom:8px}
+.post header{flex-wrap:nowrap;gap:6px}
+.post header>.link{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.widgetShell .post header .postPencil{order:1;flex:none;display:grid;place-items:center;min-width:44px;height:44px;padding:6px;border-radius:50%;color:var(--accent)}
+.postOptions{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.postOptions button{min-height:44px;padding:4px 8px;font-size:.875rem}
+.post .tag + h2{margin-top:.875rem}

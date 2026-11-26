@@ -82,26 +82,26 @@ export function Feed({
               </button>
               {(own||d.me.admin) && <button className="postPencil" aria-label="Actions sur la publication" aria-expanded={menu===p.id}
                 onClick={()=>setMenu(menu===p.id?null:p.id)}><Pencil size={17}/></button>}
-            </header>
-            {menu===p.id && (own||d.me.admin) && <div className="postOptions">
-              {own && <button onClick={()=>{setEditing(p);setMenu(null)}}>Modifier</button>}
-                <Task
-                  run={async () => {
-                    if (
-                      !confirm(
-                        'Supprimer cette publication ?',
+              {menu===p.id && (own||d.me.admin) && <div className="postOptions">
+                {own && <button onClick={()=>{setEditing(p);setMenu(null)}}>Modifier</button>}
+                  <Task
+                    run={async () => {
+                      if (
+                        !confirm(
+                          'Supprimer cette publication ?',
+                        )
                       )
-                    )
-                      return
-                    await result(db.from('posts').delete().eq('id',p.id).select('id').single())
-                    setMenu(null)
-                    if (p.user_id === d.me.id) await discard([p.image_url])
-                    list.refresh()
-                  }}
-                >
-                  Supprimer
-                </Task>
-            </div>}
+                        return
+                      await result(db.from('posts').delete().eq('id',p.id).select('id').single())
+                      setMenu(null)
+                      if (p.user_id === d.me.id) await discard([p.image_url])
+                      list.refresh()
+                    }}
+                  >
+                    Supprimer
+                  </Task>
+              </div>}
+            </header>
             {editing?.id===p.id && own && <Form action="Enregistrer les modifications" submit={async f=>{
               const title=val(f,'title'), content=val(f,'message')||title
               if(!title)throw Error('Indique un titre.')

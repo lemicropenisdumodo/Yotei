@@ -313,6 +313,19 @@ try {
   assert.equal(await post.locator('time').count(),0)
   assert.doesNotMatch(await post.innerText(),/J’aime|Commentaires/)
   await post.getByLabel('Actions sur la publication').click()
+  for (const width of [320, 390, 430]) {
+    await page.setViewportSize({width,height:844})
+    const author = await post.locator('header .link').boundingBox()
+    const pencil = await post.getByLabel('Actions sur la publication').boundingBox()
+    for (const name of ['Modifier', 'Supprimer']) {
+      const action = await post.getByRole('button',{name,exact:true}).boundingBox()
+      assert.ok(action.x >= author.x + author.width && action.x + action.width <= pencil.x)
+      assert.ok(Math.abs(action.y + action.height / 2 - pencil.y - pencil.height / 2) < 1)
+    }
+    const badge = await post.locator('.tag').boundingBox()
+    const title = await post.getByRole('heading').boundingBox()
+    assert.ok(title.y - badge.y - badge.height >= 12)
+  }
   await post.getByRole('button',{name:'Modifier',exact:true}).click()
   await post.getByLabel('Message',{exact:true}).fill('Mon nouveau message')
   await post.getByRole('button',{name:'Enregistrer les modifications'}).click()

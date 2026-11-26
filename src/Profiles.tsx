@@ -1,5 +1,5 @@
 import {ProfileListening,SpotifySharing,type useSpotify} from './Spotify'
-import { Music2, Palette } from 'lucide-react'
+import { Palette } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import {
   accept,
@@ -48,11 +48,6 @@ export function ProfilePage({
         </div>
         <p>{p.bio || 'Aucune biographie pour le moment.'}</p>
         {p.id===d.me.id ? <SpotifySharing control={spotify}/> : <ProfileListening key={p.id} id={p.id}/>}
-        {p.music && (
-          <p className="musicLine">
-            <Music2 size={18} /> {p.music}
-          </p>
-        )}
         {p.id === d.me.id && (
           <div className="actions"><button onClick={() => setEdit(!edit)}>
             {edit ? 'Fermer l’édition' : 'Personnaliser mon profil'}
@@ -113,7 +108,6 @@ export function ProfilePage({
                     .update({
                       username: val(f, 'username'),
                       bio: val(f, 'bio'),
-                      music: val(f, 'music'),
                       theme_color: val(f, 'color'),
                       avatar_url: paths[0] || p.avatar_url,
                       banner_url: paths[1] || p.banner_url,
@@ -151,10 +145,6 @@ export function ProfilePage({
             <label>
               Biographie
               <textarea name="bio" maxLength={1500} defaultValue={p.bio} />
-            </label>
-            <label>
-              Musique préférée
-              <input name="music" maxLength={180} defaultValue={p.music} />
             </label>
             <label>
               Couleur du profil
