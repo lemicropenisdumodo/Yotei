@@ -1,6 +1,7 @@
 // Test-only PostgreSQL instance with the baseline tables and Supabase role interfaces.
 import { PGlite } from '@electric-sql/pglite'
 import fs from 'node:fs'
+import assert from 'node:assert/strict'
 const db = new PGlite()
 const root = new URL('../supabase/', import.meta.url)
 const sql = (relative) => fs.readFileSync(new URL(relative, root), 'utf8')
@@ -42,6 +43,9 @@ for (const t of ['profiles', 'posts', 'comments', 'likes']) {
 }
 for (const name of fs.readdirSync(new URL('migrations/', root)).sort())
   await db.exec(sql('migrations/' + name))
+const catalog = JSON.parse(fs.readFileSync(new URL('../src/roulette-videos.json', import.meta.url), 'utf8'))
+const rotation = await db.query('select video from yotei_private.roulette_videos where in_rotation')
+assert.deepEqual(rotation.rows.map(row => row.video).sort(), catalog.filter(video => !video.archived).map(video => video.id).sort())
 await db.exec(sql('tests/access.sql'))
 await db.close()
 console.log('Migration et scénarios RLS validés en PostgreSQL local.')

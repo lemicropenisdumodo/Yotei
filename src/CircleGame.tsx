@@ -77,14 +77,14 @@ export function useCircleGame(userId:string){
 }
 export type Game=ReturnType<typeof useCircleGame>
 function shuffle(){
-  const cards=videos.slice()
+  const cards=videos.filter(video=>!video.archived)
   for(let n=cards.length-1;n>0;n--){const i=Math.floor(Math.random()*(n+1));[cards[n],cards[i]]=[cards[i],cards[n]]}
   return cards
 }
 export function Roulette({game,close}:{game:Game;close:()=>void}){
   const dialog=useRef<HTMLDialogElement>(null),lock=useRef(false),timer=useRef(0)
   const [cards,setCards]=useState(shuffle),[run,setRun]=useState(0),[busy,setBusy]=useState(false),[error,setError]=useState('')
-  const price=game.wallet?.price??20
+  const price=game.wallet?.price
   const winner=videos.find(v=>v.id===game.wallet?.video)
   useEffect(()=>{dialog.current?.showModal();return ()=>clearTimeout(timer.current)},[])
   async function draw(){
@@ -102,8 +102,8 @@ export function Roulette({game,close}:{game:Game;close:()=>void}){
   return <dialog className="rouletteDialog" ref={dialog} onClose={close} aria-label="Roulette ASMR">
     <header><h2>Roulette ASMR</h2><button aria-label="Fermer la roulette" onClick={()=>dialog.current?.close()}><X/></button></header>
     <div className="reel"><div key={run} className={'reelTrack'+(run?' spinning':'')} style={{'--stop':'-2346px'} as CSSProperties}>{cards.map(card)}</div><i/></div>
-    <div className="drawControls"><Hearts amount={game.points}/><button className="primary" disabled={!game.wallet||busy||game.points<price} onClick={draw}><Dices size={18}/> {busy?'Tirage…':<>Tourner · <Hearts amount={price}/></>}</button></div>
-    {game.points<price&&<p>Gagne encore <Hearts amount={price-game.points}/> dans le clicker.</p>}
+    <div className="drawControls"><Hearts amount={game.points}/><button className="primary" disabled={price===undefined||busy||game.points<price} onClick={draw}><Dices size={18}/> {busy?'Tirage…':<>Tourner{price!==undefined&&<> · <Hearts amount={price}/></>}</>}</button></div>
+    {price!==undefined&&game.points<price&&<p>Gagne encore <Hearts amount={price-game.points}/> dans le clicker.</p>}
     {(error||game.error)&&<p role="alert">{error||game.error} <button onClick={game.refresh}>Actualiser</button></p>}
     {!busy&&winner&&<div className="rouletteWin" aria-live="polite"><small>Ton tirage · {winner.language}</small><h3>{winner.title}</h3><a href={'https://www.youtube.com/watch?v='+winner.id} target="_blank" rel="noopener noreferrer"><CirclePlay size={18}/> Voir la vidéo</a></div>}
   </dialog>

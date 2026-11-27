@@ -5,12 +5,17 @@
   pointer-events:none;
   background:var(--canvas,#171620) center / cover no-repeat;
 }
+.motifLayer::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,#17132070,transparent 26%,transparent 70%,#17132075),
+             radial-gradient(ellipse at center,#17132029 7%,transparent 66%);
+}
 .homeBackdrop{position:fixed;inset:0;z-index:-1;pointer-events:none}
 .homeBackdrop.slate{background:linear-gradient(145deg,#263446,#10151d 75%)}
 .homeBackdrop.dusk{background:radial-gradient(ellipse at top left,#49334a,#171622 72%)}
 .homeBackdrop.forest{background:linear-gradient(155deg,#1b3e39,#101c1e 78%)}
 @media (min-aspect-ratio: 1/1) {
-  .motifLayer {background-size:auto 120%;background-repeat:repeat-x}
+  .motifLayer{background-size:cover;background-position:center 42%}
 }
 .motifSettings {display:grid;gap:12px;margin:4px 0;min-width:0}
 .motifSettings h3,.motifSettings p {margin:0}

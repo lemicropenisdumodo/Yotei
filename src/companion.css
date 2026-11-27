@@ -30,7 +30,9 @@
 .pose-idle,.pose-sleep{animation:petBreathe 3s ease-in-out infinite}
 .pose-sleep{animation-duration:5s}
 .pose-feed{animation:petNibble .32s ease-in-out 4}
-.pose-pat,.pose-company{animation:petNuzzle .55s ease-in-out 2}
+.pose-pat{animation:petNuzzle .55s ease-in-out 2}
+.pose-company{animation:petGreet .95s ease-in-out}
+@keyframes petGreet{35%{transform:translateY(-2%) rotate(2deg)}70%{transform:rotate(-1deg)}}
 .petEffect{animation:petFloat 1.3s ease-out both}
 @keyframes petBreathe{50%{transform:scaleY(.985)}}
 @keyframes petNibble{50%{transform:translateY(2px) rotate(1deg)}}

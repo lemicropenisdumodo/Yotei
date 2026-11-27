@@ -97,6 +97,14 @@ export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId
   const [motion,setMotion] = useState<{pose:Motion; key:number}>({pose:'idle',key:0})
   const [nickname,setNickname] = useState(p?.nickname || '')
   useEffect(()=>{ dialog.current?.showModal() },[])
+  const model=p?.model
+  useEffect(()=>{
+    if(!model)return
+    for(const pose of ['feed','pat'] as const){
+      const image=new Image()
+      image.src=art(model,pose)
+    }
+  },[model])
   useEffect(()=>{
     if (motion.pose === 'idle') return
     const timer=setTimeout(()=>setMotion(m=>({...m,pose:'idle'})),1300)
@@ -106,6 +114,7 @@ export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId
     if (await act(action)) setMotion(m=>({pose:action,key:m.key+1}))
   }
   const pose = p?.asleep ? 'sleep' : motion.pose
+  const illustratedPose:Pose=pose==='company'?'pat':pose==='hop'?'idle':pose
   const requestedCare = p?.mood ? 'pat' : p?.food ? 'feed' : p?.company ? 'company' : null
   const counter = kind === 'Jours ensemble' && p
   const room = !!p && !counter
@@ -141,7 +150,7 @@ export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId
           <button className="petFigure" disabled={busy} aria-label={requestedCare ? {pat:'Caresser le personnage',feed:'Nourrir le personnage',company:'Tenir compagnie au personnage'}[requestedCare] : 'Saluer le personnage'} onClick={()=>{
             if(requestedCare)void care(requestedCare);else setMotion(m=>({pose:'hop',key:m.key+1}))
           }}>
-            <img key={motion.key+'-'+pose} className={'pose-'+pose} src={art(p.model)} alt={p.model}/>
+            <img key={motion.key+'-'+pose} className={'pose-'+pose} src={art(p.model,illustratedPose)} alt={p.model}/>
           </button>)}
         {!clicker && pose==='feed' && <Utensils key={motion.key} className="petEffect"/>}
         {!clicker && (pose==='pat'||pose==='company') && <Heart key={motion.key} className="petEffect"/>}

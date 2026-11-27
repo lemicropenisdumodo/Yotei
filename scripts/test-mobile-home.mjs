@@ -10,8 +10,8 @@ const peer = {
   id: '6792ee8d-67dc-43bf-997b-842d84bf8663',
   username: 'Camille',
 }
-let balance=0,gameVersion=0,latestVideo=null
-const gallery={owned:[],prices:{stars:25,clouds:40,waves:60,mesh:80,blossoms:100},character:'plain',clicker:'plain'}
+let balance=555,gameVersion=0,latestVideo=null
+const gallery={owned:[],prices:{stars:350,clouds:600,waves:1000,mesh:1500,blossoms:2200},character:'plain',clicker:'plain'}
 const streams=new Map()
 let companion
 let posted
@@ -91,14 +91,14 @@ try {
         gallery.owned.push(motif);balance-=gallery.prices[motif]
       }
       gallery[surface]=motif==='plain'?motif:motif+':'+palette
-      return route.fulfill({json:{points:balance,version:++gameVersion,video:latestVideo,price:20,gallery}})
+      return route.fulfill({json:{points:balance,version:++gameVersion,video:latestVideo,price:250,gallery}})
     }
     if(url.pathname.endsWith('/rpc/circle_game')){
       const {action,taps,request_id}=route.request().postDataJSON()
       if(action==='tap'){ balance+=taps-(streams.get(request_id)||0);streams.set(request_id,taps);gameVersion++ }
-      if(action==='spin'){if(balance<20)return route.fulfill({status:400,json:{message:'Solde insuffisant'}})
-        balance-=20;latestVideo='XCZlx9bt1G4';gameVersion++}
-      return route.fulfill({json:{points:balance,version:gameVersion,video:latestVideo,price:20,gallery}})
+      if(action==='spin'){if(balance<250)return route.fulfill({status:400,json:{message:'Solde insuffisant'}})
+        balance-=250;latestVideo='XCZlx9bt1G4';gameVersion++}
+      return route.fulfill({json:{points:balance,version:gameVersion,video:latestVideo,price:250,gallery}})
     }
     if (url.pathname.endsWith('/rpc/companion_care')) {
       const {action,detail} = route.request().postDataJSON()
@@ -220,20 +220,23 @@ try {
   await companionDialog.getByRole('button',{name:'Afficher les soins'}).click()
   await page.setViewportSize(originalViewport)
   await companionDialog.getByRole('button',{name:'Passer un moment ensemble'}).click()
+  await companionDialog.locator('img.pose-company[src$="Tsunade-pat.webp"]').waitFor()
   await companionDialog.getByText('Tsunade te fait un clin d’œil.').waitFor()
   for(let n=0;n<2;n++)await companionDialog.getByRole('button',{name:'Caresser',exact:true}).click()
+  await companionDialog.locator('img.pose-pat[src$="Tsunade-pat.webp"]').waitFor()
   await clicker.click()
   for(let n=0;n<45;n++)await companionDialog.getByRole('button',{name:'Gagner un cœur'}).click()
-  await companionDialog.getByRole('img',{name:'45 cœurs',exact:true}).waitFor()
+  await companionDialog.getByRole('img',{name:'600 cœurs',exact:true}).waitFor()
   const backgrounds=companionDialog.getByRole('button',{name:'Fonds',exact:true})
   await backgrounds.click()
-  await companionDialog.getByRole('button',{name:'Étoiles · 25 cœurs'}).click()
+  await companionDialog.getByRole('button',{name:'Étoiles · 350 cœurs'}).click()
   await companionDialog.getByRole('button',{name:/Débloquer/}).click()
   await companionDialog.locator('[data-motif="stars"]').waitFor()
-  await companionDialog.getByRole('img',{name:'20 cœurs',exact:true}).waitFor()
+  await companionDialog.getByRole('img',{name:'250 cœurs',exact:true}).waitFor()
   await character.click()
   await companionDialog.getByRole('button',{name:'Donner une bouchée'}).click()
   await companionDialog.getByRole('button',{name:'Donner une bouchée'}).click()
+  await companionDialog.locator('img.pose-feed[src$="Tsunade-feed.webp"]').waitFor()
   await companionDialog.getByText('Rassasiée',{exact:true}).waitFor()
   await companionDialog.getByRole('button',{name:'Saluer le personnage'}).click()
   const jumping=companionDialog.locator('img.pose-hop')

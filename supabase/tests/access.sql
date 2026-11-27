@@ -37,19 +37,19 @@ end $$;
 do $$
 declare stream uuid:=gen_random_uuid(); request uuid:=gen_random_uuid(); w jsonb; first_video text; pet jsonb;
 begin
- w:=public.circle_game('tap',stream,40);
- w:=public.circle_game('tap',stream,40);
- if (w->>'points')::int<>40 then raise exception 'Taps crédités en double'; end if;
+ w:=public.circle_game('tap',stream,500);
+ w:=public.circle_game('tap',stream,500);
+ if (w->>'points')::int<>500 then raise exception 'Taps crédités en double'; end if;
  w:=public.circle_game('spin',request); first_video:=w->>'video';
  w:=public.circle_game('spin',request);
- if (w->>'points')::int<>20 or w->>'video'<>first_video then raise exception 'Débit en double'; end if;
+ if (w->>'points')::int<>250 or w->>'video'<>first_video then raise exception 'Débit en double'; end if;
  w:=public.circle_game('spin',gen_random_uuid());
  if (w->>'points')::int<>0 or w->>'video'=first_video then raise exception 'Doublon vidéo'; end if;
  begin perform public.circle_game('spin',gen_random_uuid()); raise exception 'Solde négatif';
- exception when raise_exception then if sqlerrm<>'Il faut 20 cœurs pour tourner.' then raise; end if; end;
+ exception when raise_exception then if sqlerrm<>'Il faut 250 cœurs pour tourner.' then raise; end if; end;
  begin perform public.choose_companion_background('clicker','stars',1,true); raise exception 'Achat sans solde';
  exception when raise_exception then if sqlerrm<>'Pas assez de cœurs.' then raise; end if; end;
- w:=public.circle_game('tap',stream,65);
+ w:=public.circle_game('tap',stream,850);
  begin perform public.choose_companion_background('character','clouds',0,false); raise exception 'Fond verrouillé appliqué';
  exception when raise_exception then if sqlerrm<>'Ce fond est verrouillé.' then raise; end if; end;
  w:=public.choose_companion_background('character','stars',1,true);
