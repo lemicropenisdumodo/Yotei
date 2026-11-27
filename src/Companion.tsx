@@ -1,3 +1,4 @@
+import {LoveMeter} from './LoveMeter'
 import {Hearts,type Game} from './CircleGame'
 import {GameBackdrop,BackgroundGallery} from './Wallpaper'
 import { useEffect, useRef, useState } from 'react'
@@ -52,7 +53,7 @@ export function useCompanion() {
   return {pet,error,busy,act}
 }
 type State = ReturnType<typeof useCompanion>
-export type PetTile = 'Mon personnage' | 'Jours ensemble'
+export type PetTile = 'Character' | 'Jours ensemble'
 function label(p:Pet) {
   if (p.asleep) return 'Endormie'
   if (p.food) return 'Un petit creux'
@@ -75,8 +76,8 @@ export function CompanionTile({kind,state,open,wide}:{kind:PetTile;state:State;o
     <Flame className="streakFlame"/><strong>{p?.streak ?? 0} jour{(p?.streak ?? 0)>1?'s':''}</strong>
     <small>de suite</small>{wide && p && <Week pet={p}/>}
   </div>
-  return <button className="widgetLink petShortcut" onClick={open} aria-label="Mon personnage">
-    <strong>{p ? p.nickname || p.model : 'Mon personnage'}</strong>
+  return <button className="widgetLink petShortcut" onClick={open} aria-label="Character">
+    <strong>{p ? p.nickname || p.model : 'Character'}</strong>
     {p ? <><small className="petStatus">{label(p)}</small><small className="petLevel">Nv {1+Math.floor(p.affection/5)}</small>
       <span className="petReadings">{(['mood','food'] as const).map(need=><span key={need}
         style={{background:'conic-gradient(#fff '+((4-p[need])*25)+'%, #ffffff35 0)'}}
@@ -89,6 +90,7 @@ export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId
   const palette=useGameColor(userId)
   const [settings,setSettings]=useState(false)
   const {pet:p,act,busy,error} = state
+  const [loveOpen,setLoveOpen]=useState(false)
   const [clicker,setClicker]=useState(false)
   const [galleryOpen,setGalleryOpen]=useState(false),[collapsed,setCollapsed]=useState(false)
   const surface=clicker?'clicker':'character'
@@ -122,7 +124,7 @@ export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId
   const phase=p?.asleep?'night':hour>=7 && hour<18?'day':'dusk'
   return <dialog style={palette.style} className={'petDialog'+(room?' roomDialog':'')} data-phase={room?phase:undefined} data-model={p?.model} ref={dialog} onClose={close} aria-label={kind}>
     {room&&!galleryOpen&&<GameBackdrop value={game.wallet?.gallery?.[surface]}/>}
-    <header><h2>{room && <small>{clicker?'Clicker':'Mon personnage'} · {phase==='day'?'Jour':phase==='dusk'?'Soir':'Nuit'}</small>}{counter ? kind : p ? p.nickname || p.model : 'Choisis ton personnage'}{room && p && <span className="roomStatus">{label(p)}</span>}</h2>
+    <header><h2>{room && <small>{clicker?'Clicker':'Character'} · {phase==='day'?'Jour':phase==='dusk'?'Soir':'Nuit'}</small>}{counter ? kind : p ? p.nickname || p.model : 'Choisis ton personnage'}{room && p && <span className="roomStatus">{label(p)}</span>}</h2>
       <div className="gameHeaderActions"><button aria-label="Paramètres du jeu" title="Paramètres du jeu" aria-expanded={settings} onClick={()=>setSettings(!settings)}><Settings2 size={19}/></button>
       <button onClick={()=>dialog.current?.close()} aria-label="Fermer le personnage"><X size={20}/></button></div></header>
     {settings && <section className="gameSettings"><label>Couleur des boutons<input type="color" value={palette.color} onChange={e=>palette.change(e.target.value)}/></label>
@@ -137,7 +139,7 @@ export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId
       <p>{p.days.includes(p.today) ? 'Le soin du jour est terminé.' : 'Termine un repas ou une séance de caresses pour valider la journée.'}</p>
       <p>Record · {p.best}　 ♥ {p.affection}</p></section> : <>
       <div className="roomPicker" role="group" aria-label="Activité">
-        <button type="button" aria-pressed={!clicker&&!galleryOpen} onClick={()=>{setClicker(false);setGalleryOpen(false)}}><Heart size={16}/>Mon personnage</button>
+        <button type="button" aria-pressed={!clicker&&!galleryOpen} onClick={()=>{setClicker(false);setGalleryOpen(false)}}><Heart size={16}/>Character</button>
         <button type="button" aria-pressed={clicker&&!galleryOpen} onClick={()=>{setClicker(true);setGalleryOpen(false)}}><MousePointerClick size={16}/>Clicker</button>
         <button type="button" aria-pressed={galleryOpen} onClick={()=>setGalleryOpen(!galleryOpen)}><Images size={16}/>Fonds</button>
       </div>
@@ -157,9 +159,11 @@ export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId
       </div>
       <div className="roomPanel" data-collapsed={!clicker&&collapsed}>
         {clicker ? <><p className="clickScore"><Hearts amount={game.points}/></p>{game.error&&<p role="alert">{game.error} <button onClick={game.refresh}>Réessayer</button></p>}</> : <>
+        <div className="careTools">
+        {p.model==='Tsunade' && <button className="loveEntry" onClick={()=>setLoveOpen(true)}><Heart size={16}/> Love Meter</button>}
         <button className="careToggle" aria-expanded={!collapsed} aria-controls="careDetails" onClick={()=>setCollapsed(!collapsed)}>
           {collapsed?<ChevronUp size={18}/>:<ChevronDown size={18}/>} {collapsed?'Afficher les soins':'Replier les soins'}
-        </button>
+        </button></div>
         <div id="careDetails" hidden={collapsed}><div className="petNeeds">{(['feed','pat'] as const).map(action=>{
         const food=action==='feed', remaining=food?p.food:p.mood
         const status = remaining ? (food?'A faim':'À réconforter') : (food?'Rassasiée':'Contente')
@@ -175,5 +179,6 @@ export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId
         {p.asleep && <span><Sunrise size={15}/> Réveil à 7 h</span>}</div></div></>}
       </div></>}
     </>}
+    {loveOpen && <LoveMeter close={()=>setLoveOpen(false)}/>}
   </dialog>
 }

@@ -53,12 +53,12 @@ export function Avatar({ person }: { person: Directory['me'] }) {
     </span>
   )
 }
-const widgets = ['Marchés','Courbe','Batterie','Date','Météo','Heure','Prévisions','Mon personnage','Amis','Jours ensemble','Décor','Photo','Spotify','Recommandations','Roulette'] as const
+const widgets = ['Marchés','Courbe','Batterie','Date','Météo','Heure','Prévisions','Character','Amis','Jours ensemble','Décor','Photo','Spotify','Recommandations','Roulette'] as const
 type Widget = typeof widgets[number]
 function readLayout(key: string): Widget[] {
   try {
     const saved: unknown = JSON.parse(localStorage.getItem(key) || '[]')
-    if (Array.isArray(saved)) return [...new Set<Widget>([...saved.filter(id=>widgets.includes(id)), ...widgets])]
+    if (Array.isArray(saved)) return [...new Set<Widget>([...saved.map(id=>id==='Mon personnage'?'Character':id).filter(id=>widgets.includes(id)), ...widgets])]
   } catch { /* Default arrangement */ }
   return [...widgets]
 }
@@ -132,7 +132,7 @@ export function Home({d, recent, openPost, go, editing, finish, photo, spotify,w
     save(next)
   }
   function tileContent(id: Widget) {
-    if (id === 'Mon personnage' || id === 'Jours ensemble') return <CompanionTile kind={id} state={companion} wide={false} open={()=>setPetPage('Mon personnage')}/>
+    if (id === 'Character' || id === 'Jours ensemble') return <CompanionTile kind={id} state={companion} wide={false} open={()=>setPetPage('Character')}/>
     if (id==='Roulette') return <button className="widgetLink rouletteTile" onClick={()=>setRoulette(true)}><Dices/><span><strong>Roulette ASMR</strong><small><Hearts amount={game.points}/></small></span></button>
     if (id === 'Recommandations') return <button className="widgetLink recWidget" aria-label="Recommandations" onClick={() => recent ? openPost(recent.id) : go('Fil')}>
       {recent && (recent.image_url ? <Media path={recent.image_url} className="recArt" alt="" /> :

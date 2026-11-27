@@ -15,7 +15,7 @@ body:has(.widgetShell){background:var(--canvas,#101113)}
 .fixedBoard [data-widget=Batterie],.fixedBoard [data-widget=Décor]{grid-column:span 1}
 .fixedBoard [data-widget=Date],.fixedBoard [data-widget=Heure],.fixedBoard [data-widget="Jours ensemble"]{grid-column:span 2}
 .fixedBoard [data-widget=Recommandations]{grid-column:span 6;grid-row:span 2}
-.fixedBoard [data-widget="Mon personnage"]{grid-row:span 3;background:radial-gradient(at top right,color-mix(in srgb,var(--accent),transparent 65%),transparent 76%),var(--surface)}
+.fixedBoard [data-widget="Character"]{grid-row:span 3;background:radial-gradient(at top right,color-mix(in srgb,var(--accent),transparent 65%),transparent 76%),var(--surface)}
 .fixedBoard :is([data-widget=Photo],[data-widget=Spotify],[data-widget="Jours ensemble"],[data-widget=Décor]){grid-row:span 2}
 .fixedBoard .widgetLink,.fixedBoard .weatherChip,.stillTile{min-height:0;padding:clamp(6px,2vw,15px);justify-content:center}
 .stillTile{height:100%;display:grid;align-content:center;justify-items:center;color:var(--accent);line-height:1.2}
@@ -55,7 +55,7 @@ body:has(.widgetShell){background:var(--canvas,#101113)}
 .fixedBoard [data-widget=Date]{grid-column:span 6;grid-row:span 14}
 .fixedBoard [data-widget=Météo],.fixedBoard [data-widget=Prévisions]{grid-column:span 19;grid-row:span 14}
 .fixedBoard [data-widget=Heure]{grid-column:span 11;grid-row:span 14}
-.fixedBoard [data-widget="Mon personnage"]{grid-row:span 55;border-radius:clamp(18px,5vw,38px);border:2px solid #40434b;background:radial-gradient(ellipse at 90% 14%,#337c40 0%,#235e39 27%,transparent 66%),linear-gradient(125deg,#080a11,#04060c)}
+.fixedBoard [data-widget="Character"]{grid-row:span 55;border-radius:clamp(18px,5vw,38px);border:2px solid #40434b;background:radial-gradient(ellipse at 90% 14%,#337c40 0%,#235e39 27%,transparent 66%),linear-gradient(125deg,#080a11,#04060c)}
 .fixedBoard [data-widget=Amis]{grid-column:span 13;grid-row:span 16}
 .fixedBoard [data-widget="Jours ensemble"]{grid-column:span 9;grid-row:span 39;background:radial-gradient(ellipse at 50% 25%,#64233a,transparent 64%),#161517}
 .fixedBoard [data-widget=Décor]{grid-column:span 4;grid-row:span 39;background:transparent;border:0}

@@ -1,0 +1,34 @@
+.careTools{display:flex;align-items:center;gap:.5rem}
+.widgetShell .roomDialog .careTools .loveEntry{display:flex;align-items:center;justify-content:center;gap:.4rem;flex:none;color:#ffd5e4;background:#3c2635;border-color:#684157;padding:7px 12px}
+.widgetShell .roomDialog .careTools .careToggle{flex:1;width:auto}
+dialog.loveDialog[open]{position:fixed;inset:0;margin:auto;padding:0;width:min(100%,460px);max-width:100%;height:min(100dvh,830px);max-height:100dvh;border:1px solid #52404c;border-radius:22px;background:#19151d;color:#fff1f5;overflow:auto;box-shadow:0 12px 65px #09060f66}
+.loveDialog::backdrop{background:#0c090dd9}
+.loveLayout{height:100%;min-height:320px;display:flex;flex-direction:column;padding:15px;gap:12px;box-sizing:border-box}
+.loveDialog .loveHeading,.loveFooter{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.loveDialog .loveHeading h2{padding:0;border:0;background:none;box-shadow:none;border-radius:0;color:#fff1f5;font-size:1.72rem;line-height:1.15;backdrop-filter:none}
+.loveHeading small,.loveCaption small,.loveFooter small{color:#e8b3c6;font-size:.78rem}
+.loveScene{container-type:size;--beat:0;--needle-angle:11deg;position:relative;flex:1;min-height:150px;isolation:isolate;overflow:hidden;border-radius:16px;background:radial-gradient(ellipse at 62% 58%,#89556a 0%,#4e334a 55%,#302538 100%)}
+.loveScene::after{content:"";pointer-events:none;position:absolute;inset:60% 0 0;background:linear-gradient(transparent,#221825d9)}
+.lovePortraits{position:absolute;left:50%;bottom:9%;width:min(110cqw,84cqh);aspect-ratio:1;translate:-50% 0;mask-image:linear-gradient(#000 0 86%,transparent);transform:translateY(calc(var(--beat)*-1%));transform-origin:60% 80%}
+.lovePortraits img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center bottom;opacity:0}
+.lovePortraits img[data-visible=true]{opacity:1}
+.loveScene[data-level="2"] .lovePortraits{scale:1.045;transform-origin:53% 82%}
+.loveScene[data-level="3"] .lovePortraits{scale:1.055;rotate:calc(var(--beat)*1.2deg);transform-origin:53% 82%}
+.loveDial{position:absolute;z-index:1;top:2%;left:2%;width:min(36%,17vh);height:auto;overflow:visible;filter:drop-shadow(0 2px 3px #24162760)}
+.loveNeedle{transform:rotate(var(--needle-angle));transform-origin:0 0}
+.loveCap{transform-box:fill-box;transform-origin:center}
+.loveScene[data-level="3"] .loveCap{transform:scale(calc(1 + var(--beat)*.12))}
+.loveCaption{position:absolute;z-index:1;bottom:14px;left:16px;display:grid;text-shadow:0 1px 4px #251520}
+.loveCaption strong{font-size:clamp(1.3rem,6vw,2rem);line-height:1.05}
+.loveTrack{position:absolute;z-index:1;bottom:0;left:0;width:100%;height:3px;background:#ffd2e4;transform:scaleX(var(--progress,0));transform-origin:left}
+.loveFooter>span{font-weight:650}.loveFooter small{display:block;font-weight:400}
+.loveFooter>div{display:flex;gap:6px}
+.widgetShell .loveDialog button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:44px}
+.widgetShell .loveDialog .loveFooter button:first-child{color:#2a1621;background:#f4c1d3}
+.loveSparkles{position:absolute;inset:22% 4% 20%;color:#ffc5d7;pointer-events:none;transform:translateY(calc(var(--beat)*-2%))}
+.loveSparkles svg{position:absolute}.loveSparkles svg:nth-child(1){top:8%;left:30%}.loveSparkles svg:nth-child(2){right:9%;top:12%}.loveSparkles svg:nth-child(3){top:56%;left:4%}.loveSparkles svg:nth-child(4){top:38%;right:0}.loveSparkles svg:nth-child(5){left:12%;top:26%}
+@media(max-width:480px){dialog.loveDialog[open]{border:0;border-radius:0;height:100dvh}.loveLayout{padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){.loveScene .lovePortraits{rotate:none;scale:1}}
+
+.widgetShell .loveDialog .loveLoop{align-self:flex-start;min-height:40px;padding:6px 12px;border-radius:20px;color:#f4dbe5;background:transparent;border:1px solid #795465}
+.widgetShell .loveDialog .loveLoop[aria-pressed=true]{background:#f4c1d3;border-color:#f4c1d3;color:#2a1621}

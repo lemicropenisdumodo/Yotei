@@ -194,7 +194,7 @@ try {
   await home.getByRole('button',{name:'Pause',exact:true}).click()
   await home.getByRole('button',{name:'Reprendre'}).click()
   await home.getByRole('button',{name:'Pause',exact:true}).waitFor()
-  await home.getByRole('button',{name:'Mon personnage',exact:true}).click()
+  await home.getByRole('button',{name:'Character',exact:true}).click()
   const companionDialog = page.getByRole('dialog')
   await companionDialog.getByRole('button',{name:'Paramètres du jeu'}).click()
   await companionDialog.getByLabel('Couleur des boutons').fill('#91d8b5')
@@ -202,7 +202,7 @@ try {
   await companionDialog.getByRole('button',{name:'Paramètres du jeu'}).click()
   await companionDialog.getByRole('button',{name:'Tsunade',exact:true}).click()
   const clicker=companionDialog.getByRole('button',{name:'Clicker',exact:true})
-  const character=companionDialog.getByRole('button',{name:'Mon personnage',exact:true})
+  const character=companionDialog.getByRole('button',{name:'Character',exact:true})
   await character.waitFor()
   const originalViewport = page.viewportSize()
   for (const [width,height] of [[320,568],[393,765],[430,932]]) {
@@ -213,6 +213,18 @@ try {
     assert.ok(Math.abs((figure.x + figure.width / 2) - width / 2) < 1)
     assert.ok(figure.y >= stage.y && figure.y+figure.height <= panel.y)
   }
+  await companionDialog.getByRole('button',{name:'Love Meter',exact:true}).click()
+  const love=page.getByRole('dialog',{name:'Love Meter',exact:true})
+  await love.getByRole('button',{name:'Lecture'}).click()
+  for(const name of ['Sympathie','Attirance','Amour']){
+    await love.getByText(name,{exact:true}).waitFor({timeout:12000})
+  }
+  await love.getByRole('button',{name:'Rejouer'}).click()
+  await love.getByText('Timidité',{exact:true}).waitFor()
+  await love.getByRole('button',{name:'Pause',exact:true}).click()
+  assert.ok(await love.locator('audio').evaluate(el=>el.paused))
+  await love.getByRole('button',{name:'Fermer le Love Meter'}).click()
+  await character.waitFor()
   const stageHeight=() => companionDialog.locator('.petStage').evaluate(el=>el.clientHeight)
   const openHeight=await stageHeight()
   await companionDialog.getByRole('button',{name:'Replier les soins'}).click()
@@ -257,7 +269,7 @@ try {
   assert.match(await home.locator('[data-widget="Jours ensemble"]').innerText(),/1 jour/)
   companion.asleep=true
   await page.reload()
-  await home.getByRole('button',{name:'Mon personnage',exact:true}).click()
+  await home.getByRole('button',{name:'Character',exact:true}).click()
   await companionDialog.getByRole('img',{name:'Tsunade dort.'}).waitFor()
   assert.equal(await companionDialog.evaluate(el=>el.style.getPropertyValue('--game-fill')),'#91d8b5')
   assert.equal(await companionDialog.getByRole('button',{name:'Donner une bouchée'}).count(),0)
@@ -270,7 +282,7 @@ try {
     companion.asleep=phase==='night'
     await page.reload()
     await page.evaluate(localHour => { Date.prototype.getHours = () => localHour }, hour)
-    await home.getByRole('button',{name:'Mon personnage',exact:true}).click()
+    await home.getByRole('button',{name:'Character',exact:true}).click()
     await character.waitFor()
     assert.equal(await companionDialog.getAttribute('data-phase'),phase)
     assert.equal(await companionDialog.locator('.petStage').evaluate(el=>getComputedStyle(el).backgroundImage),'none')
