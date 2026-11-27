@@ -216,11 +216,13 @@ try {
   await companionDialog.getByRole('button',{name:'Love Meter',exact:true}).click()
   const love=page.getByRole('dialog',{name:'Love Meter',exact:true})
   await love.getByRole('button',{name:'Lecture'}).click()
-  for(const name of ['Sympathie','Attirance','Amour']){
-    await love.getByText(name,{exact:true}).waitFor({timeout:12000})
+  await love.getByText('Son : She’s Homeless',{exact:true}).waitFor()
+  for(const pose of ['friendly','close','love']){
+    await love.locator('img[data-visible="true"][src$="/'+pose+'.webp"]').waitFor({timeout:12000})
+    assert.equal(await love.locator('.loveScene').innerText(),'')
   }
   await love.getByRole('button',{name:'Rejouer'}).click()
-  await love.getByText('Timidité',{exact:true}).waitFor()
+  await love.locator('img[data-visible="true"][src$="/shy.webp"]').waitFor()
   await love.getByRole('button',{name:'Pause',exact:true}).click()
   assert.ok(await love.locator('audio').evaluate(el=>el.paused))
   await love.getByRole('button',{name:'Fermer le Love Meter'}).click()

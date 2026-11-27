@@ -17,7 +17,6 @@ export function LoveMeter({close}:{close:()=>void}) {
   const [ended,setEnded]=useState(false)
   const [loop,setLoop]=useState(false)
   const [error,setError]=useState('')
-  const cue=loveCues[level]
 
   useEffect(()=>{
     const player=audio.current!, scene=stage.current!, reduced=matchMedia('(prefers-reduced-motion: reduce)')
@@ -85,10 +84,9 @@ export function LoveMeter({close}:{close:()=>void}) {
           <g transform="translate(189 211)"><g className="loveNeedle"><image href={folder+'needle.png'} x="-141" y="-26" width="168" height="52.5" preserveAspectRatio="none"/></g></g>
         </svg>
         {level===3&&<div aria-hidden="true" className="loveSparkles">{[0,1,2,3,4].map(i=><Heart key={i} size={14+i*2} fill="currentColor"/>)}</div>}
-        <div className="loveCaption" aria-live="polite"><small>{level+1} / 4</small><strong>{cue.name}</strong></div>
         <div className="loveTrack" aria-hidden="true"/>
       </div>
-      <footer className="loveFooter"><span>She’s Homeless <small>Creep-P</small></span><div>
+      <footer className="loveFooter"><span>Son : She’s Homeless <small>Creep-P</small></span><div>
         {playing ? <button onClick={()=>audio.current?.pause()} aria-label="Pause"><Pause size={18}/></button>
         : <button disabled={!ready} onClick={()=>void play()}><Play size={17}/>{!ready?'Chargement…':ended?'Rejouer':'Lecture'}</button>}
         {!ended&&<button disabled={!ready} aria-label="Recommencer depuis le début" onClick={()=>void play(true)}><RotateCcw size={17}/></button>}
