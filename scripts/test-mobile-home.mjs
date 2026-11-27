@@ -216,7 +216,7 @@ try {
   await companionDialog.getByRole('button',{name:'Love Meter',exact:true}).click()
   const love=page.getByRole('dialog',{name:'Love Meter',exact:true})
   await love.getByRole('button',{name:'Lecture'}).click()
-  await love.getByText('Son : She’s Homeless',{exact:true}).waitFor()
+  await love.getByText(/^Son\s*:\s*She’s Homeless/).waitFor()
   for(const pose of ['friendly','close','love']){
     await love.locator('img[data-visible="true"][src$="/'+pose+'.webp"]').waitFor({timeout:12000})
     assert.equal(await love.locator('.loveScene').innerText(),'')
@@ -278,6 +278,26 @@ try {
   await companionDialog.getByText('Réveil à 7 h').waitFor()
   assert.equal(await companionDialog.evaluate(el=>el.clientHeight),await page.evaluate(()=>innerHeight))
   await companionDialog.getByRole('button',{name:'Fermer le personnage'}).click()
+  for(const model of ['Nonna','Rias']){
+    companion.model=model
+    await page.reload()
+    await home.getByRole('button',{name:'Character',exact:true}).click()
+    await companionDialog.getByRole('button',{name:'Love Meter',exact:true}).click()
+    await love.getByText(model,{exact:true}).waitFor()
+    await love.getByRole('button',{name:'Lecture',exact:true}).click()
+    for(const [time,pose,x,y] of [[0,'shy',42,187],[2.4,'friendly',58,138],[4.3,'close',92,97],[6,'love',144,70]]){
+      await love.locator('audio').evaluate((el,t)=>{el.currentTime=t},time)
+      await love.locator(`img[data-visible="true"][src$="/${model}/${pose}.webp"]`).waitFor()
+      const tip=await love.locator('.loveNeedle').evaluate(needle=>{
+        const local=needle.ownerSVGElement.getScreenCTM().inverse().multiply(needle.getScreenCTM())
+        const pt=new DOMPoint(-140,0).matrixTransform(local)
+        return {x:pt.x,y:pt.y}
+      })
+      assert.ok(Math.hypot(tip.x-x,tip.y-y)<1.5,model+' · '+pose+' : '+JSON.stringify(tip))
+    }
+    await love.getByRole('button',{name:'Fermer le Love Meter'}).click()
+    await companionDialog.getByRole('button',{name:'Fermer le personnage'}).click()
+  }
   // Switching phases keeps the room plain and shows the sleeping character at night.
   companion.model='Rias'
   for (const [hour,phase] of [[12,'day'],[19,'dusk'],[23,'night']]) {

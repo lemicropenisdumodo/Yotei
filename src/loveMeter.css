@@ -15,9 +15,9 @@ dialog.loveDialog[open]{position:fixed;inset:0;margin:auto;padding:0;width:min(1
 .loveScene[data-level="2"] .lovePortraits{scale:1.045;transform-origin:53% 82%}
 .loveScene[data-level="3"] .lovePortraits{scale:1.055;rotate:calc(var(--beat)*1.2deg);transform-origin:53% 82%}
 .loveDial{position:absolute;z-index:1;top:2%;left:2%;width:min(36%,17vh);height:auto;overflow:visible;filter:drop-shadow(0 2px 3px #24162760)}
-.loveNeedle{transform:rotate(var(--needle-angle));transform-origin:0 0}
-.loveCap{transform-box:fill-box;transform-origin:center}
-.loveScene[data-level="3"] .loveCap{transform:scale(calc(1 + var(--beat)*.12))}
+.loveNeedle{transform:rotate(var(--needle-angle)) scale(var(--needle-scale,1));transform-origin:0 0}
+.loveCap{transform-box:fill-box;transform-origin:50% 75%;transform:scale(calc(1 + var(--beat)*.075 + var(--heart-pop,0)*.32)) rotate(calc(var(--heart-pop,0)*-9deg))}
+.loveScene[data-level="3"] .loveCap{transform:scale(calc(1 + var(--beat)*.16 + var(--heart-pop,0)*.32)) rotate(calc(var(--heart-pop,0)*-9deg))}
 .loveTrack{position:absolute;z-index:1;bottom:0;left:0;width:100%;height:3px;background:#ffd2e4;transform:scaleX(var(--progress,0));transform-origin:left}
 .loveFooter>span{font-weight:650}.loveFooter small{display:block;font-weight:400}
 .loveFooter>div{display:flex;gap:6px}

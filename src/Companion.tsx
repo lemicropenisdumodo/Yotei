@@ -8,7 +8,7 @@ import {useGameColor} from './GameButtons'
 import './companion.css'
 
 const models = ['Nonna', 'Rias', 'Tsunade'] as const
-type Model = typeof models[number]
+export type Model = typeof models[number]
 type Action = 'read' | 'adopt' | 'rename' | 'feed' | 'pat' | 'company'
 type Pet = {
   model: Model; nickname: string; food: number; mood: number; company:number; asleep: boolean
@@ -160,7 +160,7 @@ export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId
       <div className="roomPanel" data-collapsed={!clicker&&collapsed}>
         {clicker ? <><p className="clickScore"><Hearts amount={game.points}/></p>{game.error&&<p role="alert">{game.error} <button onClick={game.refresh}>Réessayer</button></p>}</> : <>
         <div className="careTools">
-        {p.model==='Tsunade' && <button className="loveEntry" onClick={()=>setLoveOpen(true)}><Heart size={16}/> Love Meter</button>}
+        <button className="loveEntry" onClick={()=>setLoveOpen(true)}><Heart size={16}/> Love Meter</button>
         <button className="careToggle" aria-expanded={!collapsed} aria-controls="careDetails" onClick={()=>setCollapsed(!collapsed)}>
           {collapsed?<ChevronUp size={18}/>:<ChevronDown size={18}/>} {collapsed?'Afficher les soins':'Replier les soins'}
         </button></div>
@@ -179,6 +179,6 @@ export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId
         {p.asleep && <span><Sunrise size={15}/> Réveil à 7 h</span>}</div></div></>}
       </div></>}
     </>}
-    {loveOpen && <LoveMeter close={()=>setLoveOpen(false)}/>}
+    {loveOpen && p && <LoveMeter key={p.model} model={p.model} close={()=>setLoveOpen(false)}/>}
   </dialog>
 }
