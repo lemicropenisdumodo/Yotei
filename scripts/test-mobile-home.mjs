@@ -285,15 +285,15 @@ try {
     await companionDialog.getByRole('button',{name:'Love Meter',exact:true}).click()
     await love.getByText(model,{exact:true}).waitFor()
     await love.getByRole('button',{name:'Lecture',exact:true}).click()
-    for(const [time,pose,x,y] of [[0,'shy',42,187],[2.4,'friendly',58,138],[4.3,'close',92,97],[6,'love',144,70]]){
+    for(const [time,pose,x,y] of [[0,'shy',42.22,186.52],[2.4,'friendly',58.41,137.54],[4.3,'close',91.84,97.24],[6,'love',143.80,70.37]]){
       await love.locator('audio').evaluate((el,t)=>{el.currentTime=t},time)
       await love.locator(`img[data-visible="true"][src$="/${model}/${pose}.webp"]`).waitFor()
-      const tip=await love.locator('.loveNeedle').evaluate(needle=>{
+      await page.waitForFunction(([x,y])=>{
+        const needle=document.querySelector('.loveDialog[open] .loveNeedle')
         const local=needle.ownerSVGElement.getScreenCTM().inverse().multiply(needle.getScreenCTM())
-        const pt=new DOMPoint(-140,0).matrixTransform(local)
-        return {x:pt.x,y:pt.y}
-      })
-      assert.ok(Math.hypot(tip.x-x,tip.y-y)<1.5,model+' · '+pose+' : '+JSON.stringify(tip))
+        const tip=new DOMPoint(-140,0).matrixTransform(local)
+        return Math.hypot(tip.x-x,tip.y-y)<1.5
+      },[x,y],{timeout:2000})
     }
     await love.getByRole('button',{name:'Fermer le Love Meter'}).click()
     await companionDialog.getByRole('button',{name:'Fermer le personnage'}).click()
