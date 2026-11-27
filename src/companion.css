@@ -91,3 +91,6 @@ dialog.petDialog{--mist:color-mix(in srgb,var(--game-fill) 32%,#f2e9ec);--glass:
 .widgetShell dialog.petDialog .roomPicker button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:transparent;border-color:transparent;color:#d6d0d6}
 .widgetShell dialog.petDialog .roomPicker button[aria-pressed=true]{background:color-mix(in srgb,var(--game-fill) 32%,#282631);border-color:var(--edge);color:#fff}
 .roomLocation{font-size:.88rem;margin:8px 2px}
+
+.petShortcut[data-art=anime] img,.petDialog[data-art=anime] .petFigure img,
+.petDialog[data-art=anime] .sleepingFigure,.petDialog[data-art=anime] .petChoices img{image-rendering:auto}

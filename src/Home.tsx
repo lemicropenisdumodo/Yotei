@@ -73,7 +73,7 @@ export function Home({d, recent, openPost, go, editing, finish, photo, spotify,w
   const marketRows=useMarkets(watch.tickers)
   const game=useCircleGame(d.me.id)
   const [roulette,setRoulette]=useState(false)
-  const companion = useCompanion()
+  const companion = useCompanion(d.me.id)
   const [petPage, setPetPage] = useState<PetTile | null>(null)
   const [drag, setDrag] = useState<Widget | null>(null)
   const [target, setTarget] = useState<Widget | null>(null)

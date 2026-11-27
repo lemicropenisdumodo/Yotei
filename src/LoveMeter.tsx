@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react'
 import {Heart,Pause,Play,Repeat2,RotateCcw,X} from 'lucide-react'
-import type {Model} from './Companion'
+import type {ArtStyle, Model} from './Companion'
 import {base} from './core'
 import {loveCues,beatSeconds} from './loveMeterScore'
 import './loveMeter.css'
@@ -13,8 +13,8 @@ const stops=[[42.22,186.52],[58.41,137.54],[91.84,97.24],[143.80,70.37]].map(([x
   reach:Math.hypot(pivot.x-x,pivot.y-y),
 }))
 
-export function LoveMeter({model,close}:{model:Model;close:()=>void}) {
-  const portraits=folder+(model==='Tsunade'?'':model+'/')
+export function LoveMeter({model,artStyle,close}:{model:Model;artStyle:ArtStyle;close:()=>void}) {
+  const portraits=artStyle==='anime'?base+'companions/anime/'+model+'/':folder+(model==='Tsunade'?'':model+'/')
   const dialog=useRef<HTMLDialogElement>(null)
   const audio=useRef<HTMLAudioElement>(null)
   const stage=useRef<HTMLDivElement>(null)

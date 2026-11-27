@@ -16,10 +16,23 @@ type Pet = {
 }
 type Pose = 'idle' | 'feed' | 'pat' | 'sleep'
 type Motion=Pose|'hop'|'company'
-const art = (model: Model, pose: Pose = 'idle') =>
-  base+'companions/'+model+(pose === 'idle' ? '' : '-'+pose)+'.webp'
+export type ArtStyle = 'pixel' | 'anime'
+function art(model:Model, style:ArtStyle, pose:Motion='idle'){
+  if(style==='anime')return base+'companions/anime/'+model+'/'+pose+'.webp'
+  const original=pose==='company'?'pat':pose==='hop'?'idle':pose
+  return base+'companions/'+model+(original==='idle'?'':'-'+original)+'.webp'
+}
 
-export function useCompanion() {
+export function useCompanion(userId:string) {
+  const styleKey='yotei-character-style-'+userId
+  const [artStyle,setArtStyle]=useState<ArtStyle>(()=>{
+    try{return localStorage.getItem(styleKey)==='anime'?'anime':'pixel'}catch{return 'pixel'}
+  })
+  const [temporaryStyle,setTemporaryStyle]=useState(false)
+  function changeStyle(style:ArtStyle){
+    setArtStyle(style)
+    try{localStorage.setItem(styleKey,style);setTemporaryStyle(false)}catch{setTemporaryStyle(true)}
+  }
   const [pet, setPet] = useState<Pet | null | undefined>()
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -50,7 +63,7 @@ export function useCompanion() {
     document.addEventListener('visibilitychange',refresh)
     return () => { clearInterval(timer); document.removeEventListener('visibilitychange',refresh) }
   },[])
-  return {pet,error,busy,act}
+  return {pet,error,busy,act,artStyle,changeStyle,temporaryStyle}
 }
 type State = ReturnType<typeof useCompanion>
 export type PetTile = 'Character' | 'Jours ensemble'
@@ -76,20 +89,20 @@ export function CompanionTile({kind,state,open,wide}:{kind:PetTile;state:State;o
     <Flame className="streakFlame"/><strong>{p?.streak ?? 0} jour{(p?.streak ?? 0)>1?'s':''}</strong>
     <small>de suite</small>{wide && p && <Week pet={p}/>}
   </div>
-  return <button className="widgetLink petShortcut" onClick={open} aria-label="Character">
+  return <button className="widgetLink petShortcut" data-art={state.artStyle} onClick={open} aria-label="Character">
     <strong>{p ? p.nickname || p.model : 'Character'}</strong>
     {p ? <><small className="petStatus">{label(p)}</small><small className="petLevel">Nv {1+Math.floor(p.affection/5)}</small>
       <span className="petReadings">{(['mood','food'] as const).map(need=><span key={need}
         style={{background:'conic-gradient(#fff '+((4-p[need])*25)+'%, #ffffff35 0)'}}
         aria-label={(need==='food'?'Nourriture':'Moral')+' : '+(4-p[need])+' sur 4'}>
         <i>{need==='mood'?<Heart fill="currentColor"/>:<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18C1 14 7 3 12 3s11 11 8 15c-2 3-14 3-16 0Z" fill="none" stroke="currentColor" strokeWidth="2.7"/><rect x="9" y="13" width="6" height="7" rx="1" fill="currentColor"/></svg>}</i></span>)}</span></>:<small>Choisir ↗</small>}
-    <img src={art(p?.model||'Tsunade',p?.asleep?'sleep':'idle')} alt=""/>
+    <img src={art(p?.model||'Tsunade',state.artStyle,p?.asleep?'sleep':'idle')} alt=""/>
   </button>
 }
 export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId:string;kind:PetTile;state:State;close:()=>void}) {
   const palette=useGameColor(userId)
   const [settings,setSettings]=useState(false)
-  const {pet:p,act,busy,error} = state
+  const {pet:p,act,busy,error,artStyle,changeStyle} = state
   const [loveOpen,setLoveOpen]=useState(false)
   const [clicker,setClicker]=useState(false)
   const [galleryOpen,setGalleryOpen]=useState(false),[collapsed,setCollapsed]=useState(false)
@@ -102,11 +115,11 @@ export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId
   const model=p?.model
   useEffect(()=>{
     if(!model)return
-    for(const pose of ['feed','pat'] as const){
+    for(const pose of ['feed','pat','company','hop'] as const){
       const image=new Image()
-      image.src=art(model,pose)
+      image.src=art(model,artStyle,pose)
     }
-  },[model])
+  },[model,artStyle])
   useEffect(()=>{
     if (motion.pose === 'idle') return
     const timer=setTimeout(()=>setMotion(m=>({...m,pose:'idle'})),1300)
@@ -116,25 +129,34 @@ export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId
     if (await act(action)) setMotion(m=>({pose:action,key:m.key+1}))
   }
   const pose = p?.asleep ? 'sleep' : motion.pose
-  const illustratedPose:Pose=pose==='company'?'pat':pose==='hop'?'idle':pose
+  useEffect(()=>{
+    if(!tapCount)return
+    const timer=window.setTimeout(()=>setTapCount(0),520)
+    return ()=>window.clearTimeout(timer)
+  },[tapCount])
   const requestedCare = p?.mood ? 'pat' : p?.food ? 'feed' : p?.company ? 'company' : null
   const counter = kind === 'Jours ensemble' && p
   const room = !!p && !counter
   const hour=new Date().getHours()
   const phase=p?.asleep?'night':hour>=7 && hour<18?'day':'dusk'
-  return <dialog style={palette.style} className={'petDialog'+(room?' roomDialog':'')} data-phase={room?phase:undefined} data-model={p?.model} ref={dialog} onClose={close} aria-label={kind}>
+  return <dialog style={palette.style} className={'petDialog'+(room?' roomDialog':'')} data-phase={room?phase:undefined} data-art={artStyle} data-model={p?.model} ref={dialog} onClose={close} aria-label={kind}>
     {room&&!galleryOpen&&<GameBackdrop value={game.wallet?.gallery?.[surface]}/>}
     <header><h2>{room && <small>{clicker?'Clicker':'Character'} · {phase==='day'?'Jour':phase==='dusk'?'Soir':'Nuit'}</small>}{counter ? kind : p ? p.nickname || p.model : 'Choisis ton personnage'}{room && p && <span className="roomStatus">{label(p)}</span>}</h2>
       <div className="gameHeaderActions"><button aria-label="Paramètres du jeu" title="Paramètres du jeu" aria-expanded={settings} onClick={()=>setSettings(!settings)}><Settings2 size={19}/></button>
       <button onClick={()=>dialog.current?.close()} aria-label="Fermer le personnage"><X size={20}/></button></div></header>
-    {settings && <section className="gameSettings"><label>Couleur des boutons<input type="color" value={palette.color} onChange={e=>palette.change(e.target.value)}/></label>
+    {settings && <section className="gameSettings"><label>Style du personnage
+        <select value={artStyle} onChange={e=>changeStyle(e.target.value==='anime'?'anime':'pixel')}>
+          <option value="pixel">Pixel art</option><option value="anime">Anime</option>
+        </select></label>
+      {state.temporaryStyle&&<small>Style appliqué pour cette session.</small>}
+      <label>Couleur des boutons<input type="color" value={palette.color} onChange={e=>palette.change(e.target.value)}/></label>
       {p && <form onSubmit={async e=>{e.preventDefault(); await act('rename',nickname.trim())}}>
         <label>Surnom du personnage<input value={nickname} onChange={e=>setNickname(e.target.value)} maxLength={28} placeholder={p.model}/></label>
         <button className="primary" type="submit" disabled={busy}>Enregistrer</button></form>}
       {palette.temporary&&<small>Couleur appliquée pour cette session.</small>}</section>}
     {error && <p role="alert">{error} <button onClick={()=>act()}>Réessayer</button></p>}
     {p === undefined ? <p>Ouverture…</p> : !p ? <><label>Surnom facultatif<input value={nickname} onChange={e=>setNickname(e.target.value)} maxLength={28}/></label><div className="petChoices">{models.map(model=>
-      <button key={model} disabled={busy} onClick={async ()=>{if (await act('adopt',model) && nickname.trim()) await act('rename',nickname.trim())}}><img src={art(model)} alt=""/>{model}</button>
+      <button key={model} disabled={busy} onClick={async ()=>{if (await act('adopt',model) && nickname.trim()) await act('rename',nickname.trim())}}><img src={art(model,artStyle)} alt=""/>{model}</button>
     )}</div></> : counter ? <section className="petStats"><Flame/><h3>{p.streak} jour{p.streak>1?'s':''} de suite</h3><Week pet={p}/>
       <p>{p.days.includes(p.today) ? 'Le soin du jour est terminé.' : 'Termine un repas ou une séance de caresses pour valider la journée.'}</p>
       <p>Record · {p.best}　 ♥ {p.affection}</p></section> : <>
@@ -146,13 +168,13 @@ export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId
       {galleryOpen ? <BackgroundGallery key={surface} surface={surface} game={game} done={()=>setGalleryOpen(false)}/> : <>
       <div className={'petStage'+(clicker?' clickStage':'')}>
         {clicker && <><button className="petFigure" aria-label="Gagner un cœur" onClick={()=>{if(game.tap())setTapCount(n=>n+1)}}>
-          <img key={tapCount} className={tapCount?'pose-hop':''} src={art(p.model)} alt={p.model}/>
+          <img key={tapCount} className={tapCount?'pose-hop':''} src={art(p.model,artStyle,tapCount?'hop':'idle')} alt={p.model}/>
         </button>{tapCount>0&&<b key={tapCount} className="tapPoint">+1 ♥</b>}</>}
-        {!clicker && (p.asleep ? <img className="sleepingFigure pose-sleep" src={art(p.model,'sleep')} alt={p.model+' dort.'}/> :
+        {!clicker && (p.asleep ? <img className="sleepingFigure pose-sleep" src={art(p.model,artStyle,'sleep')} alt={p.model+' dort.'}/> :
           <button className="petFigure" disabled={busy} aria-label={requestedCare ? {pat:'Caresser le personnage',feed:'Nourrir le personnage',company:'Tenir compagnie au personnage'}[requestedCare] : 'Saluer le personnage'} onClick={()=>{
             if(requestedCare)void care(requestedCare);else setMotion(m=>({pose:'hop',key:m.key+1}))
           }}>
-            <img key={motion.key+'-'+pose} className={'pose-'+pose} src={art(p.model,illustratedPose)} alt={p.model}/>
+            <img key={motion.key+'-'+pose} className={'pose-'+pose} src={art(p.model,artStyle,pose)} alt={p.model}/>
           </button>)}
         {!clicker && pose==='feed' && <Utensils key={motion.key} className="petEffect"/>}
         {!clicker && (pose==='pat'||pose==='company') && <Heart key={motion.key} className="petEffect"/>}
@@ -179,6 +201,6 @@ export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId
         {p.asleep && <span><Sunrise size={15}/> Réveil à 7 h</span>}</div></div></>}
       </div></>}
     </>}
-    {loveOpen && p && <LoveMeter key={p.model} model={p.model} close={()=>setLoveOpen(false)}/>}
+    {loveOpen && p && <LoveMeter key={p.model} model={p.model} artStyle={artStyle} close={()=>setLoveOpen(false)}/>}
   </dialog>
 }

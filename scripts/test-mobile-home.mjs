@@ -238,8 +238,16 @@ try {
   await companionDialog.getByText('Tsunade te fait un clin d’œil.').waitFor()
   for(let n=0;n<2;n++)await companionDialog.getByRole('button',{name:'Caresser',exact:true}).click()
   await companionDialog.locator('img.pose-pat[src$="Tsunade-pat.webp"]').waitFor()
+  const gameSettings=companionDialog.getByRole('button',{name:'Paramètres du jeu'})
+  await gameSettings.click()
+  const artStyle=companionDialog.getByLabel('Style du personnage')
+  assert.equal(await artStyle.inputValue(),'pixel')
+  await artStyle.selectOption('anime')
+  await gameSettings.click()
   await clicker.click()
+  await companionDialog.locator('.petFigure img[src$="/anime/Tsunade/idle.webp"]').waitFor()
   for(let n=0;n<45;n++)await companionDialog.getByRole('button',{name:'Gagner un cœur'}).click()
+  await companionDialog.locator('.petFigure img[src$="/anime/Tsunade/hop.webp"]').waitFor()
   await companionDialog.getByRole('img',{name:'600 cœurs',exact:true}).waitFor()
   const backgrounds=companionDialog.getByRole('button',{name:'Fonds',exact:true})
   await backgrounds.click()
@@ -250,7 +258,7 @@ try {
   await character.click()
   await companionDialog.getByRole('button',{name:'Donner une bouchée'}).click()
   await companionDialog.getByRole('button',{name:'Donner une bouchée'}).click()
-  await companionDialog.locator('img.pose-feed[src$="Tsunade-feed.webp"]').waitFor()
+  await companionDialog.locator('img.pose-feed[src$="/anime/Tsunade/feed.webp"]').waitFor()
   await companionDialog.getByText('Rassasiée',{exact:true}).waitFor()
   await companionDialog.getByRole('button',{name:'Saluer le personnage'}).click()
   const jumping=companionDialog.locator('img.pose-hop')
@@ -284,6 +292,7 @@ try {
     await home.getByRole('button',{name:'Character',exact:true}).click()
     await companionDialog.getByRole('button',{name:'Love Meter',exact:true}).click()
     await love.getByText(model,{exact:true}).waitFor()
+    assert.equal(await love.locator('img[src*="/companions/anime/"]').count(),4)
     await love.getByRole('button',{name:'Lecture',exact:true}).click()
     for(const [time,pose,x,y] of [[0,'shy',42.22,186.52],[2.4,'friendly',58.41,137.54],[4.3,'close',91.84,97.24],[6,'love',143.80,70.37]]){
       await love.locator('audio').evaluate((el,t)=>{el.currentTime=t},time)
@@ -298,6 +307,13 @@ try {
     await love.getByRole('button',{name:'Fermer le Love Meter'}).click()
     await companionDialog.getByRole('button',{name:'Fermer le personnage'}).click()
   }
+  await home.getByRole('button',{name:'Character',exact:true}).click()
+  await gameSettings.click()
+  assert.equal(await artStyle.inputValue(),'anime')
+  await artStyle.selectOption('pixel')
+  await gameSettings.click()
+  await companionDialog.locator('img[src$="/companions/Rias-sleep.webp"]').waitFor()
+  await companionDialog.getByRole('button',{name:'Fermer le personnage'}).click()
   // Switching phases keeps the room plain and shows the sleeping character at night.
   companion.model='Rias'
   for (const [hour,phase] of [[12,'day'],[19,'dusk'],[23,'night']]) {
