@@ -5,6 +5,9 @@ insert into auth.users(id,email,invited_at) values
  ('10000000-0000-4000-8000-000000000002','rls-b@example.invalid',now()),
  ('10000000-0000-4000-8000-000000000003','rls-c@example.invalid',now());
 set constraints all immediate;
+insert into public.push_devices(endpoint,owner_id,keys) values
+ ('https://example.invalid/test-sender','10000000-0000-4000-8000-000000000001','{}'),
+ ('https://example.invalid/test-recipient','10000000-0000-4000-8000-000000000002','{}');
 do $$ begin
  begin
  insert into auth.users(id,email) values ('10000000-0000-4000-8000-000000000004','rls-outsider@example.invalid');
@@ -30,6 +33,23 @@ begin
  if pet->>'streak'<>'1' or pet->>'affection'<>'1' or pet->>'best'<>'1' then raise exception 'Double récompense'; end if;
  pet:=public.companion_care('rename','Nona','UTC',(pet->>'version')::int);
  if pet->>'nickname'<>'Nona' then raise exception 'Surnom perdu'; end if;
+end $$;
+do $$
+declare stream uuid:=gen_random_uuid(); request uuid:=gen_random_uuid(); w jsonb; first_video text; pet jsonb;
+begin
+ w:=public.circle_game('tap',stream,40);
+ w:=public.circle_game('tap',stream,40);
+ if (w->>'points')::int<>40 then raise exception 'Taps crédités en double'; end if;
+ w:=public.circle_game('spin',request); first_video:=w->>'video';
+ w:=public.circle_game('spin',request);
+ if (w->>'points')::int<>20 or w->>'video'<>first_video then raise exception 'Débit en double'; end if;
+ w:=public.circle_game('spin',gen_random_uuid());
+ if (w->>'points')::int<>0 or w->>'video'=first_video then raise exception 'Doublon vidéo'; end if;
+ begin perform public.circle_game('spin',gen_random_uuid()); raise exception 'Solde négatif';
+ exception when raise_exception then if sqlerrm<>'Il faut 20 points pour tourner.' then raise; end if; end;
+ pet:=public.companion_care();
+ pet:=public.companion_care('company','','UTC',(pet->>'version')::int);
+ if pet->>'company'<>'0' then raise exception 'Compagnie ignorée'; end if;
 end $$;
 insert into public.posts(source_title,category,user_id,content) values('Sans lien','Cinéma',auth.uid(),'Sans lien');
 insert into public.posts(source_url,source_title,category,user_id,content) values('https://example.org/watch','Titre','Vidéo',auth.uid(),'RLS transaction test');
@@ -98,12 +118,24 @@ do $$ begin
  update public.posts set content='Modification par un tiers' where content='RLS transaction test';
  if found then raise exception 'Modification par un tiers'; end if;
 end $$;
+insert into public.post_reactions(post_id,user_id,emoji) select id,auth.uid(),'👀' from public.posts where content='RLS transaction test';
+update public.post_reactions set emoji='🔥' where user_id=auth.uid();
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
+do $$ begin
+ if not exists(select from public.post_reactions where emoji='🔥') then raise exception 'Réaction invisible'; end if;
+ delete from public.post_reactions where emoji='🔥'; if found then raise exception 'Réaction tierce effacée'; end if;
+end $$;
 do $$ begin
  if exists(select 1 from public.messages where content='test privé') or exists(select 1 from public.rooms where title='RLS transaction test') or exists(select 1 from public.notifications) then raise exception 'Conversation accessible au tiers'; end if;
  delete from public.posts where content='RLS transaction test'; if found then raise exception 'Suppression par un tiers'; end if;
 end $$;
 reset role;
+do $$ begin
+ if (select count(*) from public.push_jobs where endpoint='https://example.invalid/test-recipient')<>3
+ or exists(select from public.push_jobs where endpoint='https://example.invalid/test-sender') then
+   raise exception 'Destinataires des notifications incorrects';
+ end if;
+end $$;
 update public.members set suspended=true where id='10000000-0000-4000-8000-000000000002';
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);

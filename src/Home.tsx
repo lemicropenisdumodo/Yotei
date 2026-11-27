@@ -1,3 +1,7 @@
+import {useCircleGame,Roulette} from './CircleGame'
+import {Dices} from 'lucide-react'
+import type {Watchlist} from './MarketSettings'
+import type {useWallpapers} from './Wallpaper'
 import {CompanionDialog, CompanionTile, useCompanion, type PetTile} from './Companion'
 import { webLink, type Recommendation } from './recommendation'
 import {SpotifyTile, type useSpotify} from './Spotify'
@@ -50,7 +54,7 @@ export function Avatar({ person }: { person: Directory['me'] }) {
     </span>
   )
 }
-const widgets = ['Marchés','Courbe','Batterie','Date','Météo','Heure','Prévisions','Mon personnage','Amis','Jours ensemble','Décor','Photo','Spotify','Recommandations'] as const
+const widgets = ['Marchés','Courbe','Batterie','Date','Météo','Heure','Prévisions','Mon personnage','Amis','Jours ensemble','Décor','Photo','Spotify','Recommandations','Roulette'] as const
 type Widget = typeof widgets[number]
 function readLayout(key: string): Widget[] {
   try {
@@ -59,14 +63,17 @@ function readLayout(key: string): Widget[] {
   } catch { /* Default arrangement */ }
   return [...widgets]
 }
-export function Home({d, recent, openPost, go, editing, finish, photo, spotify}: {
+export function Home({d, recent, openPost, go, editing, finish, photo, spotify,watch,clickerWallpaper}: {
+  watch:Watchlist; clickerWallpaper:ReturnType<typeof useWallpapers>['clicker']
   d: Directory; recent?: Recommendation; openPost:(id:string)=>void; go: (p: Page) => void; editing:boolean; finish:()=>void; photo:string; spotify:ReturnType<typeof useSpotify>
 }) {
   const key = 'yotei-board-v2-' + d.me.id
   const [layout, setLayout] = useState(() => readLayout(key))
   const [selected, select] = useState<Widget | null>(null)
   const [forecastHost,setForecastHost]=useState<HTMLDivElement|null>(null)
-  const marketRows=useMarkets()
+  const marketRows=useMarkets(watch.tickers)
+  const game=useCircleGame(d.me.id)
+  const [roulette,setRoulette]=useState(false)
   const companion = useCompanion()
   const [petPage, setPetPage] = useState<PetTile | null>(null)
   const [drag, setDrag] = useState<Widget | null>(null)
@@ -127,6 +134,7 @@ export function Home({d, recent, openPost, go, editing, finish, photo, spotify}:
   }
   function tileContent(id: Widget) {
     if (id === 'Mon personnage' || id === 'Jours ensemble') return <CompanionTile kind={id} state={companion} wide={false} open={()=>setPetPage('Mon personnage')}/>
+    if (id==='Roulette') return <button className="widgetLink rouletteTile" onClick={()=>setRoulette(true)}><Dices/><span><strong>Roulette ASMR</strong><small>{game.points} points</small></span></button>
     if (id === 'Recommandations') return <button className="widgetLink recWidget" aria-label="Recommandations" onClick={() => recent ? openPost(recent.id) : go('Fil')}>
       {recent && (recent.image_url ? <Media path={recent.image_url} className="recArt" alt="" /> :
         webLink(recent.thumbnail_url) && <img className="recArt" src={webLink(recent.thumbnail_url)} alt="" referrerPolicy="no-referrer" />)}
@@ -135,7 +143,7 @@ export function Home({d, recent, openPost, go, editing, finish, photo, spotify}:
     </button>
     if (id === 'Prévisions') return <div className="forecastHost" ref={setForecastHost}/>
     if (id === 'Météo') return <Weather userId={d.me.id} forecastHost={forecastHost}/>
-    if (id === 'Marchés' || id === 'Courbe') return <Market rows={marketRows} chart={id==='Courbe'}/>
+    if (id === 'Marchés' || id === 'Courbe') return <Market watch={watch} rows={marketRows} chart={id==='Courbe'}/>
     if (id === 'Date' || id === 'Heure' || id === 'Batterie') return <ClockTiles kind={id}/>
     if (id === 'Photo') return photo ? <img className="memoryPhoto" src={photo} alt="Ma photo"/> : <div className="stillTile"><Picture/><strong>Ma photo</strong></div>
     if (id === 'Décor') return <span className="bang" aria-hidden="true">!</span>
@@ -178,6 +186,7 @@ export function Home({d, recent, openPost, go, editing, finish, photo, spotify}:
         </>}
       </section>)}
     </div>
-    {petPage && <CompanionDialog userId={d.me.id} kind={petPage} state={companion} close={()=>setPetPage(null)}/>}
+    {roulette && <Roulette game={game} close={()=>setRoulette(false)}/>}
+    {petPage && <CompanionDialog game={game} wallpaper={clickerWallpaper} userId={d.me.id} kind={petPage} state={companion} close={()=>setPetPage(null)}/>}
   </>
 }

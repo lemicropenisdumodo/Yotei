@@ -20,3 +20,18 @@ self.addEventListener('fetch', (event) => {
     ),
   )
 })
+
+self.addEventListener('push', event => {
+  if (!event.data) return
+  const {post,title,body}=event.data.json()
+  if(!/^[a-f0-9-]{36}$/i.test(post))return
+  event.waitUntil(self.registration.showNotification(title,{body,tag:'publication-'+post,data:{post},icon:new URL('icons/yotei-192.png',self.registration.scope).href}))
+})
+self.addEventListener('notificationclick',event=>{
+  event.notification.close()
+  const post=event.notification.data?.post
+  if(!/^[a-f0-9-]{36}$/i.test(post))return
+  const destination=new URL(self.registration.scope)
+  destination.searchParams.set('publication',post)
+  event.waitUntil(clients.openWindow(destination.href))
+})

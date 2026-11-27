@@ -1,0 +1,32 @@
+.reactionBar{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:1rem}
+.reactionBar button{display:inline-flex;align-items:center;gap:.3rem;border-radius:2rem;padding:5px 10px;min-height:36px}
+.reactionBar button[aria-pressed=true]{outline:1px solid var(--accent)}
+.fixedBoard [data-widget=Roulette]{grid-column:span 30;grid-row:span 17}
+.rouletteTile{width:100%;height:100%;display:flex;align-items:center;gap:12px;background:#262231;color:white;padding:8px 14px;text-align:left}
+.rouletteTile span{display:grid}.rouletteTile small{opacity:.8}
+.rouletteDialog{width:min(94vw,560px);background:#201d28;color:#fff;border:1px solid #48424f;padding:18px;border-radius:20px}
+.rouletteDialog::backdrop{background:#08070cbd}
+.rouletteDialog header,.drawControls,.drawControls span,.drawControls button,.rouletteWin a{display:flex;align-items:center;gap:8px}
+.rouletteDialog header,.drawControls{justify-content:space-between}
+.rouletteDialog h2{margin:0}.rouletteDialog header button{display:grid;place-items:center}
+.reel{position:relative;height:182px;margin:18px 0;overflow:hidden;background:#15131b;border-radius:12px}
+.reelTrack{position:absolute;top:8px;left:50%;display:flex;gap:8px;transform:translateX(-90px)}
+.reelTrack.spinning{animation:reelTurn 2.45s cubic-bezier(.12,.64,.2,1) both}
+@keyframes reelTurn{from{transform:translateX(-90px)}to{transform:translateX(var(--stop))}}
+.reel i{position:absolute;left:50%;top:0;border:8px solid transparent;border-top-color:#ffdda0;transform:translateX(-50%)}
+.videoCard{flex:0 0 180px;overflow:hidden;background:#37313f;border-radius:8px}
+.videoCard img{display:block;width:100%;height:92px;object-fit:cover}
+.videoCard strong,.videoCard small{display:block;margin:4px 8px}
+.videoCard strong{font-size:.85rem;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rouletteWin{margin-top:12px;border-top:1px solid #51465a;padding-top:12px}.rouletteWin h3{margin:.4rem 0}.rouletteWin a{color:#f4d5ff}
+.clickScore{text-align:center;font-variant-numeric:tabular-nums;font-weight:700}
+.petStage .tapPoint{position:absolute;top:14%;right:20%;color:white;pointer-events:none;text-shadow:0 1px 5px black}
+@media(prefers-reduced-motion:no-preference){
+.pose-hop{animation:characterHop .52s ease-out both;transform-origin:center bottom}
+@keyframes characterHop{0%,100%{transform:none}16%{transform:scale(1.02,.96)}45%{transform:translateY(-8%) rotate(var(--tilt,0deg))}78%{transform:scale(1.025,.965)}}
+.tapPoint{animation:petFloat .55s ease-out both}
+}
+@media(prefers-reduced-motion:reduce){.reelTrack.spinning{animation:none;transform:translateX(var(--stop))}}
+.roomDialog .roomPicker{align-self:center;width:min(100%,460px);margin-top:12px}
+.roomDialog .clickStage{isolation:isolate;overflow:hidden}
+.roomDialog[data-model=Nonna]{--tilt:-1deg}.roomDialog[data-model=Rias]{--tilt:2deg}.roomDialog[data-model=Tsunade]{--tilt:-2deg}

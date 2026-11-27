@@ -25,9 +25,9 @@ export function ClockTiles({kind}:{kind:'Date'|'Heure'|'Batterie'}) {
   }
   return <time className="dateTile"><small>{date.toLocaleDateString('fr',{weekday:'long'})}</small><b>{date.toLocaleDateString('fr',{day:'numeric',month:'short'})}</b></time>
 }
-const symbols=['AAPL','MSFT','NVDA']
+import {marketName,symbolOf,type Watchlist} from './MarketSettings'
 type Quote={symbol:string;close:number;change:number;history:number[]}
-export function useMarkets(){
+export function useMarkets(symbols:string[]){
   const [rows,setRows]=useState<Quote[]>([])
   useEffect(()=>{
     const controller=new AbortController()
@@ -35,7 +35,7 @@ export function useMarkets(){
       const quotes=await Promise.all(symbols.map(async symbol=>{
         const fields=['close','change',...Array.from({length:14},(_,i)=>'close['+(i+1)+']')]
         try{
-          const response=await fetch('https://scanner.tradingview.com/symbol?'+new URLSearchParams({symbol:'NASDAQ:'+symbol,fields:fields.join(',')}),{signal:controller.signal})
+          const response=await fetch('https://scanner.tradingview.com/symbol?'+new URLSearchParams({symbol,fields:fields.join(',')}),{signal:controller.signal})
           if(!response.ok)return null
           const values=await response.json()
           if(!Number.isFinite(values.close)||!Number.isFinite(values.change))return null
@@ -47,20 +47,21 @@ export function useMarkets(){
     void update()
     const timer=setInterval(update,300000)
     return ()=>{controller.abort();clearInterval(timer)}
-  },[])
+  },[symbols])
   return rows
 }
 const price=(n:number)=>n.toLocaleString('fr',{minimumFractionDigits:2,maximumFractionDigits:2})
-export function Market({chart,rows}:{chart:boolean;rows:Quote[]}){
-  const quote=rows.find(q=>q.symbol==='AAPL')
+export function Market({chart,rows,watch}:{chart:boolean;rows:Quote[];watch:Watchlist}){
+  const ticker=watch.tickers[watch.chart]
+  const quote=rows.find(q=>q.symbol===ticker)
   if(chart){
     const data=quote?.history||[], min=Math.min(...data), range=Math.max(...data)-min
     const points=data.map((n,i)=>(i*100/(data.length-1))+','+(24-(n-min)/(range||1)*22)).join(' ')
-    return <div className="marketChart"><header><b>AAPL</b><strong>{quote?price(quote.close):'—'}</strong></header>
-      {data.length>1?<svg viewBox="0 0 100 26" preserveAspectRatio="none" role="img" aria-label="Évolution des clôtures Apple"><polyline points={points}/></svg>:<small>Cours indisponible</small>}</div>
+    return <div className="marketChart"><header><b>{symbolOf(ticker)}</b><strong>{quote?price(quote.close):'—'}</strong></header>
+      {data.length>1?<svg viewBox="0 0 100 26" preserveAspectRatio="none" role="img" aria-label={'Évolution des clôtures · '+marketName(ticker)}><polyline points={points}/></svg>:<small>Cours indisponible</small>}</div>
   }
-  return <div className="marketRows" aria-label="Cours en dollars">{symbols.map(symbol=>{
+  return <div className="marketRows" aria-label="Cours des valeurs suivies">{watch.tickers.map(symbol=>{
     const q=rows.find(item=>item.symbol===symbol)
-    return <div key={symbol}><b>{symbol}</b><span>{q?price(q.close):'—'}</span><em data-up={(q?.change??0)>=0}>{q?(q.change>0?'+':'')+price(q.change)+' %':'—'}</em></div>
+    return <div key={symbol}><b>{symbolOf(symbol)}</b><span>{q?price(q.close):'—'}</span><em data-up={(q?.change??0)>=0}>{q?(q.change>0?'+':'')+price(q.change)+' %':'—'}</em></div>
   })}</div>
 }

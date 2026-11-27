@@ -10,6 +10,8 @@ const peer = {
   id: '6792ee8d-67dc-43bf-997b-842d84bf8663',
   username: 'Camille',
 }
+let balance=0,gameVersion=0,latestVideo=null
+const streams=new Map()
 let companion
 let posted
 const browser = await chromium.launch({ channel: 'chrome', executablePath:process.env.CHROME_PATH, headless: true })
@@ -81,13 +83,22 @@ try {
         },
       })
     if (url.pathname.endsWith('/rpc/maintenance_status')) return route.fulfill({json:maintenance})
+    if(url.pathname.endsWith('/rpc/circle_game')){
+      const {action,taps,request_id}=route.request().postDataJSON()
+      if(action==='tap'){ balance+=taps-(streams.get(request_id)||0);streams.set(request_id,taps);gameVersion++ }
+      if(action==='spin'){if(balance<20)return route.fulfill({status:400,json:{message:'Solde insuffisant'}})
+        balance-=20;latestVideo='XCZlx9bt1G4';gameVersion++}
+      return route.fulfill({json:{points:balance,version:gameVersion,video:latestVideo,price:20}})
+    }
     if (url.pathname.endsWith('/rpc/companion_care')) {
       const {action,detail} = route.request().postDataJSON()
-      if (action === 'adopt') companion = {model:detail,nickname:'',version:1,food:2,mood:2,asleep:false,days:[],today:'2026-11-25',streak:0,best:0,affection:0}
+      if (action === 'adopt') companion = {model:detail,nickname:'',version:1,company:1,food:2,mood:2,asleep:false,days:[],today:'2026-11-25',streak:0,best:0,affection:0}
       if (action === 'feed') {
         companion.food--; companion.version++
         if (!companion.food) Object.assign(companion,{days:[companion.today],streak:1,best:1,affection:1})
       }
+      if(action==='company'){companion.company=0;companion.version++}
+      if(action==='pat'){companion.mood--;companion.version++}
       if (action === 'rename') {companion.nickname=detail; companion.version++}
       return route.fulfill({contentType:'application/json',body:JSON.stringify(companion || null)})
     }
@@ -180,9 +191,9 @@ try {
   assert.equal(await companionDialog.evaluate(el=>el.style.getPropertyValue('--game-fill')),'#91d8b5')
   await companionDialog.getByRole('button',{name:'Paramètres du jeu'}).click()
   await companionDialog.getByRole('button',{name:'Tsunade',exact:true}).click()
-  const salon = companionDialog.getByRole('button',{name:'Salon',exact:true})
-  const bedroom = companionDialog.getByRole('button',{name:'Chambre',exact:true})
-  await companionDialog.getByRole('button',{name:'Salon',pressed:true}).waitFor()
+  const clicker=companionDialog.getByRole('button',{name:'Clicker',exact:true})
+  const character=companionDialog.getByRole('button',{name:'Mon personnage',exact:true})
+  await character.waitFor()
   const originalViewport = page.viewportSize()
   for (const [width,height] of [[320,568],[393,765],[430,932]]) {
     await page.setViewportSize({width,height})
@@ -193,13 +204,18 @@ try {
     assert.ok(figure.y >= stage.y && figure.y+figure.height <= panel.y)
   }
   await page.setViewportSize(originalViewport)
-  await bedroom.click()
-  await companionDialog.getByText('Tsunade est au salon.').waitFor()
-  assert.equal(await companionDialog.locator('.petFigure').count(),0)
-  await salon.click()
+  await companionDialog.getByRole('button',{name:'Passer un moment ensemble'}).click()
+  await companionDialog.getByText('Tsunade te fait un clin d’œil.').waitFor()
+  for(let n=0;n<2;n++)await companionDialog.getByRole('button',{name:'Caresser',exact:true}).click()
+  await clicker.click()
+  for(let n=0;n<20;n++)await companionDialog.getByRole('button',{name:'Gagner un point'}).click()
+  await companionDialog.getByText('20 points',{exact:true}).waitFor()
+  await character.click()
   await companionDialog.getByRole('button',{name:'Donner une bouchée'}).click()
   await companionDialog.getByRole('button',{name:'Donner une bouchée'}).click()
   await companionDialog.getByText('Rassasiée',{exact:true}).waitFor()
+  await companionDialog.getByRole('button',{name:'Saluer le personnage'}).click()
+  await companionDialog.locator('img.pose-hop').waitFor()
   await companionDialog.getByRole('button',{name:'Fermer le personnage'}).click()
   assert.match(await home.locator('[data-widget="Jours ensemble"]').innerText(),/1 jour/)
   companion.asleep=true
@@ -208,11 +224,6 @@ try {
   await companionDialog.getByRole('img',{name:'Tsunade dort.'}).waitFor()
   assert.equal(await companionDialog.evaluate(el=>el.style.getPropertyValue('--game-fill')),'#91d8b5')
   assert.equal(await companionDialog.getByRole('button',{name:'Donner une bouchée'}).count(),0)
-  await salon.click()
-  await companionDialog.getByText('Tsunade dort dans la chambre.').waitFor()
-  assert.equal(await companionDialog.locator('.petFigure').count(),0)
-  assert.equal(await companionDialog.getByRole('button',{name:'Donner une bouchée'}).count(),0)
-  await bedroom.click()
   await companionDialog.getByText('Réveil à 7 h').waitFor()
   assert.equal(await companionDialog.evaluate(el=>el.clientHeight),await page.evaluate(()=>innerHeight))
   await companionDialog.getByRole('button',{name:'Fermer le personnage'}).click()
@@ -223,13 +234,18 @@ try {
     await page.reload()
     await page.evaluate(localHour => { Date.prototype.getHours = () => localHour }, hour)
     await home.getByRole('button',{name:'Mon personnage',exact:true}).click()
-    await bedroom.click()
-    await companionDialog.getByRole('button',{name:'Chambre',pressed:true}).waitFor()
+    await character.waitFor()
     assert.equal(await companionDialog.getAttribute('data-phase'),phase)
     assert.equal(await companionDialog.locator('.petStage').evaluate(el=>getComputedStyle(el).backgroundImage),'none')
     assert.equal(await companionDialog.getByRole('img',{name:'Rias dort.'}).count(),phase==='night'?1:0)
     await companionDialog.getByRole('button',{name:'Fermer le personnage'}).click()
   }
+  await home.getByRole('button',{name:/Roulette ASMR/}).click()
+  const roulette=page.getByRole('dialog',{name:'Roulette ASMR'})
+  await roulette.getByRole('button',{name:/Tourner/}).click()
+  await roulette.getByRole('link',{name:'Voir la vidéo'}).waitFor()
+  assert.equal(balance,0)
+  await roulette.getByRole('button',{name:'Fermer la roulette'}).click()
   const close = () => page.getByRole('button', { name: 'Fermer et revenir à l’accueil' }).click()
   const widgets=home.locator('section')
   const rects=()=>widgets.evaluateAll(els=>Object.fromEntries(els.map(e=>[e.dataset.widget,[e.offsetWidth,e.offsetHeight]])))

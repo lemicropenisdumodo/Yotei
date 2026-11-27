@@ -13,3 +13,6 @@ verify_jwt = false
 
 [functions.spotify]
 verify_jwt = false
+
+[functions.publication-alerts]
+verify_jwt = false

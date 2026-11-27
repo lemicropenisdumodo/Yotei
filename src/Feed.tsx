@@ -1,3 +1,4 @@
+import {Reactions,type Reaction} from './Reactions'
 import { Avatar, categories, type Category } from './Home'
 import { Pencil, SquarePen, Star, Trash2 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
@@ -34,7 +35,7 @@ export function Feed({
     let query = db
       .from('posts')
       .select(
-        'id,user_id,content,image_url,category,rating,source_url,source_title,thumbnail_url',
+        'id,user_id,content,image_url,category,rating,source_url,source_title,thumbnail_url,post_reactions(user_id,emoji)',
       )
       .not('source_title','is',null)
       .order('created_at', { ascending: false })
@@ -42,7 +43,7 @@ export function Feed({
       .limit(limit)
     if (postId) query = query.eq('id',postId)
     if (filter) query = query.eq('category', filter)
-    return ((await result(query)) || []) as Recommendation[]
+    return ((await result(query)) || []) as (Recommendation & {post_reactions?:Reaction[]})[]
   }, [filter, limit, postId])
   return (
     <>
@@ -137,6 +138,7 @@ export function Feed({
               alt="Photo de la publication"
               className="photo"
             />
+            <Reactions postId={p.id} d={d} rows={p.post_reactions || []} refresh={list.refresh}/>
           </article>
         )
       })}

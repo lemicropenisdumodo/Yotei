@@ -1,3 +1,6 @@
+import {useWallpapers,WallpaperSettings,WallpaperLayer} from './Wallpaper'
+import {validWatchlist,MarketSettings,type Watchlist} from './MarketSettings'
+import {PublicationAlerts,disablePush} from './PublicationAlerts'
 import { MaintenanceGate } from './Maintenance'
 import { createRoot } from 'react-dom/client'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
@@ -33,6 +36,7 @@ import '@fontsource-variable/manrope/index.css'
 import '@fontsource-variable/space-grotesk/index.css'
 import './style.css'
 import './dashboard.css'
+import './circle.css'
 
 const params = new URLSearchParams(location.hash.slice(1))
 const invite = params.get('invitation')
@@ -46,10 +50,11 @@ function Network({ session }: { session: Session }) {
     [profile, setProfile] = useState(id),
     [postId, setPostId] = useState(''),
     [revision, bump] = useState(0)
+  const wallpapers=useWallpapers(id)
   const prefKey = 'yotei-dashboard-'+id
-  const [prefs,setPrefs] = useState<{theme:string;photo:string}>(()=>{
-    try { const saved=JSON.parse(localStorage.getItem(prefKey)||'{}');return {theme:saved.theme||'Graphite',photo:saved.photo||''} }
-    catch {return {theme:'Graphite',photo:''}}
+  const [prefs,setPrefs] = useState<{theme:string;photo:string;watch:Watchlist}>(()=>{
+    try { const saved=JSON.parse(localStorage.getItem(prefKey)||'{}');return {theme:saved.theme||'Graphite',photo:saved.photo||'',watch:validWatchlist(saved.watch)} }
+    catch {return {theme:'Graphite',photo:'',watch:validWatchlist()}}
   })
   const [editing,setEditing]=useState(false)
   const [custom,setCustom]=useState(false)
@@ -78,7 +83,11 @@ function Network({ session }: { session: Session }) {
     const previous = history.scrollRestoration
     history.scrollRestoration = 'manual'
     history.replaceState({ yotei: id, page: 'Accueil' }, '')
-    if(spotifyReturn.current){spotifyReturn.current=false;go('Spotify')}
+    const publication=new URL(location.href).searchParams.get('publication')
+    if(publication && /^[a-f0-9-]{36}$/i.test(publication)){
+      const clean=new URL(location.href);clean.searchParams.delete('publication')
+      history.replaceState(history.state,'',clean);setPostId(publication);go('Fil')
+    }else if(spotifyReturn.current){spotifyReturn.current=false;go('Spotify')}
     const back = () => {
       const state = history.state
       setPage(state?.yotei === id ? state.page : 'Accueil')
@@ -146,6 +155,7 @@ function Network({ session }: { session: Session }) {
   const signout = (
     <Task
       run={async () => {
+        await disablePush(id).catch(()=>{})
         await check(db.auth.signOut({ scope: 'local' }))
       }}
     >
@@ -191,6 +201,7 @@ function Network({ session }: { session: Session }) {
       data-theme={prefs.theme}
     >
       <Media path={me.wallpaper_path} alt="" className="wallpaper" />
+      {(page==='Accueil'||page==='Spotify') && <WallpaperLayer wallpaper={wallpapers.home}/>}
       <div className="content">
         <header className="pageHead">
           <div className="wordmark">Yotei<span>.</span></div>
@@ -206,14 +217,17 @@ function Network({ session }: { session: Session }) {
           )}
         </header>
         <div hidden={page !== 'Accueil' && page !== 'Spotify'}>
-          <Home key={id} d={d} go={navigate} openPost={post=>{setPostId(post);setCategory('');go('Fil')}} recent={latest.data} editing={editing} finish={()=>setEditing(false)} photo={prefs.photo} spotify={spotify}/>
+          <Home key={id} d={d} go={navigate} openPost={post=>{setPostId(post);setCategory('');go('Fil')}} recent={latest.data} editing={editing} finish={()=>setEditing(false)} photo={prefs.photo} watch={prefs.watch} clickerWallpaper={wallpapers.clicker} spotify={spotify}/>
         </div>
         {page === 'Paramètres' && <Window title="Paramètres"><h1>Paramètres</h1>
+          <PublicationAlerts userId={id}/>
           <details className="connectionSettings"><summary>Connexion</summary><SpotifyConnection control={spotify} open={()=>navigate('Spotify')}/></details>
           <button onClick={()=>setCustom(!custom)} aria-expanded={custom}>Personnalisation</button>
           {me.admin && <button onClick={()=>navigate('Administration')}>Administration</button>}
           {custom && <div className="settingsStack"><label>Thème de l’interface<select value={prefs.theme} onChange={e=>preference({theme:e.target.value})}>
             {['Graphite','Boréal','Prune','Minuit'].map(t=><option key={t}>{t}</option>)}</select></label>
+            <WallpaperSettings wallpapers={wallpapers}/>
+            <MarketSettings value={prefs.watch} save={watch=>preference({watch})}/>
             <button onClick={()=>{setEditing(true);history.back()}}>Déplacer les widgets</button>
             <label>Photo du cadre<input type="file" accept="image/jpeg,image/png,image/webp" onChange={async e=>{
               const file=e.target.files?.[0];if(!file)return
