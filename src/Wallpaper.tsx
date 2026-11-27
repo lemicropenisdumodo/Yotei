@@ -1,4 +1,7 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useRef, useState } from 'react'
+import { Check, LockKeyhole } from 'lucide-react'
+import { Hearts,type Game } from './CircleGame'
+import {message} from './core'
 import './wallpaper.css'
 
 const motifs = {
@@ -10,102 +13,66 @@ const motifs = {
 } as const
 
 type Motif = keyof typeof motifs
-type Surface = 'home' | 'clicker'
-export type Wallpaper = { motif: Motif | 'plain'; palette: number } | null
-const plain = { motif:'plain', palette:0 } as const
+export type GameSurface = 'character' | 'clicker'
+export type Gallery = {owned:string[];prices:Record<string,number>;character:string;clicker:string}
+type Background = { motif:Motif|'plain';palette:number }
 
-function readWallpaper(key: string): Wallpaper {
-  try {
-    const stored = localStorage.getItem(key)
-    if (stored === 'plain') return plain
-    if (stored) {
-      const [motif, index] = stored.split(':')
-      const palette = Number(index)
-      if (Object.hasOwn(motifs,motif) && Number.isInteger(palette) && palette >= 0 && palette < motifs[motif as Motif].palettes.length)
-        return {motif:motif as Motif, palette}
-    }
-  } catch { /* Storage is optional. */ }
-  return null
+function decode(value?:string):Background {
+  const [motif,raw]=value?.split(':')??[]
+  const palette=Number(raw)
+  if(motif && Object.hasOwn(motifs,motif) && Number.isInteger(palette) && palette>=0 && palette<4)return {motif:motif as Motif,palette}
+  return {motif:'plain',palette:0}
 }
-
-export function useWallpapers(userId: string) {
-  const prefix = 'yotei-wallpaper-'+userId+'-'
-  const load = () => ({home:readWallpaper(prefix+'home'), clicker:readWallpaper(prefix+'clicker')})
-  const [choices,setChoices] = useState(load)
-  useEffect(() => {
-    const reload = () => setChoices({home:readWallpaper(prefix+'home'), clicker:readWallpaper(prefix+'clicker')})
-    const sync = (event:StorageEvent) => {
-      if (!event.key || event.key.startsWith(prefix)) reload()
-    }
-    reload()
-    window.addEventListener('storage',sync)
-    window.addEventListener('yotei-wallpaper-change',reload)
-    return () => {
-      window.removeEventListener('storage',sync)
-      window.removeEventListener('yotei-wallpaper-change',reload)
-    }
-  },[prefix])
-  function save(surface:Surface, choice:NonNullable<Wallpaper>) {
-    try {
-      localStorage.setItem(prefix+surface,choice.motif==='plain'?'plain':choice.motif+':'+choice.palette)
-      window.dispatchEvent(new Event('yotei-wallpaper-change'))
-      return true
-    } catch {
-      return false
-    }
+function texture({motif,palette}:Background){
+  return motif==='plain'?{}:{backgroundImage:'url("'+import.meta.env.BASE_URL+'wallpapers/'+motif+'-'+palette+'.webp")'}
+}
+export function GameBackdrop({value}:{value?:string}){
+  const background=decode(value)
+  return background.motif!=='plain' && <div aria-hidden="true" className="motifLayer" data-motif={background.motif} style={texture(background)}/>
+}
+export const homeBackgrounds={
+  default:'Par défaut',
+  slate:'Ardoise',
+  dusk:'Crépuscule',
+  forest:'Forêt'
+}
+export function BackgroundGallery({surface,game,done}:{surface:GameSurface;game:Game;done:()=>void}){
+  const gallery=game.wallet?.gallery
+  const [draft,setChoice]=useState<Background|null>(null)
+  const choice=draft??decode(gallery?.[surface])
+  const lock=useRef(false),[busy,setBusy]=useState(false),[error,setError]=useState('')
+  if(!gallery)return <section className="gallery"><p role="status">{game.error||'Chargement des fonds…'}</p><button onClick={game.refresh}>Actualiser</button></section>
+  const owned=(motif:string)=>motif==='plain'||gallery.owned.includes(motif)
+  const buying=!owned(choice.motif)
+  const price=gallery.prices[choice.motif]??0
+  async function apply(){
+    if(lock.current)return
+    lock.current=true;setBusy(true);setError('')
+    try{await game.chooseBackground(surface,choice.motif,choice.palette,buying);done()}
+    catch(e){setError(message(e))}finally{lock.current=false;setBusy(false)}
   }
-  return {...choices,save}
-}
-
-function textureStyle(wallpaper:NonNullable<Wallpaper>):CSSProperties {
-  if (wallpaper.motif === 'plain') return {}
-  return {backgroundImage:'url("'+import.meta.env.BASE_URL+'wallpapers/'+wallpaper.motif+'-'+wallpaper.palette+'.webp")'}
-}
-
-export function WallpaperLayer({wallpaper}:{wallpaper:Wallpaper}) {
-  return wallpaper && <div aria-hidden="true" className="motifLayer" data-motif={wallpaper.motif} style={textureStyle(wallpaper)}/>
-}
-
-export function WallpaperSettings({wallpapers}:{wallpapers:ReturnType<typeof useWallpapers>}) {
-  const [surface,setSurface] = useState<Surface>('home')
-  const [draft,setDraft] = useState<NonNullable<Wallpaper>>(wallpapers.home ?? plain)
-  const [notice,setNotice] = useState('')
-  function selectSurface(value:Surface) {
-    setSurface(value)
-    setDraft(wallpapers[value] ?? plain)
-    setNotice('')
-  }
-  function preview(choice:NonNullable<Wallpaper>) {
-    setDraft(choice)
-    setNotice('')
-  }
-  return <section className="motifSettings" aria-label="Fonds personnalisés">
-    <h3>Fonds personnalisés</h3>
-    <div className="motifTabs" role="group" aria-label="Écran à personnaliser">
-      {(['home','clicker'] as const).map(value =>
-        <button type="button" key={value} aria-pressed={value===surface} onClick={()=>selectSurface(value)}>
-          {value==='home'?'Accueil':'Clicker'}
-        </button>
-      )}
-    </div>
-    <div className="motifGrid" role="group" aria-label="Motif du fond">
-      {(['plain',...Object.keys(motifs)] as (Motif|'plain')[]).map(motif=>
-        <button key={motif} type="button" aria-pressed={draft.motif===motif} onClick={()=>preview({motif,palette:0})}>
-          <span className="motifTile" style={textureStyle({motif,palette:draft.motif===motif?draft.palette:0})}/>
-          {motif==='plain'?'Fond uni':motifs[motif].name}
-        </button>
-      )}
-    </div>
-    {draft.motif!=='plain' && <div className="motifPalettes" role="group" aria-label="Couleur du motif">
-      {motifs[draft.motif].palettes.map(([name,color],index)=>
-        <button type="button" key={name} aria-pressed={draft.palette===index} onClick={()=>preview({...draft,palette:index})}>
-          <i aria-hidden="true" style={{backgroundColor:color}}/>{name}
-        </button>
-      )}
-    </div>}
-    <button className="primary" type="button" onClick={()=>setNotice(
-      wallpapers.save(surface,draft)?'Fond enregistré.':'Impossible d’enregistrer ce fond sur cet appareil.'
-    )}>Enregistrer le fond</button>
-    {notice && <p role="status">{notice}</p>}
+  return <section className="gallery motifSettings" aria-label="Galerie de fonds">
+    <header><h3>Fonds du {surface==='character'?'personnage':'clicker'}</h3><Hearts amount={game.points}/></header>
+    <div className="motifGrid">{(['plain',...Object.keys(motifs)] as const).map(id=>{
+      const motif=id as Background['motif']
+      const name=motif==='plain'?'Fond uni':motifs[motif].name
+      const locked=!owned(motif)
+      return <button key={id} type="button" disabled={busy} className="galleryCard" aria-pressed={choice.motif===motif}
+        aria-label={name+(locked?' · '+gallery.prices[id]+' cœurs':' · disponible')}
+        onClick={()=>{setChoice({motif,palette:0});setError('')}}>
+        <span className="galleryPreview">
+          <span className={'motifTile'+(locked?' locked':'')} style={texture({motif,palette:choice.motif===motif?choice.palette:0})}/>
+          {locked ? <span className="galleryPrice"><LockKeyhole size={14}/><Hearts amount={gallery.prices[id]}/></span>
+          : <Check className="ownedMark" size={15}/>}
+        </span>
+        <span>{name}</span>
+      </button>
+    })}</div>
+    {choice.motif!=='plain' && <div className="motifPalettes" role="group" aria-label="Couleur du motif">{motifs[choice.motif].palettes.map(([name,color],i)=>
+      <button key={name} disabled={busy} aria-pressed={choice.palette===i} onClick={()=>setChoice({...choice,palette:i})}><i style={{backgroundColor:color}}/>{name}</button>)}</div>}
+    {buying&&<small>Le motif et ses quatre couleurs seront disponibles sur les deux écrans.</small>}
+    <button className="primary" disabled={busy || (buying&&game.points<price)} onClick={apply}>{buying?<>Débloquer et appliquer · <Hearts amount={price}/></>:'Appliquer le fond'}</button>
+    {buying&&game.points<price&&<small>Encore <Hearts amount={price-game.points}/> à gagner au clicker.</small>}
+    {error&&<p role="alert">{error}</p>}
   </section>
 }

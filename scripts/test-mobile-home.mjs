@@ -11,6 +11,7 @@ const peer = {
   username: 'Camille',
 }
 let balance=0,gameVersion=0,latestVideo=null
+const gallery={owned:[],prices:{stars:25,clouds:40,waves:60,mesh:80,blossoms:100},character:'plain',clicker:'plain'}
 const streams=new Map()
 let companion
 let posted
@@ -83,12 +84,21 @@ try {
         },
       })
     if (url.pathname.endsWith('/rpc/maintenance_status')) return route.fulfill({json:maintenance})
+    if(url.pathname.endsWith('/rpc/choose_companion_background')){
+      const {surface,motif,palette,purchase}=route.request().postDataJSON()
+      if(motif!=='plain'&&!gallery.owned.includes(motif)){
+        assert.ok(purchase && balance>=gallery.prices[motif])
+        gallery.owned.push(motif);balance-=gallery.prices[motif]
+      }
+      gallery[surface]=motif==='plain'?motif:motif+':'+palette
+      return route.fulfill({json:{points:balance,version:++gameVersion,video:latestVideo,price:20,gallery}})
+    }
     if(url.pathname.endsWith('/rpc/circle_game')){
       const {action,taps,request_id}=route.request().postDataJSON()
       if(action==='tap'){ balance+=taps-(streams.get(request_id)||0);streams.set(request_id,taps);gameVersion++ }
       if(action==='spin'){if(balance<20)return route.fulfill({status:400,json:{message:'Solde insuffisant'}})
         balance-=20;latestVideo='XCZlx9bt1G4';gameVersion++}
-      return route.fulfill({json:{points:balance,version:gameVersion,video:latestVideo,price:20}})
+      return route.fulfill({json:{points:balance,version:gameVersion,video:latestVideo,price:20,gallery}})
     }
     if (url.pathname.endsWith('/rpc/companion_care')) {
       const {action,detail} = route.request().postDataJSON()
@@ -203,19 +213,43 @@ try {
     assert.ok(Math.abs((figure.x + figure.width / 2) - width / 2) < 1)
     assert.ok(figure.y >= stage.y && figure.y+figure.height <= panel.y)
   }
+  const stageHeight=() => companionDialog.locator('.petStage').evaluate(el=>el.clientHeight)
+  const openHeight=await stageHeight()
+  await companionDialog.getByRole('button',{name:'Replier les soins'}).click()
+  assert.ok(await stageHeight()>openHeight)
+  await companionDialog.getByRole('button',{name:'Afficher les soins'}).click()
   await page.setViewportSize(originalViewport)
   await companionDialog.getByRole('button',{name:'Passer un moment ensemble'}).click()
   await companionDialog.getByText('Tsunade te fait un clin d’œil.').waitFor()
   for(let n=0;n<2;n++)await companionDialog.getByRole('button',{name:'Caresser',exact:true}).click()
   await clicker.click()
-  for(let n=0;n<20;n++)await companionDialog.getByRole('button',{name:'Gagner un point'}).click()
-  await companionDialog.getByText('20 points',{exact:true}).waitFor()
+  for(let n=0;n<45;n++)await companionDialog.getByRole('button',{name:'Gagner un cœur'}).click()
+  await companionDialog.getByRole('img',{name:'45 cœurs',exact:true}).waitFor()
+  const backgrounds=companionDialog.getByRole('button',{name:'Fonds',exact:true})
+  await backgrounds.click()
+  await companionDialog.getByRole('button',{name:'Étoiles · 25 cœurs'}).click()
+  await companionDialog.getByRole('button',{name:/Débloquer/}).click()
+  await companionDialog.locator('[data-motif="stars"]').waitFor()
+  await companionDialog.getByRole('img',{name:'20 cœurs',exact:true}).waitFor()
   await character.click()
   await companionDialog.getByRole('button',{name:'Donner une bouchée'}).click()
   await companionDialog.getByRole('button',{name:'Donner une bouchée'}).click()
   await companionDialog.getByText('Rassasiée',{exact:true}).waitFor()
   await companionDialog.getByRole('button',{name:'Saluer le personnage'}).click()
-  await companionDialog.locator('img.pose-hop').waitFor()
+  const jumping=companionDialog.locator('img.pose-hop')
+  await jumping.waitFor()
+  const fits=await jumping.evaluate(el=>{
+    const animation=el.getAnimations()[0]
+    if(animation){animation.pause();animation.currentTime=234}
+    const frame=el.closest('.petStage').getBoundingClientRect(),sprite=el.getBoundingClientRect()
+    return sprite.top>=frame.top && sprite.bottom<=frame.bottom && sprite.left>=frame.left && sprite.right<=frame.right
+  })
+  assert.ok(fits)
+  await backgrounds.click()
+  await companionDialog.getByRole('button',{name:'Étoiles · disponible'}).click()
+  await companionDialog.getByRole('button',{name:'Lilas',exact:true}).click()
+  await companionDialog.getByRole('button',{name:'Appliquer le fond'}).click()
+  await companionDialog.locator('[data-motif="stars"]').waitFor()
   await companionDialog.getByRole('button',{name:'Fermer le personnage'}).click()
   assert.match(await home.locator('[data-widget="Jours ensemble"]').innerText(),/1 jour/)
   companion.asleep=true
@@ -256,6 +290,9 @@ try {
   await page.getByText('Connexion',{exact:true}).click()
   await page.getByRole('button',{name:'Déconnecter Spotify'}).waitFor()
   await page.getByRole('button',{name:'Personnalisation'}).click()
+  const homeBackground=page.getByLabel('Fond de l’accueil')
+  assert.deepEqual(await homeBackground.locator('option').allTextContents(),['Par défaut','Ardoise','Crépuscule','Forêt'])
+  await homeBackground.selectOption('dusk')
   await page.getByLabel('Thème de l’interface').selectOption('Boréal')
   await page.getByRole('button',{name:'Déplacer les widgets'}).click()
   await home.getByLabel('Sélectionner Courbe',{exact:true}).click()
@@ -272,6 +309,7 @@ try {
   await widgets.first().waitFor()
   assert.deepEqual(await order(),initialOrder)
   assert.equal(await page.locator('.widgetShell').getAttribute('data-theme'),'Boréal')
+  await page.locator('.homeBackdrop.dusk').waitFor()
   await page.getByRole('button', { name: 'Configurer la météo' }).click()
   const weather = page.getByRole('dialog')
   await weather.getByLabel('Ville', { exact: true }).fill('Lyon')

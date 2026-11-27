@@ -23,10 +23,13 @@
 .petStage .tapPoint{position:absolute;top:14%;right:20%;color:white;pointer-events:none;text-shadow:0 1px 5px black}
 @media(prefers-reduced-motion:no-preference){
 .pose-hop{animation:characterHop .52s ease-out both;transform-origin:center bottom}
-@keyframes characterHop{0%,100%{transform:none}16%{transform:scale(1.02,.96)}45%{transform:translateY(-8%) rotate(var(--tilt,0deg))}78%{transform:scale(1.025,.965)}}
+@keyframes characterHop{0%,100%{transform:none}16%{transform:scale(1.02,.96)}45%{transform:translateY(-6%) rotate(var(--tilt,0deg))}78%{transform:scale(1.025,.965)}}
 .tapPoint{animation:petFloat .55s ease-out both}
 }
 @media(prefers-reduced-motion:reduce){.reelTrack.spinning{animation:none;transform:translateX(var(--stop))}}
 .roomDialog .roomPicker{align-self:center;width:min(100%,460px);margin-top:12px}
 .roomDialog .clickStage{isolation:isolate;overflow:hidden}
 .roomDialog[data-model=Nonna]{--tilt:-1deg}.roomDialog[data-model=Rias]{--tilt:2deg}.roomDialog[data-model=Tsunade]{--tilt:-2deg}
+
+.hearts,.drawControls .hearts,.rouletteTile .hearts{display:inline-flex;align-items:center;justify-content:center;gap:.28em;white-space:nowrap;font-variant-numeric:tabular-nums}
+.hearts svg,.tapPoint{color:#ff90aa}

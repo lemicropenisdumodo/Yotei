@@ -5,19 +5,15 @@
   pointer-events:none;
   background:var(--canvas,#171620) center / cover no-repeat;
 }
-.widgetShell > .motifLayer {position:fixed}
-.widgetShell > .motifLayer:not([data-motif=plain])::after {
-  content:"";
-  position:absolute;
-  inset:0;
-  background:linear-gradient(to bottom,#100e174a,#100e1766 34%);
-}
+.homeBackdrop{position:fixed;inset:0;z-index:-1;pointer-events:none}
+.homeBackdrop.slate{background:linear-gradient(145deg,#263446,#10151d 75%)}
+.homeBackdrop.dusk{background:radial-gradient(ellipse at top left,#49334a,#171622 72%)}
+.homeBackdrop.forest{background:linear-gradient(155deg,#1b3e39,#101c1e 78%)}
 @media (min-aspect-ratio: 1/1) {
   .motifLayer {background-size:auto 120%;background-repeat:repeat-x}
 }
 .motifSettings {display:grid;gap:12px;margin:4px 0;min-width:0}
 .motifSettings h3,.motifSettings p {margin:0}
-.motifSettings .motifTabs {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
 .motifGrid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
 .motifSettings .motifGrid button {
   display:flex;
@@ -46,3 +42,13 @@
   text-align:left;
 }
 .motifPalettes i {width:18px;height:18px;flex:none;border-radius:50%;border:1px solid #fff6}
+
+.roomDialog .gallery{width:min(100%,460px);align-self:center;padding:8px 0 18px}
+.roomDialog .gallery header{width:100%;align-items:center}
+.roomDialog .gallery header h3{font-size:1.15rem}
+.roomDialog .gallery .galleryCard{display:flex;flex-direction:column;gap:5px;min-width:0;overflow:hidden;padding:5px 5px 8px}
+.galleryPreview{position:relative;display:block;width:100%}
+.galleryPreview .locked{filter:brightness(.26) saturate(.7)}
+.galleryPrice,.ownedMark{position:absolute;bottom:5px;right:5px;color:white;border-radius:8px;background:#121219df}
+.galleryPrice{display:flex;align-items:center;gap:5px;padding:3px 6px}.ownedMark{box-sizing:content-box;padding:3px}
+.roomDialog .gallery button[aria-pressed=true]{border-color:var(--mist);box-shadow:inset 0 0 0 1px var(--mist)}

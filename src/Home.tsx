@@ -1,7 +1,6 @@
-import {useCircleGame,Roulette} from './CircleGame'
+import {useCircleGame,Roulette,Hearts} from './CircleGame'
 import {Dices} from 'lucide-react'
 import type {Watchlist} from './MarketSettings'
-import type {useWallpapers} from './Wallpaper'
 import {CompanionDialog, CompanionTile, useCompanion, type PetTile} from './Companion'
 import { webLink, type Recommendation } from './recommendation'
 import {SpotifyTile, type useSpotify} from './Spotify'
@@ -63,8 +62,8 @@ function readLayout(key: string): Widget[] {
   } catch { /* Default arrangement */ }
   return [...widgets]
 }
-export function Home({d, recent, openPost, go, editing, finish, photo, spotify,watch,clickerWallpaper}: {
-  watch:Watchlist; clickerWallpaper:ReturnType<typeof useWallpapers>['clicker']
+export function Home({d, recent, openPost, go, editing, finish, photo, spotify,watch}: {
+  watch:Watchlist
   d: Directory; recent?: Recommendation; openPost:(id:string)=>void; go: (p: Page) => void; editing:boolean; finish:()=>void; photo:string; spotify:ReturnType<typeof useSpotify>
 }) {
   const key = 'yotei-board-v2-' + d.me.id
@@ -134,7 +133,7 @@ export function Home({d, recent, openPost, go, editing, finish, photo, spotify,w
   }
   function tileContent(id: Widget) {
     if (id === 'Mon personnage' || id === 'Jours ensemble') return <CompanionTile kind={id} state={companion} wide={false} open={()=>setPetPage('Mon personnage')}/>
-    if (id==='Roulette') return <button className="widgetLink rouletteTile" onClick={()=>setRoulette(true)}><Dices/><span><strong>Roulette ASMR</strong><small>{game.points} points</small></span></button>
+    if (id==='Roulette') return <button className="widgetLink rouletteTile" onClick={()=>setRoulette(true)}><Dices/><span><strong>Roulette ASMR</strong><small><Hearts amount={game.points}/></small></span></button>
     if (id === 'Recommandations') return <button className="widgetLink recWidget" aria-label="Recommandations" onClick={() => recent ? openPost(recent.id) : go('Fil')}>
       {recent && (recent.image_url ? <Media path={recent.image_url} className="recArt" alt="" /> :
         webLink(recent.thumbnail_url) && <img className="recArt" src={webLink(recent.thumbnail_url)} alt="" referrerPolicy="no-referrer" />)}
@@ -187,6 +186,6 @@ export function Home({d, recent, openPost, go, editing, finish, photo, spotify,w
       </section>)}
     </div>
     {roulette && <Roulette game={game} close={()=>setRoulette(false)}/>}
-    {petPage && <CompanionDialog game={game} wallpaper={clickerWallpaper} userId={d.me.id} kind={petPage} state={companion} close={()=>setPetPage(null)}/>}
+    {petPage && <CompanionDialog game={game} userId={d.me.id} kind={petPage} state={companion} close={()=>setPetPage(null)}/>}
   </>
 }

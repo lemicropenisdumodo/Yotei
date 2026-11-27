@@ -1,4 +1,4 @@
-import {useWallpapers,WallpaperSettings,WallpaperLayer} from './Wallpaper'
+import {homeBackgrounds} from './Wallpaper'
 import {validWatchlist,MarketSettings,type Watchlist} from './MarketSettings'
 import {PublicationAlerts,disablePush} from './PublicationAlerts'
 import { MaintenanceGate } from './Maintenance'
@@ -50,11 +50,10 @@ function Network({ session }: { session: Session }) {
     [profile, setProfile] = useState(id),
     [postId, setPostId] = useState(''),
     [revision, bump] = useState(0)
-  const wallpapers=useWallpapers(id)
   const prefKey = 'yotei-dashboard-'+id
-  const [prefs,setPrefs] = useState<{theme:string;photo:string;watch:Watchlist}>(()=>{
-    try { const saved=JSON.parse(localStorage.getItem(prefKey)||'{}');return {theme:saved.theme||'Graphite',photo:saved.photo||'',watch:validWatchlist(saved.watch)} }
-    catch {return {theme:'Graphite',photo:'',watch:validWatchlist()}}
+  const [prefs,setPrefs] = useState<{theme:string;photo:string;watch:Watchlist;background:keyof typeof homeBackgrounds}>(()=>{
+    try { const saved=JSON.parse(localStorage.getItem(prefKey)||'{}');return {background:Object.hasOwn(homeBackgrounds,saved.background)?saved.background:'default',theme:saved.theme||'Graphite',photo:saved.photo||'',watch:validWatchlist(saved.watch)} }
+    catch {return {background:'default',theme:'Graphite',photo:'',watch:validWatchlist()}}
   })
   const [editing,setEditing]=useState(false)
   const [custom,setCustom]=useState(false)
@@ -201,7 +200,7 @@ function Network({ session }: { session: Session }) {
       data-theme={prefs.theme}
     >
       <Media path={me.wallpaper_path} alt="" className="wallpaper" />
-      {(page==='Accueil'||page==='Spotify') && <WallpaperLayer wallpaper={wallpapers.home}/>}
+      {(page==='Accueil'||page==='Spotify') && prefs.background!=='default' && <div aria-hidden="true" className={'homeBackdrop '+prefs.background}/>}
       <div className="content">
         <header className="pageHead">
           <div className="wordmark">Yotei<span>.</span></div>
@@ -217,7 +216,7 @@ function Network({ session }: { session: Session }) {
           )}
         </header>
         <div hidden={page !== 'Accueil' && page !== 'Spotify'}>
-          <Home key={id} d={d} go={navigate} openPost={post=>{setPostId(post);setCategory('');go('Fil')}} recent={latest.data} editing={editing} finish={()=>setEditing(false)} photo={prefs.photo} watch={prefs.watch} clickerWallpaper={wallpapers.clicker} spotify={spotify}/>
+          <Home key={id} d={d} go={navigate} openPost={post=>{setPostId(post);setCategory('');go('Fil')}} recent={latest.data} editing={editing} finish={()=>setEditing(false)} photo={prefs.photo} watch={prefs.watch} spotify={spotify}/>
         </div>
         {page === 'Paramètres' && <Window title="Paramètres"><h1>Paramètres</h1>
           <PublicationAlerts userId={id}/>
@@ -226,7 +225,8 @@ function Network({ session }: { session: Session }) {
           {me.admin && <button onClick={()=>navigate('Administration')}>Administration</button>}
           {custom && <div className="settingsStack"><label>Thème de l’interface<select value={prefs.theme} onChange={e=>preference({theme:e.target.value})}>
             {['Graphite','Boréal','Prune','Minuit'].map(t=><option key={t}>{t}</option>)}</select></label>
-            <WallpaperSettings wallpapers={wallpapers}/>
+            <label>Fond de l’accueil<select value={prefs.background} onChange={e=>preference({background:e.target.value as keyof typeof homeBackgrounds})}>
+              {Object.entries(homeBackgrounds).map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label>
             <MarketSettings value={prefs.watch} save={watch=>preference({watch})}/>
             <button onClick={()=>{setEditing(true);history.back()}}>Déplacer les widgets</button>
             <label>Photo du cadre<input type="file" accept="image/jpeg,image/png,image/webp" onChange={async e=>{

@@ -30,7 +30,7 @@
 .pose-idle,.pose-sleep{animation:petBreathe 3s ease-in-out infinite}
 .pose-sleep{animation-duration:5s}
 .pose-feed{animation:petNibble .32s ease-in-out 4}
-.pose-pat{animation:petNuzzle .55s ease-in-out 2}
+.pose-pat,.pose-company{animation:petNuzzle .55s ease-in-out 2}
 .petEffect{animation:petFloat 1.3s ease-out both}
 @keyframes petBreathe{50%{transform:scaleY(.985)}}
 @keyframes petNibble{50%{transform:translateY(2px) rotate(1deg)}}
@@ -46,9 +46,17 @@ dialog.roomDialog[open]{position:fixed;inset:0;margin:0;width:100%;height:100dvh
 .roomDialog h2,.roomDialog header button,.roomPanel,.roomDialog>p{background:#12131ce8;color:#fff;border:1px solid #ffffff38;border-radius:17px}
 .roomDialog header h2{padding:8px 14px;line-height:1.12}.roomDialog h2 small{display:block;font:500 .72rem/1.6 sans-serif;color:#d0cbd4}.roomDialog header button{min-width:44px;min-height:44px}
 .roomDialog .petStage{flex:1 0 160px;display:grid;place-items:center;background:none;width:min(100%,460px);align-self:center}
-.roomDialog .petStage .petFigure,.roomDialog .sleepingFigure{position:absolute;width:80%;height:90%;max-height:470px;min-height:0;padding:0;background:transparent}
+.roomDialog .petStage .petFigure,.roomDialog .sleepingFigure{position:absolute;inset:0;margin:auto;width:90%;height:86%;max-height:640px;min-height:0;padding:0;background:transparent}
 .roomDialog .petFigure img,.roomDialog .sleepingFigure{object-fit:contain;image-rendering:pixelated}
-.roomDialog .petFigure img{width:100%;height:100%;max-height:100%}
+.roomDialog .petStage .petFigure{display:block;overflow:visible}
+.roomDialog .petFigure img{display:block;width:100%;height:100%;max-height:100%;object-position:center}
+.roomDialog .petStage{isolation:isolate}
+.roomDialog .roomPanel{flex:none}
+.widgetShell .roomDialog .roomPanel .careToggle{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:36px;background:transparent;border:0;color:var(--mist);padding:4px}
+.roomDialog .roomPanel[data-collapsed=true]{padding-block:2px}
+.roomPicker svg{flex-shrink:0}
+@media(max-width:380px){.widgetShell .roomDialog .roomPicker button{padding-inline:4px;font-size:.8rem}.roomPicker svg{width:14px}}
+
 .roomPanel{padding:8px 14px}.roomPanel .petNeeds{margin:0;gap:4px}.roomPanel .petNeeds button{padding:5px 8px;font-size:.83rem}.roomPanel .petNeeds progress{height:6px}
 .roomPanel .petAffection,.roomPanel details{display:inline-block;margin:4px 10px 0 0;font-size:.78rem}.roomPanel details[open]{display:block}
 

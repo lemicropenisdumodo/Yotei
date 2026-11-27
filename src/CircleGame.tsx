@@ -1,9 +1,14 @@
 import {useCallback,useEffect,useRef,useState,type CSSProperties} from 'react'
-import {CirclePlay,Coins,Dices,X} from 'lucide-react'
+import {CirclePlay,Heart,Dices,X} from 'lucide-react'
 import {db,message} from './core'
 import videos from './roulette-videos.json'
 
-type Wallet={points:number;version:number;video:string|null;price:number}
+import type {Gallery,GameSurface} from './Wallpaper'
+
+export function Hearts({amount}:{amount:number}){
+  return <span className="hearts" role="img" aria-label={amount+(amount===1?' cœur':' cœurs')}>{amount} <Heart aria-hidden="true" size={15} fill="currentColor"/></span>
+}
+type Wallet={gallery:Gallery;points:number;version:number;video:string|null;price:number}
 type Video=typeof videos[number]
 export const cover=(id:string)=>'https://i.ytimg.com/vi/'+id+'/hqdefault.jpg'
 async function walletCall(action:string,request_id?:string,taps?:number){
@@ -61,7 +66,14 @@ export function useCircleGame(userId:string){
     sessionStorage.removeItem(key);receive(result);setError('')
     return result.video
   }
-  return {wallet,points:(wallet?.points??0)+uncredited,error,refresh,tap,spin}
+  async function chooseBackground(surface:GameSurface,motif:string,palette:number,purchase:boolean){
+    await sync()
+    if(total.current>credited.current)await sync()
+    const {data,error}=await db.rpc('choose_companion_background',{surface,motif,palette,purchase})
+    if(error||!data)throw Error(error?.message||'Enregistrement du fond impossible.')
+    receive(data as Wallet)
+  }
+  return {chooseBackground,wallet,points:(wallet?.points??0)+uncredited,error,refresh,tap,spin}
 }
 export type Game=ReturnType<typeof useCircleGame>
 function shuffle(){
@@ -90,8 +102,8 @@ export function Roulette({game,close}:{game:Game;close:()=>void}){
   return <dialog className="rouletteDialog" ref={dialog} onClose={close} aria-label="Roulette ASMR">
     <header><h2>Roulette ASMR</h2><button aria-label="Fermer la roulette" onClick={()=>dialog.current?.close()}><X/></button></header>
     <div className="reel"><div key={run} className={'reelTrack'+(run?' spinning':'')} style={{'--stop':'-2346px'} as CSSProperties}>{cards.map(card)}</div><i/></div>
-    <div className="drawControls"><span><Coins size={18}/> {game.points} pts</span><button className="primary" disabled={!game.wallet||busy||game.points<price} onClick={draw}><Dices size={18}/> {busy?'Tirage…':'Tourner · '+price+' pts'}</button></div>
-    {game.points<price&&<p>Gagne encore {price-game.points} points dans le clicker.</p>}
+    <div className="drawControls"><Hearts amount={game.points}/><button className="primary" disabled={!game.wallet||busy||game.points<price} onClick={draw}><Dices size={18}/> {busy?'Tirage…':<>Tourner · <Hearts amount={price}/></>}</button></div>
+    {game.points<price&&<p>Gagne encore <Hearts amount={price-game.points}/> dans le clicker.</p>}
     {(error||game.error)&&<p role="alert">{error||game.error} <button onClick={game.refresh}>Actualiser</button></p>}
     {!busy&&winner&&<div className="rouletteWin" aria-live="polite"><small>Ton tirage · {winner.language}</small><h3>{winner.title}</h3><a href={'https://www.youtube.com/watch?v='+winner.id} target="_blank" rel="noopener noreferrer"><CirclePlay size={18}/> Voir la vidéo</a></div>}
   </dialog>

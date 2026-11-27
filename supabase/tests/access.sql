@@ -46,9 +46,22 @@ begin
  w:=public.circle_game('spin',gen_random_uuid());
  if (w->>'points')::int<>0 or w->>'video'=first_video then raise exception 'Doublon vidéo'; end if;
  begin perform public.circle_game('spin',gen_random_uuid()); raise exception 'Solde négatif';
- exception when raise_exception then if sqlerrm<>'Il faut 20 points pour tourner.' then raise; end if; end;
+ exception when raise_exception then if sqlerrm<>'Il faut 20 cœurs pour tourner.' then raise; end if; end;
+ begin perform public.choose_companion_background('clicker','stars',1,true); raise exception 'Achat sans solde';
+ exception when raise_exception then if sqlerrm<>'Pas assez de cœurs.' then raise; end if; end;
+ w:=public.circle_game('tap',stream,65);
+ begin perform public.choose_companion_background('character','clouds',0,false); raise exception 'Fond verrouillé appliqué';
+ exception when raise_exception then if sqlerrm<>'Ce fond est verrouillé.' then raise; end if; end;
+ w:=public.choose_companion_background('character','stars',1,true);
+ w:=public.choose_companion_background('clicker','stars',2,true);
+ if (w->>'points')::int<>0 or w#>>'{gallery,character}'<>'stars:1' or w#>>'{gallery,clicker}'<>'stars:2'
+ or jsonb_array_length(w#>'{gallery,owned}')<>1 then raise exception 'Double achat ou sélection perdue'; end if;
  pet:=public.companion_care();
  pet:=public.companion_care('company','','UTC',(pet->>'version')::int);
+ if (pet->>'food_due')::timestamptz not between now()+interval '30 minutes' and now()+interval '60 minutes'
+ or (pet->>'mood_due')::timestamptz not between now()+interval '25 minutes' and now()+interval '50 minutes'
+ or (pet->>'company_due')::timestamptz not between now()+interval '20 minutes' and now()+interval '45 minutes'
+ then raise exception 'Délai de soin inattendu'; end if;
  if pet->>'company'<>'0' then raise exception 'Compagnie ignorée'; end if;
 end $$;
 insert into public.posts(source_title,category,user_id,content) values('Sans lien','Cinéma',auth.uid(),'Sans lien');

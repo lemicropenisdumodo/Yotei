@@ -1,7 +1,7 @@
-import type {Game} from './CircleGame'
-import {WallpaperLayer,type Wallpaper} from './Wallpaper'
+import {Hearts,type Game} from './CircleGame'
+import {GameBackdrop,BackgroundGallery} from './Wallpaper'
 import { useEffect, useRef, useState } from 'react'
-import { Heart, Settings2, X, Flame, Utensils, Sunrise, Hand, MousePointerClick } from 'lucide-react'
+import { Heart, Settings2, X, Flame, Utensils, Sunrise, Hand, MousePointerClick, Images, ChevronDown, ChevronUp } from 'lucide-react'
 import { base, db, message } from './core'
 import {useGameColor} from './GameButtons'
 import './companion.css'
@@ -85,11 +85,13 @@ export function CompanionTile({kind,state,open,wide}:{kind:PetTile;state:State;o
     <img src={art(p?.model||'Tsunade',p?.asleep?'sleep':'idle')} alt=""/>
   </button>
 }
-export function CompanionDialog({kind,state,close,userId,game,wallpaper}:{game:Game;wallpaper:Wallpaper;userId:string;kind:PetTile;state:State;close:()=>void}) {
+export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId:string;kind:PetTile;state:State;close:()=>void}) {
   const palette=useGameColor(userId)
   const [settings,setSettings]=useState(false)
   const {pet:p,act,busy,error} = state
   const [clicker,setClicker]=useState(false)
+  const [galleryOpen,setGalleryOpen]=useState(false),[collapsed,setCollapsed]=useState(false)
+  const surface=clicker?'clicker':'character'
   const [tapCount,setTapCount]=useState(0)
   const dialog = useRef<HTMLDialogElement>(null)
   const [motion,setMotion] = useState<{pose:Motion; key:number}>({pose:'idle',key:0})
@@ -104,13 +106,13 @@ export function CompanionDialog({kind,state,close,userId,game,wallpaper}:{game:G
     if (await act(action)) setMotion(m=>({pose:action,key:m.key+1}))
   }
   const pose = p?.asleep ? 'sleep' : motion.pose
-  const spritePose = pose==='company' ? 'pat' : pose==='hop' ? 'idle' : pose
   const requestedCare = p?.mood ? 'pat' : p?.food ? 'feed' : p?.company ? 'company' : null
   const counter = kind === 'Jours ensemble' && p
   const room = !!p && !counter
   const hour=new Date().getHours()
   const phase=p?.asleep?'night':hour>=7 && hour<18?'day':'dusk'
   return <dialog style={palette.style} className={'petDialog'+(room?' roomDialog':'')} data-phase={room?phase:undefined} data-model={p?.model} ref={dialog} onClose={close} aria-label={kind}>
+    {room&&!galleryOpen&&<GameBackdrop value={game.wallet?.gallery?.[surface]}/>}
     <header><h2>{room && <small>{clicker?'Clicker':'Mon personnage'} · {phase==='day'?'Jour':phase==='dusk'?'Soir':'Nuit'}</small>}{counter ? kind : p ? p.nickname || p.model : 'Choisis ton personnage'}{room && p && <span className="roomStatus">{label(p)}</span>}</h2>
       <div className="gameHeaderActions"><button aria-label="Paramètres du jeu" title="Paramètres du jeu" aria-expanded={settings} onClick={()=>setSettings(!settings)}><Settings2 size={19}/></button>
       <button onClick={()=>dialog.current?.close()} aria-label="Fermer le personnage"><X size={20}/></button></div></header>
@@ -126,24 +128,30 @@ export function CompanionDialog({kind,state,close,userId,game,wallpaper}:{game:G
       <p>{p.days.includes(p.today) ? 'Le soin du jour est terminé.' : 'Termine un repas ou une séance de caresses pour valider la journée.'}</p>
       <p>Record · {p.best}　 ♥ {p.affection}</p></section> : <>
       <div className="roomPicker" role="group" aria-label="Activité">
-        <button type="button" aria-pressed={!clicker} onClick={()=>setClicker(false)}><Heart size={16}/>Mon personnage</button>
-        <button type="button" aria-pressed={clicker} onClick={()=>setClicker(true)}><MousePointerClick size={16}/>Clicker</button>
+        <button type="button" aria-pressed={!clicker&&!galleryOpen} onClick={()=>{setClicker(false);setGalleryOpen(false)}}><Heart size={16}/>Mon personnage</button>
+        <button type="button" aria-pressed={clicker&&!galleryOpen} onClick={()=>{setClicker(true);setGalleryOpen(false)}}><MousePointerClick size={16}/>Clicker</button>
+        <button type="button" aria-pressed={galleryOpen} onClick={()=>setGalleryOpen(!galleryOpen)}><Images size={16}/>Fonds</button>
       </div>
+      {galleryOpen ? <BackgroundGallery key={surface} surface={surface} game={game} done={()=>setGalleryOpen(false)}/> : <>
       <div className={'petStage'+(clicker?' clickStage':'')}>
-        {clicker && <><WallpaperLayer wallpaper={wallpaper}/><button className="petFigure" aria-label="Gagner un point" onClick={()=>{if(game.tap())setTapCount(n=>n+1)}}>
+        {clicker && <><button className="petFigure" aria-label="Gagner un cœur" onClick={()=>{if(game.tap())setTapCount(n=>n+1)}}>
           <img key={tapCount} className={tapCount?'pose-hop':''} src={art(p.model)} alt={p.model}/>
-        </button>{tapCount>0&&<b key={tapCount} className="tapPoint">+1</b>}</>}
+        </button>{tapCount>0&&<b key={tapCount} className="tapPoint">+1 ♥</b>}</>}
         {!clicker && (p.asleep ? <img className="sleepingFigure pose-sleep" src={art(p.model,'sleep')} alt={p.model+' dort.'}/> :
           <button className="petFigure" disabled={busy} aria-label={requestedCare ? {pat:'Caresser le personnage',feed:'Nourrir le personnage',company:'Tenir compagnie au personnage'}[requestedCare] : 'Saluer le personnage'} onClick={()=>{
             if(requestedCare)void care(requestedCare);else setMotion(m=>({pose:'hop',key:m.key+1}))
           }}>
-            <img key={motion.key+'-'+pose} className={'pose-'+pose} src={base+'companions/room/salon/'+p.model+(spritePose==='idle'?'':'-'+spritePose)+'.png'} alt={p.model}/>
+            <img key={motion.key+'-'+pose} className={'pose-'+pose} src={art(p.model)} alt={p.model}/>
           </button>)}
+        {!clicker && pose==='feed' && <Utensils key={motion.key} className="petEffect"/>}
         {!clicker && (pose==='pat'||pose==='company') && <Heart key={motion.key} className="petEffect"/>}
       </div>
-      <div className="roomPanel">
-        {clicker ? <><p className="clickScore">{game.points} points</p>{game.error&&<p role="alert">{game.error} <button onClick={game.refresh}>Réessayer</button></p>}</> : <>
-        <div className="petNeeds">{(['feed','pat'] as const).map(action=>{
+      <div className="roomPanel" data-collapsed={!clicker&&collapsed}>
+        {clicker ? <><p className="clickScore"><Hearts amount={game.points}/></p>{game.error&&<p role="alert">{game.error} <button onClick={game.refresh}>Réessayer</button></p>}</> : <>
+        <button className="careToggle" aria-expanded={!collapsed} aria-controls="careDetails" onClick={()=>setCollapsed(!collapsed)}>
+          {collapsed?<ChevronUp size={18}/>:<ChevronDown size={18}/>} {collapsed?'Afficher les soins':'Replier les soins'}
+        </button>
+        <div id="careDetails" hidden={collapsed}><div className="petNeeds">{(['feed','pat'] as const).map(action=>{
         const food=action==='feed', remaining=food?p.food:p.mood
         const status = remaining ? (food?'A faim':'À réconforter') : (food?'Rassasiée':'Contente')
         const Icon=food?Utensils:Heart
@@ -155,8 +163,8 @@ export function CompanionDialog({kind,state,close,userId,game,wallpaper}:{game:G
       {!p.asleep && !!p.company && <button disabled={busy} onClick={()=>care('company')}><Hand size={16}/> Passer un moment ensemble</button>}
       {pose==='company' && <p role="status">{{Nonna:'Nonna t’adresse un petit sourire.',Rias:'Rias se rapproche de toi.',Tsunade:'Tsunade te fait un clin d’œil.'}[p.model]}</p>}
       <div className="careFoot"><span><Heart size={13}/> Affection · {p.affection}</span>
-        {p.asleep && <span><Sunrise size={15}/> Réveil à 7 h</span>}</div></>}
-      </div>
+        {p.asleep && <span><Sunrise size={15}/> Réveil à 7 h</span>}</div></div></>}
+      </div></>}
     </>}
   </dialog>
 }
