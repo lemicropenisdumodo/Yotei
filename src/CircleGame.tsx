@@ -85,7 +85,7 @@ const previewSides = ['DG2DiSWjJyA','_k9T0PBwkpQ'].map(id => videos.find(video =
 export function RouletteShortcut({points,open}:{points:number;open:()=>void}){
   function side(video:Video){
     return <span className="previewSide" data-rarity={video.rarity}>
-      <img src={cover(video.id)} alt="" loading="lazy"/><Rarity value={video.rarity}/>
+      <img src={import.meta.env.BASE_URL+'roulette/'+video.id+'.webp'} alt="" loading="lazy"/><Rarity value={video.rarity}/>
     </span>
   }
   return <button className="widgetLink rouletteTile" onClick={open}>
