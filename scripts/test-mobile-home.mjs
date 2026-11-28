@@ -14,6 +14,7 @@ let balance=555,gameVersion=0,latestVideo=null
 const gallery={owned:[],prices:{stars:350,clouds:600,waves:1000,mesh:1500,blossoms:2200},character:'plain',clicker:'plain'}
 const streams=new Map()
 let companion
+let careReadyAt=0
 let posted
 const browser = await chromium.launch({ channel: 'chrome', executablePath:process.env.CHROME_PATH, headless: true })
 try {
@@ -104,13 +105,17 @@ try {
     if (url.pathname.endsWith('/rpc/companion_care')) {
       const {action,detail} = route.request().postDataJSON()
       if (action === 'adopt') companion = {model:detail,nickname:'',version:1,company:1,food:2,mood:2,asleep:false,days:[],today:'2026-11-25',streak:0,best:0,affection:0}
-      if (action === 'feed') {
+      const care=['feed','pat','company'].includes(action)
+      if(companion)companion.care_applied=care && Date.now()>=careReadyAt
+      if(care && companion.care_applied)careReadyAt=Date.now()+3000
+      if (action === 'feed' && companion.care_applied) {
         companion.food--; companion.version++
         if (!companion.food) Object.assign(companion,{days:[companion.today],streak:1,best:1,affection:1})
       }
-      if(action==='company'){companion.company=0;companion.version++}
-      if(action==='pat'){companion.mood--;companion.version++}
+      if(action==='company' && companion.care_applied){companion.company=0;companion.version++}
+      if(action==='pat' && companion.care_applied){companion.mood--;companion.version++}
       if (action === 'rename') {companion.nickname=detail; companion.version++}
+      if(companion)companion.care_wait_ms=Math.max(0,careReadyAt-Date.now())
       return route.fulfill({contentType:'application/json',body:JSON.stringify(companion || null)})
     }
     if (url.pathname.endsWith('/recommendation-preview')) return route.fulfill({json:{title:'Morceau du cercle'}})
@@ -237,6 +242,8 @@ try {
   await companionDialog.getByRole('button',{name:'Passer un moment ensemble'}).click()
   await companionDialog.locator('img.pose-company[src$="Tsunade-pat.webp"]').waitFor()
   await companionDialog.getByText('Tsunade te fait un clin d’œil.').waitFor()
+  assert.ok(await companionDialog.getByRole('button',{name:/^Donner une bouchée · [1-3] s$/}).isDisabled())
+  assert.ok(await companionDialog.getByRole('button',{name:'Caresser le personnage'}).isDisabled())
   for(let n=0;n<2;n++)await companionDialog.getByRole('button',{name:'Caresser',exact:true}).click()
   await companionDialog.locator('img.pose-pat[src$="Tsunade-pat.webp"]').waitFor()
   const gameSettings=companionDialog.getByRole('button',{name:'Paramètres du jeu'})

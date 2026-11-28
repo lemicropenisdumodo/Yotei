@@ -14,6 +14,10 @@ do $$ begin
  raise exception 'Unexpected signup' using errcode='XX000';
  exception when raise_exception then if sqlerrm<>'Invitation requise' then raise; end if; end;
 end $$;
+-- Advance only this fixture's care timer between successful actions.
+create function pg_temp.finish_care_wait() returns void language sql security definer set search_path='' as $$
+ update yotei_private.companions set care_ready_at=clock_timestamp() where owner_id=auth.uid()
+$$;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 do $$
@@ -28,8 +32,14 @@ begin
  pet:=public.companion_care('feed','','UTC',version_before);
  pet:=public.companion_care('feed','','UTC',version_before);
  if (pet->>'food')::int<>initial-1 then raise exception 'Double bouchée'; end if;
- while (pet->>'food')::int>0 loop pet:=public.companion_care('feed','','UTC',(pet->>'version')::int); end loop;
- while (pet->>'mood')::int>0 loop pet:=public.companion_care('pat','','UTC',(pet->>'version')::int); end loop;
+ version_before:=(pet->>'version')::int;
+ pet:=public.companion_care('pat','','UTC',version_before);
+ if (pet->>'care_applied')::boolean or (pet->>'version')::int<>version_before
+    or (pet->>'care_wait_ms')::int not between 1 and 3000 then raise exception 'Délai entre soins ignoré'; end if;
+ pet:=public.companion_care();
+ if (pet->>'care_wait_ms')::int<=0 then raise exception 'Délai perdu au rechargement'; end if;
+ while (pet->>'food')::int>0 loop perform pg_temp.finish_care_wait(); pet:=public.companion_care('feed','','UTC',(pet->>'version')::int); end loop;
+ while (pet->>'mood')::int>0 loop perform pg_temp.finish_care_wait(); pet:=public.companion_care('pat','','UTC',(pet->>'version')::int); end loop;
  if pet->>'streak'<>'1' or pet->>'affection'<>'1' or pet->>'best'<>'1' then raise exception 'Double récompense'; end if;
  pet:=public.companion_care('rename','Nona','UTC',(pet->>'version')::int);
  if pet->>'nickname'<>'Nona' then raise exception 'Surnom perdu'; end if;
@@ -58,6 +68,7 @@ begin
  if (w->>'points')::int<>0 or w#>>'{gallery,character}'<>'stars:1' or w#>>'{gallery,clicker}'<>'stars:2'
  or jsonb_array_length(w#>'{gallery,owned}')<>1 then raise exception 'Double achat ou sélection perdue'; end if;
  pet:=public.companion_care();
+ perform pg_temp.finish_care_wait();
  pet:=public.companion_care('company','','UTC',(pet->>'version')::int);
  if (pet->>'food_due')::timestamptz not between now()+interval '30 minutes' and now()+interval '60 minutes'
  or (pet->>'mood_due')::timestamptz not between now()+interval '25 minutes' and now()+interval '50 minutes'

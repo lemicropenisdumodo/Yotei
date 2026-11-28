@@ -12,6 +12,7 @@ export type Model = typeof models[number]
 type Action = 'read' | 'adopt' | 'rename' | 'feed' | 'pat' | 'company'
 type Pet = {
   model: Model; nickname: string; food: number; mood: number; company:number; asleep: boolean
+  care_applied: boolean; care_wait_ms: number
   streak: number; best: number; affection: number; today: string; days: string[]; version: number
 }
 type Pose = 'idle' | 'feed' | 'pat' | 'sleep'
@@ -35,6 +36,7 @@ export function useCompanion(userId:string) {
   }
   const [pet, setPet] = useState<Pet | null | undefined>()
   const [error, setError] = useState('')
+  const [careReadyAt,setCareReadyAt]=useState(0)
   const [busy, setBusy] = useState(false)
   const lock = useRef(false)
   const version = useRef<number | null>(null)
@@ -50,8 +52,10 @@ export function useCompanion(userId:string) {
       const updated = data as Pet | null
       const changed = updated?.version !== version.current
       version.current = updated?.version ?? null
+      setCareReadyAt(updated?.care_wait_ms ? performance.now()+updated.care_wait_ms : 0)
       setPet(updated)
       setError('')
+      if (action==='feed' || action==='pat' || action==='company') return updated?.care_applied===true
       return changed
     } catch (e) { setError(message(e)); return false }
     finally { lock.current = false; setBusy(false) }
@@ -63,7 +67,7 @@ export function useCompanion(userId:string) {
     document.addEventListener('visibilitychange',refresh)
     return () => { clearInterval(timer); document.removeEventListener('visibilitychange',refresh) }
   },[])
-  return {pet,error,busy,act,artStyle,changeStyle,temporaryStyle}
+  return {pet,error,busy,act,careReadyAt,artStyle,changeStyle,temporaryStyle}
 }
 type State = ReturnType<typeof useCompanion>
 export type PetTile = 'Character' | 'Jours ensemble'
@@ -103,6 +107,18 @@ export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId
   const palette=useGameColor(userId)
   const [settings,setSettings]=useState(false)
   const {pet:p,act,busy,error,artStyle,changeStyle} = state
+  const [,tick]=useState(0)
+  const wait=Math.max(0,Math.ceil((state.careReadyAt-performance.now())/1000))
+  useEffect(()=>{
+    if(state.careReadyAt<=performance.now()) return
+    const timer=window.setInterval(()=>{
+      tick(n=>n+1)
+      if(performance.now()>=state.careReadyAt) window.clearInterval(timer)
+    },150)
+    return ()=>window.clearInterval(timer)
+  },[state.careReadyAt])
+  const careDisabled=busy || wait>0
+  const countdown=wait ? ' · '+wait+' s' : ''
   const [loveOpen,setLoveOpen]=useState(false)
   const [clicker,setClicker]=useState(false)
   const [galleryOpen,setGalleryOpen]=useState(false),[collapsed,setCollapsed]=useState(false)
@@ -126,7 +142,7 @@ export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId
     return ()=>clearTimeout(timer)
   },[motion])
   async function care(action:'feed'|'pat'|'company') {
-    if (await act(action)) setMotion(m=>({pose:action,key:m.key+1}))
+    if (!careDisabled && await act(action)) setMotion(m=>({pose:action,key:m.key+1}))
   }
   const pose = p?.asleep ? 'sleep' : motion.pose
   useEffect(()=>{
@@ -171,7 +187,7 @@ export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId
           <img key={tapCount} className={tapCount?'pose-hop':''} src={art(p.model,artStyle,tapCount?'hop':'idle')} alt={p.model}/>
         </button>{tapCount>0&&<b key={tapCount} className="tapPoint">+1 ♥</b>}</>}
         {!clicker && (p.asleep ? <img className="sleepingFigure pose-sleep" src={art(p.model,artStyle,'sleep')} alt={p.model+' dort.'}/> :
-          <button className="petFigure" disabled={busy} aria-label={requestedCare ? {pat:'Caresser le personnage',feed:'Nourrir le personnage',company:'Tenir compagnie au personnage'}[requestedCare] : 'Saluer le personnage'} onClick={()=>{
+          <button className="petFigure" disabled={busy || (!!requestedCare && wait>0)} aria-label={requestedCare ? {pat:'Caresser le personnage',feed:'Nourrir le personnage',company:'Tenir compagnie au personnage'}[requestedCare] : 'Saluer le personnage'} onClick={()=>{
             if(requestedCare)void care(requestedCare);else setMotion(m=>({pose:'hop',key:m.key+1}))
           }}>
             <img key={motion.key+'-'+pose} className={'pose-'+pose} src={art(p.model,artStyle,pose)} alt={p.model}/>
@@ -193,9 +209,9 @@ export function CompanionDialog({kind,state,close,userId,game}:{game:Game;userId
         return <div key={action} className="needCard"><label><span className="needTitle"><Icon size={15}/>{food?'Repas':'Moral'}</span>
           <progress max={4} value={4-remaining}/></label>
           {p.asleep || !remaining ? <small>{status}</small> :
-            <button disabled={busy} onClick={()=>care(action)}>{food?'Donner une bouchée':'Caresser'}</button>}</div>
+            <button disabled={careDisabled} onClick={()=>care(action)}>{food?'Donner une bouchée':'Caresser'}{countdown}</button>}</div>
       })}</div>
-      {!p.asleep && !!p.company && <button disabled={busy} onClick={()=>care('company')}><Hand size={16}/> Passer un moment ensemble</button>}
+      {!p.asleep && !!p.company && <button disabled={careDisabled} onClick={()=>care('company')}><Hand size={16}/> Passer un moment ensemble{countdown}</button>}
       {pose==='company' && <p role="status">{{Nonna:'Nonna t’adresse un petit sourire.',Rias:'Rias se rapproche de toi.',Tsunade:'Tsunade te fait un clin d’œil.'}[p.model]}</p>}
       <div className="careFoot"><span><Heart size={13}/> Affection · {p.affection}</span>
         {p.asleep && <span><Sunrise size={15}/> Réveil à 7 h</span>}</div></div></>}
