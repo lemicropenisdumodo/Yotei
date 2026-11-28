@@ -1,154 +1,180 @@
 [
   {
-    "id": "XCZlx9bt1G4",
-    "title": "ASMR FR 🧸 Tu es malade, Maman te soigne !",
-    "language": "Français"
-  },
-  {
-    "id": "wFo6SiJOdaA",
-    "title": "Je te maquille ~ Rôleplay Maman ASMR Français",
-    "language": "Français"
-  },
-  {
-    "id": "mAK97i57th8",
-    "title": "ASMR FRANÇAIS⎪ROLEPLAY Ta maman TE RASSURE ET CONSEILLE POUR TA RENTRÉE 💗 Back To School, Vidéo n°1",
-    "language": "Français"
-  },
-  {
-    "id": "k6OvOT3s6EU",
-    "title": "ASMR • Je te brosse les cheveux (démêlage ultra lent) • sommeil profond (FR)",
-    "language": "Français"
-  },
-  {
-    "id": "VBKwmc3s6Ts",
-    "title": "ASMR Français | Attention Personnelle Pour Toi (Massage Cranien, Massage Oreilles, Face brushing...)",
-    "language": "Français"
-  },
-  {
     "id": "nL7g22DIwX8",
     "title": "ASMR Tucking you in, crispy sheets and massage (for when you miss your mom)",
-    "language": "Anglais"
+    "language": "Anglais",
+    "rarity": "Épique"
   },
   {
     "id": "6Zt4O2jJOjc",
     "title": "Mom helps you sleep roleplay ASMR Sleep Aid 🌙 Tucking You In & Soothing Triggers",
-    "language": "Anglais"
+    "language": "Anglais",
+    "rarity": "Rare",
+    "archived": true
   },
   {
     "id": "g29Hyn2xwiM",
     "title": "ASMR Mommy Reads You A Bedtime Story... [Soft][F4A][Sleep Aid][Whispers][Soft Rain]",
-    "language": "Anglais"
+    "language": "Anglais",
+    "rarity": "Épique"
   },
   {
     "id": "2AsE4FAI_5w",
     "title": "ASMR MOMMY TUCKS YOU IN (Hand Movements, Mouth Sounds, Reading, etc)",
-    "language": "Anglais"
+    "language": "Anglais",
+    "rarity": "Épique"
   },
   {
     "id": "6Lb6W8uxCkM",
     "title": "{ASMR} Mom Takes Care of you While You’re Sick",
-    "language": "Anglais"
+    "language": "Anglais",
+    "rarity": "Rare",
+    "archived": true
   },
   {
     "id": "iQB-0fu5QPs",
     "title": "Mom Comforts You After a Nightmare [ASMR Roleplay]",
-    "language": "Anglais"
+    "language": "Anglais",
+    "rarity": "Rare"
   },
   {
     "id": "sDULmmJ-VZc",
     "title": "ASMR Getting You Ready For Bed & Tucking You In ✨ (hair care, skincare, pampering layered sounds)",
-    "language": "Anglais"
+    "language": "Anglais",
+    "rarity": "Épique"
   },
   {
     "id": "yA2J2kXGODs",
     "title": "ASMR Your Fairy Godmother Prepares You for Your New Life",
-    "language": "Anglais"
+    "language": "Anglais",
+    "rarity": "Légendaire"
   },
   {
     "id": "YqMJvUEgFLc",
     "title": "⭐ASMR: tu MAMÁ chilena te hace dormir 😴💢 (humor, versión intensa)",
     "language": "Espagnol",
-    "archived": true
+    "archived": true,
+    "rarity": "Rare"
   },
   {
     "id": "15q0bGw3p_w",
     "title": "Asmr español roleplay: Tienes gripe y tu mama te cuida 🤒🤧",
     "language": "Espagnol",
-    "archived": true
+    "archived": true,
+    "rarity": "Rare"
   },
   {
     "id": "C7t5FdLBvtk",
     "title": "ASMR ESPAÑOL / ¿NO PUEDES DORMIR? Te CONSIENTO en tu CAMA PARA que DUERMAS EN 5 MINUTOS",
     "language": "Espagnol",
-    "archived": true
+    "archived": true,
+    "rarity": "Rare"
   },
   {
     "id": "Tud4YsNxuPM",
     "title": "⭐ASMR Sirvienta te Cuida en tu Camita 🕯️ Masajes • Cepillado de cabello • Cuentos para dormir",
     "language": "Espagnol",
-    "archived": true
+    "archived": true,
+    "rarity": "Épique"
   },
   {
     "id": "3GSH37__hDY",
     "title": "ASMR Mama bringt dich ins Bett 🌙 Abschminken, Pflege, Haare bürsten, Märchen, Rainsounds | Roleplay",
     "language": "Allemand",
-    "archived": true
+    "archived": true,
+    "rarity": "Épique"
   },
   {
     "id": "cobKo9MHXRk",
     "title": "ASMR Schlafenszeit, ich bringe dich ins Bett",
     "language": "Allemand",
-    "archived": true
+    "archived": true,
+    "rarity": "Rare"
   },
   {
     "id": "DG2DiSWjJyA",
     "title": "[ASMR💤] 손님! 무릉도원이세요?  | Hair/Head Spa＆Shampoo RP",
-    "language": "Coréen"
+    "language": "Coréen",
+    "rarity": "Épique"
   },
   {
     "id": "YNMl9aIoaeE",
     "title": "asmr cuidando do seu cabelo :) roleplay",
     "language": "Portugais",
-    "archived": true
+    "archived": true,
+    "rarity": "Rare"
   },
   {
     "id": "KujHGTFnELA",
     "title": "【ASMR】ママがそばにいるよ。優しい看病ロールプレイ",
-    "language": "Japonais"
+    "language": "Japonais",
+    "rarity": "Rare"
   },
   {
     "id": "CADwHvRnq3U",
     "title": "【ASMR/黒3Dio】ママの甘い寝かしつけで気持ちよく安眠♡耳ふー/赤ちゃん綿棒/ゼロ距離囁き/EarBlowing/Whispering【睡眠導入】",
-    "language": "Japonais"
+    "language": "Japonais",
+    "rarity": "Épique"
   },
   {
     "id": "2CLVoXJiTqY",
     "title": "【ASMR/ママ】両耳同時♡ 2人のママが甘やかして寝かしつけ　Mommy/Whispering/RelaxSounds【西園寺メアリ / ななしいんく】",
-    "language": "Japonais"
+    "language": "Japonais",
+    "rarity": "Légendaire"
   },
   {
     "id": "mxSUTfPgIts",
     "title": "【ASMR】大好きなママの寝かしつけ  Mommy/Whispering/Ear Cleaining/Massage【西園寺メアリ / ハニスト】",
-    "language": "Japonais"
+    "language": "Japonais",
+    "rarity": "Épique",
+    "archived": true
   },
   {
     "id": "w_O6bZo1rVU",
     "title": "한국어ASMR 숲 속,구미호 수면 카페🦊잠이 오는 속삭임의 상황극",
-    "language": "Coréen"
+    "language": "Coréen",
+    "rarity": "Légendaire"
   },
   {
     "id": "3WVYaQ44FSk",
     "title": "ASMR 새해부터 지독한 감기 걸린 친구 돌봐주기 🤒 | 체온계, 쿨시트, 죽, 약, 물수건 소리 등등 | 롤플레이, 상황극 | 한국어 ASMR , ASMR Korean",
-    "language": "Coréen"
+    "language": "Coréen",
+    "rarity": "Épique"
   },
   {
     "id": "HXPEXGwQz84",
     "title": "엄마 무릎에 누워서 ASMR 느껴보기 / 시각적 ASMR / 두피마사지 /",
-    "language": "Coréen"
+    "language": "Coréen",
+    "rarity": "Rare"
   },
   {
     "id": "ZtZaZvAePO4",
     "title": "ASMR (Sub) 朋友的照顾安慰 帮你入睡 中文助眠 Friend Helping You Fall Back Asleep Roleplay",
-    "language": "Chinois"
+    "language": "Chinois",
+    "rarity": "Rare"
+  },
+  {
+    "id": "HeCSMKuvmvM",
+    "title": "ASMR Rlaxing Sleep Exam💤",
+    "language": "Anglais",
+    "rarity": "Rare"
+  },
+  {
+    "id": "_k9T0PBwkpQ",
+    "title": "【ASMR】深夜の図書館（司書ロールプレイ）📚",
+    "language": "Japonais",
+    "rarity": "Rare"
+  },
+  {
+    "id": "qkJfF9fIyjE",
+    "title": "Bookshop of Wonders | ASMR Roleplay (magical, soft spoken)",
+    "language": "Anglais",
+    "rarity": "Légendaire"
+  },
+  {
+    "id": "SHNtU3MK3W8",
+    "title": "Tea Room of Enchantment | ASMR Fantasy Roleplay (magical, soft spoken)",
+    "language": "Anglais",
+    "rarity": "Légendaire"
   }
 ]

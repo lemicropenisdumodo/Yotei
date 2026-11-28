@@ -1,3 +1,4 @@
+import {AsmrCollection} from './AsmrCollection'
 import {ProfileListening,SpotifySharing,type useSpotify} from './Spotify'
 import { Palette } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
@@ -47,6 +48,7 @@ export function ProfilePage({
           </div>
         </div>
         <p>{p.bio || 'Aucune biographie pour le moment.'}</p>
+        {(p.id===d.me.id || (p.show_asmr && !p.suspended)) && <AsmrCollection key={p.id} id={p.id}/>}
         {p.id===d.me.id ? <SpotifySharing control={spotify}/> : <ProfileListening key={p.id} id={p.id}/>}
         {p.id === d.me.id && (
           <div className="actions"><button onClick={() => setEdit(!edit)}>
@@ -108,6 +110,7 @@ export function ProfilePage({
                     .update({
                       username: val(f, 'username'),
                       bio: val(f, 'bio'),
+                      show_asmr: f.has('showAsmr'),
                       theme_color: val(f, 'color'),
                       avatar_url: paths[0] || p.avatar_url,
                       banner_url: paths[1] || p.banner_url,
@@ -146,6 +149,7 @@ export function ProfilePage({
               Biographie
               <textarea name="bio" maxLength={1500} defaultValue={p.bio} />
             </label>
+            <label className="inline"><input type="checkbox" name="showAsmr" defaultChecked={p.show_asmr}/> Afficher mes découvertes ASMR sur mon profil</label>
             <label>
               Couleur du profil
               <input name="color" type="color" defaultValue={p.theme_color} />

@@ -1,6 +1,7 @@
 import {useCallback,useEffect,useRef,useState,type CSSProperties} from 'react'
 import {CirclePlay,Heart,Dices,X} from 'lucide-react'
 import {db,message} from './core'
+import {Rarity,cover} from './AsmrCollection'
 import videos from './roulette-videos.json'
 
 import type {Gallery,GameSurface} from './Wallpaper'
@@ -10,7 +11,6 @@ export function Hearts({amount}:{amount:number}){
 }
 type Wallet={gallery:Gallery;points:number;version:number;video:string|null;price:number}
 type Video=typeof videos[number]
-export const cover=(id:string)=>'https://i.ytimg.com/vi/'+id+'/hqdefault.jpg'
 async function walletCall(action:string,request_id?:string,taps?:number){
   const {data,error}=await db.rpc('circle_game',{action,request_id,taps})
   if(error||!data)throw Error(error?.message||'Solde indisponible.')
@@ -81,6 +81,24 @@ function shuffle(){
   for(let n=cards.length-1;n>0;n--){const i=Math.floor(Math.random()*(n+1));[cards[n],cards[i]]=[cards[i],cards[n]]}
   return cards
 }
+const previewSides = ['DG2DiSWjJyA','_k9T0PBwkpQ'].map(id => videos.find(video => video.id===id)!)
+export function RouletteShortcut({points,open}:{points:number;open:()=>void}){
+  function side(video:Video){
+    return <span className="previewSide" data-rarity={video.rarity}>
+      <img src={cover(video.id)} alt="" loading="lazy"/><Rarity value={video.rarity}/>
+    </span>
+  }
+  return <button className="widgetLink rouletteTile" onClick={open}>
+    <span className="rouletteHeading"><strong>Roulette ASMR</strong><Hearts amount={points}/></span>
+    <span className="previewReel" aria-hidden="true">
+      {side(previewSides[0])}
+      <span className="previewMystery" data-rarity="Légendaire">
+        <b>?</b><Rarity value="Légendaire"/><em>Mommy ASMR…</em>
+      </span>
+      {side(previewSides[1])}
+    </span>
+  </button>
+}
 export function Roulette({game,close}:{game:Game;close:()=>void}){
   const dialog=useRef<HTMLDialogElement>(null),lock=useRef(false),timer=useRef(0)
   const [cards,setCards]=useState(shuffle),[run,setRun]=useState(0),[busy,setBusy]=useState(false),[error,setError]=useState('')
@@ -98,13 +116,14 @@ export function Roulette({game,close}:{game:Game;close:()=>void}){
       timer.current=window.setTimeout(()=>{lock.current=false;setBusy(false)},reduced?0:2500)
     }catch(e){lock.current=false;setBusy(false);setError(message(e))}
   }
-  function card(v:Video,i:number){return <div className="videoCard" key={i}><img src={cover(v.id)} alt=""/><small>{v.language}</small><strong>{v.title}</strong></div>}
+  function card(v:Video,i:number){return <div className="videoCard" key={i}><img src={cover(v.id)} alt=""/><small><Rarity value={v.rarity}/> · {v.language}</small><strong>{v.title}</strong></div>}
   return <dialog className="rouletteDialog" ref={dialog} onClose={close} aria-label="Roulette ASMR">
     <header><h2>Roulette ASMR</h2><button aria-label="Fermer la roulette" onClick={()=>dialog.current?.close()}><X/></button></header>
     <div className="reel"><div key={run} className={'reelTrack'+(run?' spinning':'')} style={{'--stop':'-2346px'} as CSSProperties}>{cards.map(card)}</div><i/></div>
+    <details className="rarityGuide"><summary>Comment fonctionne la rareté ?</summary><p>Rare pour une scène du quotidien, Épique pour une séance qui combine plusieurs soins ou sons, Légendaire pour un univers fantastique ou un duo de voix. Chaque vidéo garde sa rareté.</p><p>Parmi les vidéos restantes, une carte Rare a six fois et une Épique trois fois le poids d’une Légendaire. Tu découvres toute la sélection avant de retrouver des doublons.</p></details>
     <div className="drawControls"><Hearts amount={game.points}/><button className="primary" disabled={price===undefined||busy||game.points<price} onClick={draw}><Dices size={18}/> {busy?'Tirage…':<>Tourner{price!==undefined&&<> · <Hearts amount={price}/></>}</>}</button></div>
     {price!==undefined&&game.points<price&&<p>Gagne encore <Hearts amount={price-game.points}/> dans le clicker.</p>}
     {(error||game.error)&&<p role="alert">{error||game.error} <button onClick={game.refresh}>Actualiser</button></p>}
-    {!busy&&winner&&<div className="rouletteWin" aria-live="polite"><small>Ton tirage · {winner.language}</small><h3>{winner.title}</h3><a href={'https://www.youtube.com/watch?v='+winner.id} target="_blank" rel="noopener noreferrer"><CirclePlay size={18}/> Voir la vidéo</a></div>}
+    {!busy&&winner&&<div className="rouletteWin" aria-live="polite"><small>Ton tirage · {winner.language} · <Rarity value={winner.rarity}/></small><h3>{winner.title}</h3><a href={'https://www.youtube.com/watch?v='+winner.id} target="_blank" rel="noopener noreferrer"><CirclePlay size={18}/> Voir la vidéo</a></div>}
   </dialog>
 }

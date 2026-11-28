@@ -17,6 +17,7 @@ create table public.likes(post_id uuid references posts,user_id uuid references 
 create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
 create table storage.objects(id uuid,name text,bucket_id text);
 alter table storage.objects enable row level security; grant select,insert,delete on storage.objects to authenticated; create function storage.foldername(text) returns text[] language sql as $$select string_to_array($1,'/')$$;
+create policy baseline_profile_update on public.profiles for update to authenticated using(auth.uid()=id) with check(auth.uid()=id);
 create publication supabase_realtime;`)
 for (const t of ['profiles', 'posts', 'comments', 'likes']) {
   await db.exec(
@@ -44,8 +45,13 @@ for (const t of ['profiles', 'posts', 'comments', 'likes']) {
 for (const name of fs.readdirSync(new URL('migrations/', root)).sort())
   await db.exec(sql('migrations/' + name))
 const catalog = JSON.parse(fs.readFileSync(new URL('../src/roulette-videos.json', import.meta.url), 'utf8'))
-const rotation = await db.query('select video from yotei_private.roulette_videos where in_rotation')
+const rotation = await db.query('select video,rarity from yotei_private.roulette_videos where in_rotation')
 assert.deepEqual(rotation.rows.map(row => row.video).sort(), catalog.filter(video => !video.archived).map(video => video.id).sort())
+for (const row of rotation.rows) {
+  const video = catalog.find(v => v.id === row.video)
+  assert.equal(row.rarity, video.rarity)
+  assert.notEqual(video.language, 'Français')
+}
 await db.exec(sql('tests/access.sql'))
 await db.close()
 console.log('Migration et scénarios RLS validés en PostgreSQL local.')

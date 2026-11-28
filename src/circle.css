@@ -1,9 +1,29 @@
 .reactionBar{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:1rem}
 .reactionBar button{display:inline-flex;align-items:center;gap:.3rem;border-radius:2rem;padding:5px 10px;min-height:36px}
 .reactionBar button[aria-pressed=true]{outline:1px solid var(--accent)}
-.fixedBoard [data-widget=Roulette]{grid-column:span 30;grid-row:span 17}
-.rouletteTile{width:100%;height:100%;display:flex;align-items:center;gap:12px;background:#262231;color:white;padding:8px 14px;text-align:left}
-.rouletteTile span{display:grid}.rouletteTile small{opacity:.8}
+.fixedBoard [data-widget=Roulette]{grid-column:span 30;grid-row:span 38}
+.fixedBoard .rouletteTile{display:flex;flex-direction:column;justify-content:center;align-items:stretch;width:100%;height:100%;gap:8px;padding:7px 4%;background:radial-gradient(ellipse at 50% 110%,#473525,transparent 58%),#211c26;color:#fff;text-align:left}
+.rouletteHeading{display:flex;justify-content:space-between;align-items:center}
+.fixedBoard .rouletteHeading strong{font-size:clamp(.94rem,3.9cqw,1.32rem)}
+.previewReel{display:grid;grid-template-columns:.8fr 1fr .8fr;align-items:center;gap:2%;min-height:0;max-width:540px;width:100%;align-self:center}
+[data-rarity="Rare"]{--rarity:#92ceff}
+[data-rarity="Épique"]{--rarity:#dab1ff}
+[data-rarity="Légendaire"]{--rarity:#ffda85}
+.asmrRarity{color:var(--rarity);font-weight:750}
+.previewSide,.previewMystery{position:relative;isolation:isolate;display:grid;align-content:end;justify-items:center;overflow:hidden;border:1px solid color-mix(in srgb,var(--rarity),transparent 45%);border-radius:7px;background:#201c27}
+.previewSide{height:clamp(48px,14cqw,85px);font-size:clamp(.67rem,2.8cqw,.87rem)}
+.previewSide img{position:absolute;inset:0;z-index:-1;width:100%;height:100%;object-fit:cover;opacity:.82}
+.previewSide .asmrRarity{width:100%;padding:8px 2px 3px;text-align:center;background:linear-gradient(transparent,#15101ce8)}
+.previewMystery{height:clamp(62px,21cqw,125px);align-content:center;gap:1px;overflow:visible;background:radial-gradient(at 48% 0,#725535,#332720 65%);border-color:var(--rarity);box-shadow:0 0 8px #efb45b29}
+.previewMystery::before{content:"";position:absolute;top:-4px;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top:9px solid #ffe5a1;filter:drop-shadow(0 1px 1px #291808)}
+.previewMystery b{font-size:clamp(1.25rem,6.8cqw,2.7rem);line-height:1;color:#ffeabb}
+.previewMystery .asmrRarity,.previewMystery em{font-size:clamp(.66rem,2.65cqw,.94rem);line-height:1.18}
+.previewMystery em{font-style:normal;color:#fff1d4}
+.rarityGuide{margin:.5rem 0 .9rem}.rarityGuide p{font-size:.9rem}
+.asmrCollection{margin:1rem 0}.asmrCollection>a{display:flex;align-items:center;gap:10px;padding:8px 0;text-decoration:none;color:inherit}
+.asmrCollection img{width:clamp(64px,20%,110px);aspect-ratio:16/9;object-fit:cover;border-radius:6px}
+.asmrCollection a>span{min-width:0}.asmrCollection strong{display:-webkit-box;overflow:hidden;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.asmrCollection .asmrRarity{background:#201c27;border-radius:4px;padding:2px 6px;font-size:.78rem}
 .rouletteDialog{width:min(94vw,560px);background:#201d28;color:#fff;border:1px solid #48424f;padding:18px;border-radius:20px}
 .rouletteDialog::backdrop{background:#08070cbd}
 .rouletteDialog header,.drawControls,.drawControls span,.drawControls button,.rouletteWin a{display:flex;align-items:center;gap:8px}

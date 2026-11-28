@@ -18,6 +18,7 @@ export type Profile = {
   id: string
   username: string
   bio: string
+  show_asmr: boolean
   music: string
   avatar_url: string | null
   wallpaper_path: string | null

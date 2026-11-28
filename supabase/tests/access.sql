@@ -45,6 +45,7 @@ begin
  if (w->>'points')::int<>250 or w->>'video'<>first_video then raise exception 'Débit en double'; end if;
  w:=public.circle_game('spin',gen_random_uuid());
  if (w->>'points')::int<>0 or w->>'video'=first_video then raise exception 'Doublon vidéo'; end if;
+ if (select count(*) from public.asmr_discoveries(auth.uid()))<>2 then raise exception 'Collection incomplète'; end if;
  begin perform public.circle_game('spin',gen_random_uuid()); raise exception 'Solde négatif';
  exception when raise_exception then if sqlerrm<>'Il faut 250 cœurs pour tourner.' then raise; end if; end;
  begin perform public.choose_companion_background('clicker','stars',1,true); raise exception 'Achat sans solde';
@@ -102,6 +103,7 @@ do $$ begin
 end $$;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
 do $$ begin
+ if exists(select from public.asmr_discoveries('10000000-0000-4000-8000-000000000001')) then raise exception 'Collection privée visible'; end if;
  if public.companion_care() is not null then raise exception 'Compagnon visible à un tiers'; end if;
  if (select count(*) from public.messages where content='test privé')<>1 then raise exception 'Message invisible au destinataire'; end if;
  if not exists(select 1 from storage.objects where bucket_id='yotei-media' and name='10000000-0000-4000-8000-000000000001/rls-test.png') then raise exception 'Média du cercle invisible';end if;
@@ -117,6 +119,7 @@ end $$;
 insert into public.friend_nicknames values(auth.uid(),'10000000-0000-4000-8000-000000000001','Surnom personnel');
 do $$ begin if not exists(select 1 from public.friend_nicknames where nickname='Surnom personnel') then raise exception 'Surnom inaccessible'; end if; end $$;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+update public.profiles set show_asmr=true where id=auth.uid();
 do $$ begin if exists(select 1 from public.friend_nicknames) then raise exception 'Surnom visible par son destinataire';end if; end $$;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
 do $$ begin
@@ -134,6 +137,7 @@ end $$;
 insert into public.post_reactions(post_id,user_id,emoji) select id,auth.uid(),'👀' from public.posts where content='RLS transaction test';
 update public.post_reactions set emoji='🔥' where user_id=auth.uid();
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',true);
+do $$ begin if (select count(*) from public.asmr_discoveries('10000000-0000-4000-8000-000000000001'))<>2 then raise exception 'Collection partagée invisible'; end if; end $$;
 do $$ begin
  if not exists(select from public.post_reactions where emoji='🔥') then raise exception 'Réaction invisible'; end if;
  delete from public.post_reactions where emoji='🔥'; if found then raise exception 'Réaction tierce effacée'; end if;

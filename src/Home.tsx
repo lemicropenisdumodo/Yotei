@@ -1,5 +1,4 @@
-import {useCircleGame,Roulette,Hearts} from './CircleGame'
-import {Dices} from 'lucide-react'
+import {useCircleGame,Roulette,RouletteShortcut} from './CircleGame'
 import type {Watchlist} from './MarketSettings'
 import {CompanionDialog, CompanionTile, useCompanion, type PetTile} from './Companion'
 import { webLink, type Recommendation } from './recommendation'
@@ -133,7 +132,7 @@ export function Home({d, recent, openPost, go, editing, finish, photo, spotify,w
   }
   function tileContent(id: Widget) {
     if (id === 'Character' || id === 'Jours ensemble') return <CompanionTile kind={id} state={companion} wide={false} open={()=>setPetPage('Character')}/>
-    if (id==='Roulette') return <button className="widgetLink rouletteTile" onClick={()=>setRoulette(true)}><Dices/><span><strong>Roulette ASMR</strong><small><Hearts amount={game.points}/></small></span></button>
+    if (id==='Roulette') return <RouletteShortcut points={game.points} open={()=>setRoulette(true)}/>
     if (id === 'Recommandations') return <button className="widgetLink recWidget" aria-label="Recommandations" onClick={() => recent ? openPost(recent.id) : go('Fil')}>
       {recent && (recent.image_url ? <Media path={recent.image_url} className="recArt" alt="" /> :
         webLink(recent.thumbnail_url) && <img className="recArt" src={webLink(recent.thumbnail_url)} alt="" referrerPolicy="no-referrer" />)}

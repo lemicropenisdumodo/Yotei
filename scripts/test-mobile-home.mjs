@@ -93,11 +93,12 @@ try {
       gallery[surface]=motif==='plain'?motif:motif+':'+palette
       return route.fulfill({json:{points:balance,version:++gameVersion,video:latestVideo,price:250,gallery}})
     }
+    if(url.pathname.endsWith('/rpc/asmr_discoveries'))return route.fulfill({json:latestVideo?[{video:latestVideo}]:[]})
     if(url.pathname.endsWith('/rpc/circle_game')){
       const {action,taps,request_id}=route.request().postDataJSON()
       if(action==='tap'){ balance+=taps-(streams.get(request_id)||0);streams.set(request_id,taps);gameVersion++ }
       if(action==='spin'){if(balance<250)return route.fulfill({status:400,json:{message:'Solde insuffisant'}})
-        balance-=250;latestVideo='XCZlx9bt1G4';gameVersion++}
+        balance-=250;latestVideo='_k9T0PBwkpQ';gameVersion++}
       return route.fulfill({json:{points:balance,version:gameVersion,video:latestVideo,price:250,gallery}})
     }
     if (url.pathname.endsWith('/rpc/companion_care')) {
